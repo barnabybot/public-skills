@@ -1,0 +1,54 @@
+---
+categories:
+  - "[[Lifecycle]]"
+type: "[[Phase Hub]]"
+phase: delivery
+status: "Not Started"
+rag_status: "Green"
+created: {{CREATED}}
+updated: {{CREATED}}
+---
+
+# Delivery
+
+The heavy working folder of [[Project {{VAULT_NAME}}]]. Most knowledge work
+happens here: Meetings, Correspondence, Analysis (the workstream hubs), and
+Working Files.
+
+## Status
+
+| Field | Value |
+|-------|-------|
+| Phase active from | (set when Planning exits) |
+| Target Reporting start | {{TARGET_COMPLETION}} (less the drafting allowance) |
+| RAG | Green |
+
+## Workstream hubs
+
+Analytical work is partitioned by **{{STRUCTURE_AXIS}}**. Each hub lives at
+`Delivery/Analysis/{{STRUCTURE_AXIS}}/<value>/<value>.md`.
+
+{{STRUCTURE_VALUES_LIST}}
+
+## Working files
+
+`Delivery/Working Files/` holds the spreadsheets, extracts and exports the
+analysis is built on. Each one gets a Markdown note beside it saying what it is,
+where it came from and what has been checked, because a file with no note is a
+number nobody can source.
+
+## Relevant skills for this phase
+
+| Skill | Purpose |
+|-------|---------|
+| `recall` | What was done on a workstream last week, from the session transcripts |
+| `handoff` | Moving a workstream's context to the next session before it runs out |
+
+## Open issues (this phase)
+
+(populated as Delivery unfolds — link items to [[04 Issues & Risks Log]])
+
+## Previous and next phase
+
+← [[Planning]]
+→ [[Reporting]]

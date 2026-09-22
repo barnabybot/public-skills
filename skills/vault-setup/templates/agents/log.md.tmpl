@@ -1,0 +1,19 @@
+---
+type: operational-log
+created: {{CREATED}}
+append_only: true
+---
+
+# {{VAULT_NAME}} — operational log
+
+## {{CREATED}} — vault scaffolded
+
+- Created by the `vault-setup` skill (agents workflow)
+- Ecosystem: {{ECOSYSTEM_NAME}}
+- Agent dirs: {{AGENT_DIRS_LIST}}
+- Fleet docs (`Workstations/`): {{INCLUDE_WORKSTATIONS_DIR}}
+- Secrets dir: {{SECRETS_DIR_ENABLED}}
+- Search indexed: {{SEARCH_INDEXED}}; collection registration: {{SEARCH_REGISTERED}}
+- Wrote AGENTS.md (vault_type: agents)
+- Created Sessions/{Handoffs,Archive}, Audits/, Ops/ and one folder per agent
+- Sync file-type toggle set on: (list each device as it is done)

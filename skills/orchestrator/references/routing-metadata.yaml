@@ -1,0 +1,139 @@
+# Model IDs, provider settings and evidence. Edit model preferences in ../SKILL.md.
+#
+# ---------------------------------------------------------------------------
+# THIS IS A PLACEHOLDER TABLE. Replace it with your own stack before you spawn.
+#
+# `provider_b` ships with obviously fake model IDs so a wrong model can never
+# launch silently. `provider_a` ships with real Claude IDs, so a Claude-only
+# reader can run `--tier` today and edit the rest later.
+#
+# Three rules the resolver enforces, so you cannot get them wrong quietly:
+#   1. Every tier in this file must appear in the SKILL.md table, and the other
+#      way round.
+#   2. Every tier's backup must sit on a DIFFERENT provider from its default.
+#      A backup on the same provider fails at the moment you need it, which is
+#      when that provider's allowance runs out.
+#   3. Every effort named in the table must be in that provider's `efforts`.
+#
+# `codexbar: null` on both providers means capacity reads as unread and each
+# row dispatches as written. Wire a usage meter in by setting `codexbar` to the
+# provider name your meter reports, and the same resolver starts taking the
+# backup when the default is exhausted. Nothing else changes.
+# ---------------------------------------------------------------------------
+version: 2
+revised: 2026-09-22
+revised_by: "placeholder table shipped with the public skill"
+evidence_date: none
+evidence_digest: "No evidence. Every row below is a shape to edit."
+providers:
+  provider_a:
+    agent: claude
+    codexbar: null
+    subscription: "(your plan)"
+    efforts:
+    - low
+    - medium
+    - high
+    - xhigh
+    - max
+  provider_b:
+    agent: codex
+    codexbar: null
+    subscription: "(your plan)"
+    efforts:
+    - low
+    - medium
+    - high
+    - xhigh
+    - max
+models:
+  a_large:
+    id: claude-opus-5
+    provider: provider_a
+    display: A-Large
+  a_mid:
+    id: claude-sonnet-5
+    provider: provider_a
+    display: A-Mid
+  a_small:
+    id: claude-haiku-4-5-20251001
+    provider: provider_a
+    display: A-Small
+  b_large:
+    id: REPLACE-WITH-YOUR-PROVIDER-B-LARGE-MODEL-ID
+    provider: provider_b
+    display: B-Large
+  b_mid:
+    id: REPLACE-WITH-YOUR-PROVIDER-B-MID-MODEL-ID
+    provider: provider_b
+    display: B-Mid
+capacity:
+  exhausted_used_percent: 95
+  exhausted_min_hours_to_reset: 1
+  read_timeout_seconds: 20
+  timezone: UTC
+tiers:
+  O:
+    name: Orchestrator
+    what: 'This seat: dispatch, relay, judgement, succession'
+    stop: A seat that compacts in place recycles on a new phase; a seat with a fixed
+      window hands off at about 30%.
+    basis: practice
+    evidence: none
+  A:
+    name: Mechanical
+    what: Named files, explicit instruction, machine-checkable
+    stop: The named files only.
+    basis: practice
+    evidence: none
+  B:
+    name: Bounded
+    what: Plan locked, tests define done, long agentic loop
+    stop: Diff plus green tests. Raise effort one step only after high stalls.
+    basis: practice
+    evidence: none
+  C:
+    name: Everyday
+    what: Ordinary coding, ordinary debugging, first structure of a page or deck
+    stop: It runs and you can watch it run. A structure exists; the spec waits for
+      tier F.
+    basis: practice
+    evidence: none
+  D:
+    name: Iterative
+    what: The user will steer it through the composer several times
+    stop: The user stops correcting.
+    basis: practice
+    evidence: none
+  E:
+    name: Hard
+    what: Ambiguous debugging, architecture, terminal investigation, difficult document
+      reasoning
+    stop: Cause named and demonstrated.
+    basis: practice
+    evidence: none
+  F:
+    name: Consequential
+    what: Final argument, written spec, working prose, editorial judgement
+    stop: An artefact you would present or merge. Max for the last look.
+    basis: practice
+    evidence: none
+  V:
+    name: Visual
+    what: Visual system, UI, slide look
+    stop: Screenshots at 1920x1080 plus one phone viewport. The backup is the visual
+      QA gate.
+    basis: practice
+    evidence: none
+  R:
+    name: Review
+    what: Independent check of finished work; takes the tier of the work it checks,
+      on a different provider
+    of: required
+    stop: Every finding with confidence and severity, plus a coverage statement.
+    basis: practice
+    evidence: Never the builder's provider.
+legacy_tiers:
+  basic: A
+  moderate: C
+  complex: E

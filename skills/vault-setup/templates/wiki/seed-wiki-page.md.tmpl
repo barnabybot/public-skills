@@ -1,0 +1,112 @@
+# Seed wiki-page templates
+#
+# Three variants — concept / book-summary / person.
+# Use the appropriate variant when writing a stub page.
+# Remove the variant delimiters and the other two variants before writing the file.
+#
+# ── VARIANT: concept ──────────────────────────────────────────────────────────
+
+---
+title: {{PAGE_TITLE}}
+type: concept
+created: {{CREATED}}
+last_ingested:
+confidence: low
+claims_count: 0
+status: stub
+categories:
+  - "[[Concept]]"
+topics: []
+sources: []
+people: []
+---
+
+# {{PAGE_TITLE}}
+
+*(Seeded — no content yet. First ingestion will populate this opening synthesis.)*
+
+## Synthesis
+
+*(populated by ingestion)*
+
+## Source evidence
+
+*(populated by ingestion — bullet list of raw chapter and article backlinks, each opening with **supports**, **qualifies** or **challenges** and annotated with the specific claim it bears on)*
+
+## Cross-references
+
+*(populated by ingestion + lint)*
+
+## Referenced in
+
+*(auto-populated by ingest)*
+
+# ── VARIANT: book-summary ─────────────────────────────────────────────────────
+
+---
+title: {{PAGE_TITLE}}
+type: book-summary
+authors: []
+subject:
+publisher:
+year:
+isbn:
+created: {{CREATED}}
+last_ingested:
+chapters_count: 0
+confidence: low
+categories:
+  - "[[Books]]"
+topics: []
+---
+
+# {{PAGE_TITLE}}
+
+## Premise
+
+*(populated by ingestion)*
+
+## How to use it
+
+*(populated by ingestion)*
+
+## Spine of arguments
+
+*(populated by ingestion)*
+
+## Coverage limits
+
+*(populated by ingestion)*
+
+## Source location
+
+- Raw chapters: `raw/Books/{{PAGE_TITLE}}/`
+
+## Related
+
+*(populated by ingestion)*
+
+# ── VARIANT: person ───────────────────────────────────────────────────────────
+
+---
+title: {{PAGE_TITLE}}
+type: person
+created: {{CREATED}}
+status: stub
+categories:
+  - "[[Person]]"
+topics: []
+books: []
+---
+
+# {{PAGE_TITLE}}
+
+*(Seeded — one-paragraph biographical note will be added on first ingestion.)*
+
+## Relevance to this vault
+
+*(populated by ingestion)*
+
+## Reading conventions
+
+*(optional — populated by ingestion if specific reading conventions apply)*

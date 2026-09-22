@@ -1,0 +1,214 @@
+---
+vault_type: personal
+search_collection: {{SEARCH_COLLECTION}}
+created: {{CREATED}}
+---
+
+# Obsidian Vault: {{VAULT_NAME}}
+
+{{VAULT_PURPOSE}}
+
+## Progressive Disclosure
+
+Before reading full files:
+
+1. Check session context (SessionStart hook output)
+2. Check frontmatter `description` fields
+3. Scan headings (`grep -n "^#" file.md`)
+4. Read full content only after confirming relevance
+
+## Filing philosophy (personal vault)
+
+The **filing tree** is personal-vault-specific and lives here. The universal **note-keeping rules** (categories against folders, wikilinks, property standards, naming, dates, ratings) sit in the block below.
+
+**Files over folders.** Categories drive filtering via Bases; folders carry only the coarse split between own writing, clippings from others, and references to external things.
+
+| Location | What belongs there |
+|----------|-------------------|
+| **Root** | Personal writing: essays, ideas, thoughts, journal fragments, year reviews, draft articles. If YOU wrote it, it stays in root. |
+| **Clippings/** | Content by OTHERS. Subfolders: `Articles/`, `Tweets/`, `Podcasts/`, `Books/`, `Youtube/`, `Voice Memos/` |
+| **References/** | External things: people, places, companies, products, recipes, quotes |
+| **Daily/** | Daily notes only. Format: `YYYY-MM-DD.md` (omit folder if daily notes disabled) |
+| **Projects/** | Active project folders |
+| **Templates/** | Note templates (do not edit). Bases go in `Templates/Bases/` |
+| **Attachments/** | Images and files |
+
+### Quick decision tree
+
+1. Did someone else write it? → `Clippings/` (pick subfolder by type)
+2. Is it about an external thing? → `References/`
+3. Is it your own writing or thinking? → **Root**
+
+<!-- kepano:begin -->
+
+## Kepano knowledge rules
+
+Universal note-keeping rules. If you keep one canonical copy of these rules elsewhere and sync it into each vault, the sentinel comments mark the managed region and edits inside the pair are overwritten on the next sync. Otherwise treat this block as yours to edit.
+
+### Categories vs folders
+
+- Categories drive filtering via Bases; folders carry only the coarse split between own writing, content by others, and external references.
+- `[[Clippings]]` category ↔ `Clippings/` folder (loose coupling — categories sort, folders contain).
+- `[[Inbox]]` category = "needs processing". File stays where it is until processed.
+- Personal-writing categories (`[[Essays]]`, `[[Thoughts]]`, `[[Journals]]`) live at vault root.
+
+### Wikilink conventions
+
+When creating or editing notes, add wikilinks following these rules:
+
+1. **First occurrence only** — link the first mention of a term in the body text, not every instance.
+2. **Skip zones** — never add wikilinks inside:
+   - YAML frontmatter (between `---` markers)
+   - Code blocks (between `` ``` `` markers)
+   - Headings (lines starting with `#`)
+   - URLs
+   - Existing wikilinks or markdown links
+3. **Whole word matching** — don't link substrings (e.g., don't link "Integration" inside "Disintegration").
+4. **People** — use display name format: `[[Full Name|First Name]]`.
+5. **Don't self-link** — a note should not wikilink to itself.
+6. **Longest match first** — when two targets overlap (e.g., "Total Cost of Ownership" vs "Cost"), prefer the longer match.
+7. **What earns a link** — a passing mention qualifies: parenthetical lists, quote attributions and yardstick uses ("the next Amazon") all link on first mention. Three disqualifiers only: **sense mismatch** (the surface must carry the sense the target note carries — common-noun titles link the concept under discussion, while instances of it stay bare); **fragment of a longer term** (a phrase naming a different entity keeps its parts bare: "leveraged finance", "Carolingian Renaissance"; a compound whose head concept IS the target links: "the finance industry", "AI datacenters"); **rhetorical stand-in** (aphorism, personification, idiom — "History does not punish optimism" stays bare). Quotation marks alone disqualify nothing.
+
+### Property standards
+
+#### Naming rules
+
+- **Lowercase property keys are mandatory**: `source:` not `Source:`, `created:` not `CREATED:`.
+- **Never uppercase YAML property keys**: no `TITLE:`, `SOURCE:`, `Created:`, or `kindle-bookId:` unless preserving an external import field intentionally.
+- **Lowercase snake_case for multi-word keys**: `prep_time`, `cost_tier`, `weight_g`, not `prepTime`, `Prep Time`, `prep-time`, or `PREP_TIME`.
+- **Only property keys are constrained**: values may use normal casing (e.g. `status: "In Progress"`, `region: "North America"`).
+- **Plural for lists**: `categories:`, `topics:`, `tags:`.
+- **Singular for single values**: `author:`, `rating:`.
+- **Before saving frontmatter**: scan the keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case.
+
+#### Standard properties
+
+| Property | Type | Usage |
+|----------|------|-------|
+| `categories` | list | Top-level organisation (wikilinks) |
+| `topics` | list | Thematic tags (wikilinks) |
+| `author` | single or list | Creator (wikilink) |
+| `people` | list | Related people (wikilinks) |
+| `source` | single | Origin reference (wikilink) |
+| `type` | single | Content type (wikilink, plural: `[[Books]]`) |
+| `genre` | single or list | Media genre (wikilink) |
+| `description` | text | One-sentence summary of the note |
+| `notes` | text | Additional commentary or observations |
+| `rating` | number | 1-7 scale |
+| `created` | date | YYYY-MM-DD |
+| `published` | date | YYYY-MM-DD |
+| `date` | date | Event or occurrence date |
+| `last_reviewed` | datetime | Last reviewed or updated date |
+| `modified` | date | Last modified date |
+| `status` | text | e.g., `published`, `draft` |
+| `project` | text | Project name |
+
+#### Cross-category reusability
+
+- `genre` shared across Books, Movies, Shows, Podcasts.
+- `author` shared across Books, Articles, Quotes.
+- `type` uses wikilinks: `type: "[[Books]]"`.
+
+#### Deprecated property names
+
+| Old name | Use instead | Reason |
+|----------|-------------|--------|
+| `category` | `categories` | Non-standard singular form |
+| `summary` | `description` | Standardised Feb 2026 |
+| `comment` | `notes` | Standardised Feb 2026 |
+| `colour` | `colours` | Standardised to plural |
+| `resolution` | `resolution_mp` | Explicit unit suffix |
+| `weight` | `weight_g` | Explicit unit suffix |
+| `time` | `prep_time` | Vague name |
+| `last` | `last_reviewed` | Vague name |
+| `cost-tier` | `cost_tier` | Hyphen → underscore |
+| `secondary_status` | `artist_subtype` | Clearer name |
+| `person` | — | Redundant with filename |
+| `loc` | `location` | Unused abbreviation |
+| `project name` | `project` | No spaces in property names |
+| `maker` | `brand` | Standardised |
+| `attendees` | `people` | Merged into standard property |
+| `role` | `roles` | Standardised to plural |
+
+### Naming conventions
+
+- **Dated content** (date IS part of identity): `YYYY-MM-DD Title.md` — meeting notes, event or conference notes, dated proposal versions, daily notes.
+- **Everything else**: descriptive name, **no date prefix**. Sort via frontmatter `created:` and the vault's sort configuration rather than filenames.
+- **Templates**: `[Type] Template.md` (e.g., `Methodology Note Template.md`).
+- **People**: `Full Name.md`.
+- **Clippings**: `Clean Title.md` — **no date prefix**. Capture the date in `published` (priority: `published` > content-inferred > URL path date > `created`) and sort/filter via frontmatter, not the filename. Clean titles: remove site names, author attribution, URL artefacts, ticker symbols. Exception: annual shareholder letters keep the year (e.g. `1999 Berkshire Hathaway Shareholder Letter.md`).
+
+### Dates — YYYY-MM-DD everywhere
+
+- Filenames, frontmatter, directory names — one format.
+- ISO-8601 ordering means filesystem-collation matches chronological order.
+- Avoid locale-specific date formats (no `MM/DD/YYYY`, no `5 May 2026`).
+
+### Rating scale
+
+- Ratings use the 7-point scale: `1` through `7`.
+- Why 7: middle is `4`, leaves `2`/`3` and `5`/`6` for forced discrimination on either side. Five-point scales collapse to "good / OK / bad"; ten-point scales lose precision via false granularity.
+
+### HTML in notes
+
+- Obsidian renders inline HTML in reading view and live preview.
+- **Inline `style=""` only** — `<style>` tags and CSS class-based styling are ignored. Put all styling in inline `style=""` attributes with hardcoded hex values.
+- Obsidian's own CSS variables (`var(--text-normal)`, `var(--background-primary)`, etc.) work inside inline styles.
+- SVG with inline styles also renders.
+- CSS snippets in `.obsidian/snippets/` style Obsidian's UI chrome, not user HTML in notes.
+
+<!-- kepano:end -->
+
+## Slash commands
+
+| Command | Description |
+|---------|-------------|
+| Capture | Route raw external input into the vault with minimal frontmatter |
+| Organise | Filing audit, frontmatter harmonisation, retention |
+| Review | Backward pass over older notes against newer knowledge |
+| Sweep | The full maintenance pipeline, on a cadence |
+
+## Vault log
+
+`log.md` in vault root is an append-only operational log. Every skill that mutates the vault appends an entry after completing its work.
+
+**Format:**
+
+```
+## [YYYY-MM-DD] operation | summary
+- detail line
+```
+
+**Operations**: `capture`, `organise`, `review`, `cascade`, `sweep`, `manual`
+
+**Rules:**
+
+- Append only — never edit or delete past entries
+- One entry per skill invocation (not per file touched)
+- When `/sweep` runs sub-skills, only the orchestrator logs (avoids double-logging)
+- Keep detail lines concise — counts and wikilinks, not full descriptions
+
+## Inbox workflow
+
+Notes can carry `categories: ["[[Inbox]]"]` to mark them as needing processing. The `/capture` and `/organise --inbox` workflows find these and route them.
+
+Triggering processing:
+
+1. **Scan** vault for any file where `categories` contains `[[Inbox]]`
+2. **For each file**, determine correct location using the filing decision tree above
+3. **Fix categories** — replace `[[Inbox]]` with the appropriate category
+4. **Add topics** — relevant topic wikilinks based on content
+5. **Move file** to correct folder if misplaced
+6. **Add wikilinks** to body text — link first mentions of people, concepts, places
+7. **Report** what was processed
+
+## Editing files externally
+
+Obsidian caches open files in memory and reverts external changes. For bulk edits:
+
+```bash
+osascript -e 'quit app "Obsidian"' && sleep 2
+rm -f ".obsidian/workspace.json" ".obsidian/workspace-mobile.json"
+# ... make edits ...
+open -a Obsidian
+```

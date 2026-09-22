@@ -1,0 +1,285 @@
+---
+schema_version: 4
+last_modified: {{CREATED}}
+search_collection: {{SEARCH_COLLECTION}}
+wiki_pattern: karpathy-llm-wiki
+---
+
+# Schema for {{WIKI_NAME}} wiki
+
+This file is the machine-readable contract. Read it on every ingest, query, or lint pass. Update `last_modified:` when changing page schemas or lint rules. The shared half of the contract - the property, wikilink and retrieval rules - is the block at the foot of `AGENTS.md`.
+
+## Page taxonomy
+
+| page_type | folder | role |
+|-----------|--------|------|
+| **concept** | `Concepts/` | One page per recurring concept in the domain. LLM owns. |
+| **person** | `People/` | One page per person referenced in the corpus. LLM owns. |
+| **book-summary** | `Books/` | One page per book. Wiki-layer summary of a `raw/Books/<Book>/` subfolder. |
+| **hub** | `00-Hubs/` | Map-of-content pages grouping related Concepts. |
+| **route** | `Routes/` | Audit checklist pairing a problem framing with relevant Concepts. |
+| **chapter** | `raw/Books/<Book>/` | One file per extracted chapter or section. Raw text, light frontmatter. |
+| **book-index** | `raw/Books/<Book>/INDEX.md` | Folder index for a book. Carries `type: book-index`, `categories: - "[[Books]]"`, and a wikilinked `people:` author list so the graph groups it under Books and connects it to the author. |
+| **article** | `raw/Articles/` | Web clippings, transcripts. Raw text, light frontmatter. |{{ADDITIONAL_PAGE_TAXONOMY_ROWS}}
+
+**When to make a page vs a section** (Karpathy heuristic): create a new page for a *distinct entity or concept you would link to from elsewhere*; keep an *attribute or sub-part of an existing concept* as a section inside that concept's page. The four stages of a lifecycle live as sections of one `Stage Analysis` concept, not four `Stage N` pages. The opposite failure is under-linking — a recurring cross-cutting concept mentioned across several pages earns its own page (the lint flags a concept named in the corpus with no page).
+
+## Page schemas
+
+### concept
+
+Required frontmatter:
+
+```yaml
+title: <name>
+type: concept
+created: YYYY-MM-DD
+last_ingested: YYYY-MM-DD
+confidence: high | medium | low        # tests under ## Confidence tests
+claims_count: <int>
+status: stub | active | disputed | superseded   # closed vocabulary, see ## Page status
+superseded_by: "[[<page>]]"           # only when status is superseded
+categories:
+  - "[[Concept]]"
+topics:
+  - "[[<related concept>]]"
+sources:
+  - "[[<book or article wikilink>]]"
+people:
+  - "[[<person>]]"
+```
+
+Required sections:
+
+- One-paragraph opening synthesis (what this concept is, in 2–4 sentences).
+- `## Synthesis` — multi-paragraph treatment with claims backed by raw citations.
+- `## Source evidence` — bullet list of `[[<chapter>]]` and `[[<article>]]` backlinks, each opening with a role tag (**supports**, **qualifies** or **challenges**, see `## Evidence roles`) and annotated with the specific claim it bears on.
+- `## Cross-references` — wikilinks to related Concepts.
+- `## Referenced in` — auto-maintained list of pages that link back to this one.
+
+Optional sections: `## Evolution`, `## Contradictions and reconciliations`, `## Open questions`.
+
+### book-summary
+
+Required frontmatter:
+
+```yaml
+title: <book title>
+type: book-summary
+authors:
+  - "[[<author>]]"
+subject: "[[<primary subject>]]"
+publisher: <string>
+year: <int>
+isbn: <string, optional>
+created: YYYY-MM-DD
+last_ingested: YYYY-MM-DD
+chapters_count: <int>
+confidence: high | medium | low
+categories:
+  - "[[Books]]"
+topics:
+  - "[[<concept>]]"
+```
+
+Required sections:
+
+- `## Premise` — what the book is and what role it plays in this corpus.
+- `## How to use it` — when to reach for it vs other sources.
+- `## Spine of arguments` — the main threads, with `[[Concept]]` wikilinks.
+- `## Coverage limits` — what the book does not cover; biases to flag.
+- `## Source location` — paths into `raw/Books/<Book>/`.
+- `## Related` — wikilinks to other Books and key Concepts.
+
+### chapter (raw)
+
+Required frontmatter:
+
+```yaml
+chapter_order: <int>
+chapter_title: <string>
+location_year: <string, optional — e.g. "SpaceX, 2002">
+page_start: <int>
+page_end: <int>
+source: <string — book title>
+topics:           # optional — LLM-tagged on ingest as a light retrieval hint
+  - "[[<concept>]]"
+people:           # optional — LLM-tagged on ingest
+  - "[[<person>]]"
+```
+
+Body: the extracted text. Headings and inline image wikilinks (`![[filename.jpeg]]`) are allowed. No commentary, no synthesis — that is the wiki layer's job.
+
+### person
+
+Required frontmatter:
+
+```yaml
+title: <full name>
+type: person
+created: YYYY-MM-DD
+status: stub | active | disputed | superseded   # closed vocabulary, see ## Page status
+categories:
+  - "[[Person]]"
+topics:
+  - "[[<concept>]]"
+books:
+  - "[[<book wikilink>]]"
+```
+
+Required sections:
+
+- One-paragraph biographical note.
+- `## Relevance to this vault` — what role this person plays in the corpus.
+- `## Reading conventions` (optional) — how to treat this person's quotes or framings.
+
+### hub
+
+Required frontmatter:
+
+```yaml
+title: <hub name>
+type: hub
+created: YYYY-MM-DD
+categories:
+  - "[[Hub]]"
+```
+
+Body: an annotated list of Concept wikilinks grouped by sub-theme.
+
+### route
+
+Required frontmatter:
+
+```yaml
+title: <route name>
+type: route
+created: YYYY-MM-DD
+categories:
+  - "[[Route]]"
+```
+
+Body: an ordered checklist of steps, each step referencing one or more `[[Concept]]` pages.
+
+### article (raw)
+
+Required frontmatter:
+
+```yaml
+title: <article title>
+type: article
+source_url: <string, optional>
+published: YYYY-MM-DD
+ingested: YYYY-MM-DD
+topics:
+  - "[[<concept>]]"
+people:
+  - "[[<person>]]"
+```
+
+Body: the extracted article text. No synthesis — that is the wiki layer's job.
+
+## Ingestion rules
+
+1. New source material lands in `raw/_inbox/`.
+2. For a book or long document, split into per-chapter markdowns under `raw/Books/<Book Title>/`. Use the PDF outline; extract per-chapter; write light frontmatter as per the chapter schema above.
+3. Extract inline images to `raw/images/`. Reference them from the chapter markdown via bare wikilinks like `![[_page_133_Picture_0.jpeg]]` — Obsidian resolves them vault-wide.
+   - **Raw frontmatter uses wikilinks, never plain strings.** `people:`, `author:`, and `topics:` on any raw source (chapter, INDEX, article) must be `- "[[Name]]"`, not `- Name` or `[]`. Obsidian draws graph edges only from wikilinks, so plain-string or empty values leave the raw source orphaned and ungrouped.
+4. Symlink (or copy) the source PDF into the same `raw/Books/<Book>/` folder.
+5. Write `raw/Books/<Book>/INDEX.md` listing the chapters and page ranges. Give it `type: book-index`, `categories: - "[[Books]]"`, and a wikilinked `people:` author list — without these the raw folder floats as an orphan and the graph cannot group it under Books.
+6. Create the wiki `Books/<Book>.md` summary page (peer-level with other books — same shape). Its `## Source location` MUST wikilink the raw extraction/chapter by stem (e.g. `[[<book-slug>]]`), not only cite the folder path — the summary page's stem-wikilink is what de-orphans the raw folder in the graph. Every raw book folder needs a summary page.
+7. Walk Concepts and People. Before editing a page, read the held sources that support, qualify and challenge its claim and tag each evidence bullet with its role. For each touched page, update synthesis and add source backlinks. Create stub Concept/Person pages for new entities surfaced by the source. When a claim rests on a dated external source (a tweet, talk, or dated post), capture it verbatim into `raw/Articles/<slug>.md` and cite that — a bare-URL-only citation is unverifiable and leaves the evidence outside the corpus.
+8. Append one entry to `log.md` in the shape under `## Log entry shape`.
+9. Refresh `index.md`; every new or changed page gets a row that meets `## Index entry contract`.
+
+## Evidence roles
+
+Every bullet under `## Source evidence` opens with a bold role tag, then the source wikilink, then the one-line claim it bears on. A bullet with no tag reads as **supports**, so pages written before schema 4 stay valid; tag on the next touch.
+
+| tag | meaning | consequence |
+|---|---|---|
+| **supports** | the source states or demonstrates the claim | none |
+| **qualifies** | the source narrows the claim to a condition, period or population | the qualification appears in the synthesis |
+| **challenges** | the source contradicts the claim or its mechanism | the page carries an entry in `## Contradictions and reconciliations` or `status: disputed` |
+
+Silent replacement is a lint failure: a source that disagrees with an existing claim lands as a **challenges** bullet and a named contradiction; overwriting the earlier claim is the defect.
+
+## Confidence tests
+
+| value | test |
+|---|---|
+| `high` | two independent held sources agree, or one primary source states the claim without qualification |
+| `medium` | one clear held source |
+| `low` | inference from the corpus, or an ambiguous or second-hand source |
+
+"Held" means the source sits in `raw/`. A claim that rests on a source outside the corpus stays `low` until the source is captured (ingestion rule 7).
+
+## Page status
+
+`status` on concept and person pages is a closed vocabulary. Absent reads as `active` when `claims_count` is above zero and `stub` otherwise; write the field on the next touch.
+
+| value | meaning | moves to |
+|---|---|---|
+| `stub` | page exists, no sourced claim | `active` on the first sourced claim |
+| `active` | sourced claims, no open contradiction | `disputed` when a **challenges** bullet lands; `superseded` when another page replaces it |
+| `disputed` | at least one open contradiction named in `## Contradictions and reconciliations` | `active` once the entry records a reconciliation |
+| `superseded` | replaced by the page named in `superseded_by:` | terminal; the page keeps its evidence and gains a one-line pointer |
+
+## Index entry contract
+
+Every row in the Concept, People and Books tables of `index.md` carries these cells beyond the link, so a reader judges relevance without opening the page:
+
+| cell | content | length |
+|---|---|---|
+| claim | the page's principal claim or mechanism | one sentence |
+| source | the strongest held source, as a basename wikilink | one link |
+| use | when to open the page: the question it answers or the decision it informs | one clause |
+| confidence | the page's `confidence` value, on page types that carry one | one word |
+
+Counts stay in page frontmatter and off the index; a count copied into the index drifts from the page. A row missing a cell, a row whose link resolves to no page, and a wiki page with no row are all lint failures.
+
+## Log entry shape
+
+Each ingest, reweave or migration entry in `log.md` is a dated `##` heading followed by six labelled lines. Write `none` where a line has nothing to report; free prose may follow.
+
+```markdown
+## YYYY-MM-DD — <ingest | reweave | migration> — <source or subject>
+
+- source: <raw path or subject>
+- pages created: <wikilinks or none>
+- pages changed: <wikilinks or none>
+- claims added: <int> (<pages>)
+- contradictions: <page: sources in conflict, or none>
+- supersessions: <old page to new page, or none>
+```
+
+## Lint criteria
+
+- Broken wikilinks.
+- Concept page missing `## Source evidence`.
+- Raw chapter not linked from any Concept (orphan evidence).
+- Concept frontmatter missing required fields.
+- Book-summary page without a matching `raw/Books/<Book>/` subfolder.
+- **`raw/Books/<Book>/` folder with no `Books/<Book>.md` summary page (orphaned book — the inverse check).**
+- **Raw source (INDEX, chapter, or article) with no `type:` key.**
+- **Raw source with a plain-string or empty `people:` / `author:` / `topics:` where a wikilink target exists (ungrouped, no graph edge).**
+- **Concept named across the corpus with no Concept page (under-linking).**
+- **Wiki claim citing a bare external URL with no captured `raw/Articles/` source.**
+- Image in `raw/images/` with no inbound wikilink (orphan image).
+- Stale Concept (newest source backlink older than 12 months while domain is active).
+- Contradictions between two Concept pages.
+- **Verbatim quote house-styled** — a block presented as verbatim that has been anglicised or otherwise normalised away from the source wording.
+- **Page with a `challenges` bullet and neither a `## Contradictions and reconciliations` entry nor `status: disputed`** (silent replacement).
+- **`status` outside `stub | active | disputed | superseded`; `superseded` without `superseded_by`; `superseded_by` on any other status.**
+- **`confidence: high` with a single `sources:` entry** — review item; the test needs two sources or one unqualified primary statement.
+- **Index row missing a claim, source or use cell; index row whose link resolves to no page; wiki page with no index row.**
+- **Log entry after the schema-4 migration missing one of the six labelled lines.**
+- Evidence bullet with no role tag — counted as backlog and reported without failing; the backlog clears on touch.
+
+## Fidelity of verbatim quotes
+
+Verbatim source quotes are exempt from house-style normalisation. Preserve the source's exact wording — American spelling, `&` ampersands, original punctuation — inside any block presented as a quote or labelled "verbatim". British-English and other house-style rules apply to the wiki's own prose, never to quoted source text. A "verbatim" block that has been anglicised is a fidelity defect, not a style improvement.
+
+## Coverage limits
+
+<COVERAGE_LIMITS — fill in at scaffold time or after first ingest: what this corpus is strong on, what it does not cover (valuation, legal, safety-critical, current events, AI capability claims), and when the coverage window was last updated.>

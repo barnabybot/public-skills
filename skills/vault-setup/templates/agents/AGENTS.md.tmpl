@@ -1,0 +1,167 @@
+---
+vault_type: agents
+search_indexed: {{SEARCH_INDEXED}}
+created: {{CREATED}}
+---
+
+# Obsidian Vault: {{VAULT_NAME}}
+
+Agents workspace for {{ECOSYSTEM_NAME}}. {{VAULT_PURPOSE}} This is the vault every session from every tool writes to. It holds machine state, queues, session notes, handoffs and skill evidence. Human-curated knowledge belongs in a personal or operations vault.
+
+## Vault root
+
+The root holds only `AGENTS.md`, `log.md`, the folders listed below and hidden tool-config folders (`.obsidian/`, `.claude/`). Anything else, including a loose `YYYY-MM-DD *.md` note, is a leaked write: file it or remove it. Every report a skill writes has a home in the table below, so do not invent a root folder for one.
+
+{{TOP_LEVEL_FOLDERS_LIST}}
+
+## Where things go
+
+| Output | Path |
+|--------|------|
+| Session note | `Sessions/YYYY-MM-DD <slug>.md` |
+| Handoff or pickup prompt | `Sessions/Handoffs/` |
+| Audit, one-off review, retrospective | `Audits/<agent>/`; cross-agent synthesis at `Audits/` root |
+| A skill's evidence: renders, probes, measurements, extraction records, the work-graph trio of a programme | `Ops/<skill-or-programme>/` |
+| A skill's append-only journal | `Ops/<skill>-log.md` |
+| A current-state report, overwritten on each run | `Ops/<report>.md`, with `generated_at` in frontmatter so its freshness shows the job that writes it is alive |
+| Agent runtime state | `<Agent>/` |
+| Workstation setup note (fleet) | `Workstations/Setup/` |
+
+A work graph lives with the project it describes, never here: its `derive:` block resolves sources relative to the state file.
+
+## Agent folders
+
+{{AGENT_UNIVERSES}}
+
+Agent folders are runtime data. Do not hand-edit unless triaging; the next tick may overwrite. Give every new output folder a row in the agent's table, with a retention window, before the job that writes it goes live. Do not re-create a folder that a table marks deleted.
+
+## Sessions
+
+Session notes file flat at `Sessions/` root, one note per session, `YYYY-MM-DD <slug>.md`, with the first eight characters of the session id appended when the name is taken that day. The `agent:` field discriminates the source (`claude-code`, `codex`, `cmux`, and whatever else you run); any dashboard over the folder groups on it. `Sessions/Handoffs/` holds pickup prompts and `Sessions/Archive/` older notes and retired working material.
+
+Standard session frontmatter:
+
+```yaml
+---
+categories:
+  - "[[Sessions]]"
+type: "[[Sessions]]"
+agent: claude-code
+model: <model id>
+date: YYYY-MM-DD
+status: in-progress
+ended: YYYY-MM-DD HH:MM
+workspace_name: "<name>"
+workspace_id: "<uuid>"
+goal: |
+  <one-paragraph goal>
+definition_of_done:
+related:
+  - "[[Sessions]]"
+created: YYYY-MM-DD
+---
+```
+
+### Session `status:` is a closed vocabulary
+
+A dashboard groups on the literal string, so a value outside this set gets its own one-off heading and the note is effectively lost.
+
+`queued` → `in-progress` → `review` → `done`, plus `blocked` (waiting on a human or an external event) and `failed` (ended without achieving its goal). Six values, nothing else.
+
+- **Lowercase and hyphenated, never quoted.** `status: in-progress`. Quoting defeats tooling that matches on the bare value.
+- **`done` means off the board.** When closing a session whose outcome was never recorded, say so in `## Outcome` rather than letting `done` imply the work shipped.
+- **Do not normalise `failed` to `done`.** It carries information `done` destroys.
+
+## Audits
+
+Per-agent audits sit under `Audits/<agent>/`; cross-agent synthesis notes sit at `Audits/` root; a large historical sweep gets its own dated folder such as `Audits/YYYY-MM-DD restructure sweep/`. Audit files keep incident evidence, restructure notes and retrospectives indefinitely.
+
+## Ops
+
+Evidence and reports written by skills. Three kinds live here: append-only journals, one per skill family (`<family>-log.md`); current-state reports overwritten on each run; and artefact corpora a skill produces about its own build, each under `Ops/<name>/`. Operations and projects vaults hold their own subject matter, while a skill's engineering evidence lands here.
+
+## Secrets
+
+{{SECRETS_DIR_DESCRIPTION}}
+
+Master credentials never sit inline anywhere in this vault. Agents read entries through a secrets-CLI helper, never by parsing markdown.
+
+## Filing rules
+
+- **YYYY-MM-DD dates everywhere** — filenames, frontmatter, directory names
+- **Lowercase property keys**, plural for lists, snake_case for multi-word keys
+- **No wikilinks to other vaults** — reference other-vault files by relative description, because paths change
+- **Auto-generated index files** are never hand-edited. Edit the canonical source and rerun the generator.
+
+## Property standards
+
+| Property | Type | Usage |
+|----------|------|-------|
+| `agent` | text | which agent or host wrote this file |
+| `status` | text | the closed session vocabulary above; free text on other note types |
+| `created` | date | YYYY-MM-DD |
+| `date` | date | the date the content relates to |
+| `generated_at` | datetime | on a current-state report, the run that wrote it |
+| `workspace_id` | text | cmux workspace UUID |
+| `workspace_name` | text | cmux workspace name |
+
+Only keys are constrained; values keep normal casing, except session `status:`.
+
+## Retention
+
+Agents vaults accumulate state and need periodic cleanup. Give every new output folder its own row.
+
+| Path pattern | Retention |
+|--------------|-----------|
+| `Sessions/*.md` with `status: done` or `failed` | 30 days → `Sessions/Archive/` |
+| `Audits/**` | indefinite |
+| `Ops/<skill>-log.md` | indefinite |
+| `Ops/<report>.md` | superseded in place |
+| `Ops/<name>/` corpora | until the work they describe is retired |
+| `<Agent>/**` | per the agent's own table |
+
+## Boundary rule
+
+Agents write freely to their own folders in this vault. Writes to **other** vaults need explicit cross-vault approval through the H0 primitive; agents never write across a vault boundary directly.
+
+## Maintenance entrypoints
+
+| Command | Behaviour on this vault |
+|---------|-------------------------|
+| Sweep | The full pipeline: reconcile sessions, audit filing, apply retention |
+| Organise | Filing audit against the vault-root rule and the where-things-go table |
+| Reconcile | Close session notes whose workspace is gone, and check agent health |
+
+## Vault log
+
+`log.md` is the append-only operational log for structural changes to this vault. Agents log their own runs to their own `<Agent>/ops/` or `<Agent>/sessions/` folders.
+
+## QMD
+
+This vault is {{SEARCH_INDEXED_DESCRIPTION}}.
+
+## Editing files externally
+
+Most content here is written by agents. To hand-edit:
+
+```bash
+osascript -e 'quit app "Obsidian"' && sleep 2
+rm -f ".obsidian/workspace.json" ".obsidian/workspace-mobile.json"
+# ... make edits ...
+open -a Obsidian
+```
+
+Files under agent folders may be overwritten on the next tick.
+
+<!-- kepano-ops:begin -->
+
+## Kepano knowledge rules (agents-vault pointer)
+
+If you keep one canonical copy of these rules elsewhere and sync it into each vault, the sentinel comments mark the managed region and edits inside the pair are overwritten on the next sync. Otherwise treat this block as yours to edit.
+
+Agents vaults are runtime substrate: session logs, ops state and queues. Their local standards cover the property and retention rules needed in this vault.
+
+- **Rules that apply when writing notes in this vault** — YAML property naming (lowercase snake_case keys), `YYYY-MM-DD` dates everywhere, plural keys for lists / singular for single values — are stated in this vault's own **Property Standards** section above. That section is the operative reference.
+- **The full universal canon** — categories against folders, wikilink conventions, the standard-property and deprecated-property tables, the rating scale, HTML in notes — is carried in the personal and operations vault templates in this skill. An operational vault does not need it loaded every session, so read it there on demand.
+
+<!-- kepano-ops:end -->

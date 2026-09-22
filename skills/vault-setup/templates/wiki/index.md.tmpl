@@ -1,0 +1,61 @@
+---
+title: {{WIKI_NAME}} Corpus Index
+type: index
+created: {{CREATED}}
+updated: {{CREATED}}
+auto_maintained: true
+search_collection: {{SEARCH_COLLECTION}}
+categories:
+  - "[[Index]]"
+---
+
+# {{WIKI_NAME}} Corpus Index
+
+Starting map for the {{WIKI_NAME}} Karpathy-pattern wiki. Layout: `raw/` for source material, wiki folders (`Concepts/`, `People/`, `Books/`, `00-Hubs/`, `Routes/`{{ADDITIONAL_WIKI_FOLDERS_INLINE}}) for LLM-curated knowledge. Read `schema.md` before ingesting or restructuring. Every row below carries claim, source and use (schema 4 index entry contract) so a reader judges relevance without opening the page.
+
+## Books (wiki layer)
+
+| page | claim | source | use | confidence |
+|---|---|---|---|---|
+| *(populates on first ingestion)* | | | | |
+
+## Concept pages
+
+| page | claim | source | use | confidence |
+|---|---|---|---|---|
+| *(populates on first ingestion)* | | | | |
+
+## People pages
+
+| page | claim | source | use |
+|---|---|---|---|
+| *(populates on first ingestion)* | | | |
+
+## Hubs
+
+See `00-Hubs/` — hub pages grouping Concepts by sub-theme.
+
+## Routes
+
+See `Routes/` — audit checklists pairing problem framings with Concepts.
+{{ADDITIONAL_WIKI_FOLDERS_INDEX_SECTIONS}}
+
+## Raw layer
+
+```
+raw/
+├── Articles/                              web clippings, transcripts, blog posts
+├── Books/                                 one subfolder per book (created on first ingest)
+├── images/                                PDF-extracted figures (referenced from chapter markdowns)
+└── _inbox/                                drop new sources here
+```
+
+## Retrieval order
+
+1. Scoped ranked search against the `{{SEARCH_COLLECTION}}` collection alone; confirm every returned path starts with `{{SEARCH_COLLECTION}}/`. Read the top three to five pages, Concept pages first.
+2. Read this index for the neighbours the query missed; the claim, source and use cells say which pages to open.
+3. On the chosen Concept page, read `## Source evidence` to find which raw chapters back the claim and which challenge it.
+4. Read the relevant raw chapters under `raw/Books/<Book>/` for direct quotes and dated episodes.
+5. Open `raw/images/` files when a chapter references a diagram.
+6. Use `Routes/` for audit sequence and output shape.
+7. Label coverage limits for current facts, valuation, legal, security, safety-critical, and current AI capability questions. When QMD was unavailable and step 1 fell back to this index, say so in the output.

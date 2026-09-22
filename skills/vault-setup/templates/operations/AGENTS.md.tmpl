@@ -1,0 +1,376 @@
+---
+vault_type: operations
+search_collection: {{SEARCH_COLLECTION}}
+created: {{CREATED}}
+---
+
+# Obsidian Vault: {{VAULT_NAME}}
+
+## Operations Context
+
+**Owner**: {{OWNER}}
+**Role**: {{ROLE}}
+**Firm**: {{FIRM}}
+**Coverage**: {{COVERAGE}}
+
+This vault holds how the practice runs: propositions, methods, meeting records, team operations and internal delivery.
+
+### The Boundary Test
+
+> **Would this note be useful if I left {{FIRM}} tomorrow?**
+> - Yes, as professional IP → **this vault**
+> - Yes, as personal insight → personal vault
+> - No, it's client-specific → project vault
+
+### When to Create a Separate Project Vault
+
+> Will this generate 50+ interlinked notes with its own terminology, stakeholder universe, and confidential data?
+> - **Yes** → a new projects vault (use the `vault-setup` skill)
+> - **No** → `Projects/[ClientName]/` under this vault
+
+## Wikilink Conventions (Kepano Method)
+
+When creating or editing notes, add wikilinks following these rules:
+
+1. **First occurrence only** — link the first mention of a term in the body text, not every instance
+2. **Skip zones** — never add wikilinks inside:
+   - YAML frontmatter (between `---` markers)
+   - Code blocks (between `` ``` `` markers)
+   - Headings (lines starting with `#`)
+   - URLs
+   - Existing wikilinks or markdown links
+3. **Whole word matching** — don't link substrings (e.g., don't link "Integration" inside "Disintegration")
+4. **People** — use display name format: `[[Full Name|First Name]]`
+5. **Don't self-link** — a note should not wikilink to itself
+6. **Link targets** — link to other notes in this vault: methodologies, mental models, people, skills, concepts. Don't link to other vaults.
+7. **Longest match first** — when two targets overlap (e.g., "Total Cost of Ownership" vs "Cost"), prefer the longer match
+
+## Progressive Disclosure
+
+Before reading full files:
+
+1. Check frontmatter `description` fields
+2. Scan headings (`grep -n "^#" file.md`)
+3. Read full content only after confirming relevance
+
+## Folder Structure
+
+| Location | What belongs here |
+|----------|-------------------|
+| **Methodologies/** | Frameworks, playbooks, checklists, training materials — "what we know" |
+| **Go to Market/** | Propositions, proposals, thought leadership, events — "how we sell" |
+| **Operations/** | Team, recruitment, training, financials — "how we run" |
+| **Technology/** | Skills, workflows, and technology strategy — "how we evolve" |
+| **Mental Models/** | First-class IP — strategic frameworks and cognitive models used in client delivery and skill development |
+| **Projects/** | Small/medium engagements (< 50 notes). Per-client subfolders |
+| **People/** | Professional network — clients, colleagues, advisors |
+| **Clippings/** | Content by OTHERS (professional or industry). Subfolders: `Articles/`, `Books/`, `PDFs/`, `Podcasts/`, `Tweets/`, `Youtube/` |
+| **References/** | External frameworks, benchmarks, PDFs, third-party IP documents (NOT personal mental models — those live in `Mental Models/`) |
+| **Templates/** | Note templates. Bases go in `Templates/Bases/` |
+| **Inbox/** | Drop zone for unprocessed content. `Inbox/Staging/` holds raw source files (PDFs, PPTXs, DOCXs) |
+| **Attachments/** | Images and files |
+| **Archive/** | Completed or archived material |
+
+### Methodology Subfolders
+
+Configured at scaffold time per the practice's service lines:
+
+{{METHODOLOGY_SUBFOLDERS}}
+
+### Go to Market Subfolders
+
+| Subfolder | Contents |
+|-----------|----------|
+| `Go to Market/Propositions/` | Service offerings, sector propositions |
+| `Go to Market/Proposals/` | Example scopes, pitches, live opportunities |
+| `Go to Market/Thought Leadership/` | Published or draft TL content, editorial pipeline |
+| `Go to Market/Events/` | Conferences, presentations, speaking |
+
+### Technology Subfolders
+
+| Subfolder | Contents |
+|-----------|----------|
+| `Technology/Skills/` | Claude Code skill development notes, red-testing logs |
+| `Technology/Workflows/` | Automation patterns, agent playbooks |
+| `Technology/Strategy/` | Practice-area technology strategy, sector AI analysis |
+
+### Clippings Subfolders
+
+| Subfolder | Content Type |
+|-----------|-------------|
+| `Clippings/Articles/` | Industry articles, analyst reports, competitor research |
+| `Clippings/Books/` | Book notes, chapter summaries |
+| `Clippings/PDFs/` | Clipped PDFs, whitepapers, industry reports |
+| `Clippings/Podcasts/` | Podcast notes and transcripts |
+| `Clippings/Tweets/` | Social media clips, LinkedIn posts |
+| `Clippings/Youtube/` | Video notes, conference recordings |
+
+### Categories vs Folders
+
+- `[[Clippings]]` category = file belongs in `Clippings/` folder (pick subfolder by type)
+- `[[Inbox]]` category = needs processing (file stays where it is until processed)
+- Other categories (`[[Methodologies]]`, `[[Go to Market]]`, etc.) = organisational, file lives in corresponding folder
+
+### Quick Filing Decision Tree
+
+1. Is it an unprocessed source file (PDF, PPTX, DOCX)? → `Inbox/Staging/` until processed
+2. Did someone else write it (article, report, post)? → `Clippings/` (pick subfolder by type)
+3. Is it a framework, playbook, or training doc? → `Methodologies/` (pick service line)
+4. Is it about selling or marketing the practice? → `Go to Market/` (pick subfolder)
+5. Is it about running the team or practice? → `Operations/`
+6. Is it about technology, skills, or automation? → `Technology/` (pick subfolder)
+7. Is it a specific client project (< 50 notes)? → `Projects/[ClientName]/`
+8. Is it about a person in the professional network? → `People/`
+9. Is it a strategic framework or cognitive model used in deal thinking? → `Mental Models/`
+10. Is it an external reference doc (third-party, benchmark, industry IP)? → `References/`
+
+## Naming Conventions
+
+- **Dated content** (date is part of identity): `YYYY-MM-DD Title.md` — meeting notes, event or conference notes, dated proposal versions, daily notes
+- **Everything else**: descriptive name, **no date prefix**. Reference material, position papers, methodology notes, proposals-in-progress, vault plans, strategy essays all use clean titles. Rely on frontmatter `created:` and the sort configuration rather than filenames for ordering
+- **Templates**: `[Type] Template.md` (e.g., `Methodology Note Template.md`)
+- **People**: `Full Name.md`
+- **Projects**: `Projects/[ClientName]/` subfolder
+
+## Browsing & Sort
+
+Obsidian's filesystem-ctime sort is unreliable on vaults that have been copied or iCloud-synced (creation time resets). Sort via frontmatter `created:` instead:
+
+- Primary surface: a root-level Base view (e.g. `00 All Notes.base`) sorted by `created` descending
+- File explorer fallback: use "Modified time (new to old)"
+- Do NOT add date prefixes to filenames as a sort workaround. Fix sort at the source.
+
+## Property Standards
+
+### Naming Rules
+
+- **Lowercase property keys are mandatory**: `source:` not `Source:`, `created:` not `CREATED:`
+- **Never uppercase YAML property keys**: no `TITLE:`, `SOURCE:`, `Created:`, or `PROJECT_STATUS:`
+- **Lowercase snake_case for multi-word keys**: `service_line`, `methodology_type`, `proposal_status`
+- **Only property keys are constrained**: values may use normal casing
+- **Before saving frontmatter**: scan keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case
+- **Plural for lists**: `categories:`, `topics:`, `tags:`
+- **Singular for single values**: `author:`, `rating:`
+- **Underscores for multi-word keys**: `service_line`, `methodology_type`
+
+### Standard Properties (all files)
+
+```yaml
+categories: ["[[Methodologies]]"]
+topics: ["[[Transfer Pricing]]", "[[Documentation]]"]
+service_line: "[[Transfer Pricing]]"
+description: "One-sentence summary"
+created: YYYY-MM-DD
+status: draft | active | archived
+```
+
+### Methodology-Specific Properties
+
+```yaml
+methodology_type: framework | playbook | checklist | training
+skill_link: <skill-name>          # connected Claude Code skill, if any
+maturity: developing | tested | proven
+```
+
+### Go to Market Properties
+
+```yaml
+client: "[[Client Name]]"
+sector: "[[Sector]]"
+proposal_status: draft | submitted | won | lost
+fee_estimate: USD X
+```
+
+### People Properties
+
+```yaml
+tags: [contact]
+name: Full Name
+role: Title
+entity: Organisation
+email: address
+location: City
+relationship: client | colleague | advisor | co-advisor
+```
+
+### Project Properties
+
+```yaml
+project: "Project Name"
+client: "[[Client Name]]"
+sector: "[[Sector]]"
+project_status: active | completed | on-hold
+start_date: YYYY-MM-DD
+end_date: YYYY-MM-DD
+```
+
+## Ingestion Instructions
+
+### Inbox Workflow
+
+1. **Drop source files** into `Inbox/Staging/` (PDFs, PPTXs, DOCXs, or raw text)
+2. **Tell the assistant the theme**: e.g., "process the Transfer Pricing training materials in Inbox/Staging/"
+3. **Per document**: identify type → apply template → extract content → set frontmatter → file to correct location → add wikilinks → set status
+4. **Move source files** from `Inbox/Staging/` to `Attachments/` after processing
+5. **Flag for review** — notes needing human review get `status: draft`
+
+### Batch Ingestion Protocol
+
+For large ingestion sessions:
+
+1. Scope the batch — one service line or topic per session
+2. List contents of `Inbox/Staging/` and confirm processing order
+3. Process sequentially — each document gets its own note
+4. Create a hub note for the batch (e.g., `<Topic> Index.md`) linking all processed notes
+5. Cross-reference between notes within the batch
+6. Move source files from `Inbox/Staging/` to `Attachments/` after processing
+
+## Slash Commands
+
+| Command | Description |
+|---------|-------------|
+| Capture | Process inbox items |
+| Organise | Filing audit, frontmatter harmonisation, retention |
+| Review | Backward pass over method notes against newer evidence |
+| Sweep | The full maintenance pipeline, on a cadence |
+
+## Vault Log
+
+`log.md` in vault root is an append-only operational log. Same format as the personal-vault log: `## [YYYY-MM-DD] operation | summary` + detail lines.
+
+## Cross-Vault References
+
+- **Personal vault**: career reflections and personal notes
+- **Projects vaults**: client-specific data — this vault holds the reusable methodology patterns extracted from projects
+- **Claude Code skills**: execution tools — this vault holds the reference knowledge that skills operationalise
+
+## Editing Files Externally
+
+Obsidian caches open files in memory and reverts external changes. For bulk edits:
+
+```bash
+osascript -e 'quit app "Obsidian"' && sleep 2
+rm -f ".obsidian/workspace.json" ".obsidian/workspace-mobile.json"
+# ... make edits ...
+open -a Obsidian
+```
+
+<!-- kepano:begin -->
+
+## Kepano knowledge rules
+
+Universal note-keeping rules. If you keep one canonical copy of these rules elsewhere and sync it into each vault, the sentinel comments mark the managed region and edits inside the pair are overwritten on the next sync. Otherwise treat this block as yours to edit.
+
+### Categories vs folders
+
+- Categories drive filtering via Bases; folders carry only the coarse split between own writing, content by others, and external references.
+- `[[Clippings]]` category ↔ `Clippings/` folder (loose coupling — categories sort, folders contain).
+- `[[Inbox]]` category = "needs processing". File stays where it is until processed.
+- Personal-writing categories (`[[Essays]]`, `[[Thoughts]]`, `[[Journals]]`) live at vault root.
+
+### Wikilink conventions
+
+When creating or editing notes, add wikilinks following these rules:
+
+1. **First occurrence only** — link the first mention of a term in the body text, not every instance.
+2. **Skip zones** — never add wikilinks inside:
+   - YAML frontmatter (between `---` markers)
+   - Code blocks (between `` ``` `` markers)
+   - Headings (lines starting with `#`)
+   - URLs
+   - Existing wikilinks or markdown links
+3. **Whole word matching** — don't link substrings (e.g., don't link "Integration" inside "Disintegration").
+4. **People** — use display name format: `[[Full Name|First Name]]`.
+5. **Don't self-link** — a note should not wikilink to itself.
+6. **Longest match first** — when two targets overlap (e.g., "Total Cost of Ownership" vs "Cost"), prefer the longer match.
+7. **What earns a link** — a passing mention qualifies: parenthetical lists, quote attributions and yardstick uses ("the next Amazon") all link on first mention. Three disqualifiers only: **sense mismatch** (the surface must carry the sense the target note carries — common-noun titles link the concept under discussion, while instances of it stay bare); **fragment of a longer term** (a phrase naming a different entity keeps its parts bare: "leveraged finance", "Carolingian Renaissance"; a compound whose head concept IS the target links: "the finance industry", "AI datacenters"); **rhetorical stand-in** (aphorism, personification, idiom — "History does not punish optimism" stays bare). Quotation marks alone disqualify nothing.
+
+### Property standards
+
+#### Naming rules
+
+- **Lowercase property keys are mandatory**: `source:` not `Source:`, `created:` not `CREATED:`.
+- **Never uppercase YAML property keys**: no `TITLE:`, `SOURCE:`, `Created:`, or `kindle-bookId:` unless preserving an external import field intentionally.
+- **Lowercase snake_case for multi-word keys**: `prep_time`, `cost_tier`, `weight_g`, not `prepTime`, `Prep Time`, `prep-time`, or `PREP_TIME`.
+- **Only property keys are constrained**: values may use normal casing (e.g. `status: "In Progress"`, `region: "North America"`).
+- **Plural for lists**: `categories:`, `topics:`, `tags:`.
+- **Singular for single values**: `author:`, `rating:`.
+- **Before saving frontmatter**: scan the keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case.
+
+#### Standard properties
+
+| Property | Type | Usage |
+|----------|------|-------|
+| `categories` | list | Top-level organisation (wikilinks) |
+| `topics` | list | Thematic tags (wikilinks) |
+| `author` | single or list | Creator (wikilink) |
+| `people` | list | Related people (wikilinks) |
+| `source` | single | Origin reference (wikilink) |
+| `type` | single | Content type (wikilink, plural: `[[Books]]`) |
+| `genre` | single or list | Media genre (wikilink) |
+| `description` | text | One-sentence summary of the note |
+| `notes` | text | Additional commentary or observations |
+| `rating` | number | 1-7 scale |
+| `created` | date | YYYY-MM-DD |
+| `published` | date | YYYY-MM-DD |
+| `date` | date | Event or occurrence date |
+| `last_reviewed` | datetime | Last reviewed or updated date |
+| `modified` | date | Last modified date |
+| `status` | text | e.g., `published`, `draft` |
+| `project` | text | Project name |
+
+#### Cross-category reusability
+
+- `genre` shared across Books, Movies, Shows, Podcasts.
+- `author` shared across Books, Articles, Quotes.
+- `type` uses wikilinks: `type: "[[Books]]"`.
+
+#### Deprecated property names
+
+| Old name | Use instead | Reason |
+|----------|-------------|--------|
+| `category` | `categories` | Non-standard singular form |
+| `summary` | `description` | Standardised Feb 2026 |
+| `comment` | `notes` | Standardised Feb 2026 |
+| `colour` | `colours` | Standardised to plural |
+| `resolution` | `resolution_mp` | Explicit unit suffix |
+| `weight` | `weight_g` | Explicit unit suffix |
+| `time` | `prep_time` | Vague name |
+| `last` | `last_reviewed` | Vague name |
+| `cost-tier` | `cost_tier` | Hyphen → underscore |
+| `secondary_status` | `artist_subtype` | Clearer name |
+| `person` | — | Redundant with filename |
+| `loc` | `location` | Unused abbreviation |
+| `project name` | `project` | No spaces in property names |
+| `maker` | `brand` | Standardised |
+| `attendees` | `people` | Merged into standard property |
+| `role` | `roles` | Standardised to plural |
+
+### Naming conventions
+
+- **Dated content** (date IS part of identity): `YYYY-MM-DD Title.md` — meeting notes, event or conference notes, dated proposal versions, daily notes.
+- **Everything else**: descriptive name, **no date prefix**. Sort via frontmatter `created:` and the vault's sort configuration rather than filenames.
+- **Templates**: `[Type] Template.md` (e.g., `Methodology Note Template.md`).
+- **People**: `Full Name.md`.
+- **Clippings**: `Clean Title.md` — **no date prefix**. Capture the date in `published` (priority: `published` > content-inferred > URL path date > `created`) and sort/filter via frontmatter, not the filename. Clean titles: remove site names, author attribution, URL artefacts, ticker symbols. Exception: annual shareholder letters keep the year (e.g. `1999 Berkshire Hathaway Shareholder Letter.md`).
+
+### Dates — YYYY-MM-DD everywhere
+
+- Filenames, frontmatter, directory names — one format.
+- ISO-8601 ordering means filesystem-collation matches chronological order.
+- Avoid locale-specific date formats (no `MM/DD/YYYY`, no `5 May 2026`).
+
+### Rating scale
+
+- Ratings use the 7-point scale: `1` through `7`.
+- Why 7: middle is `4`, leaves `2`/`3` and `5`/`6` for forced discrimination on either side. Five-point scales collapse to "good / OK / bad"; ten-point scales lose precision via false granularity.
+
+### HTML in notes
+
+- Obsidian renders inline HTML in reading view and live preview.
+- **Inline `style=""` only** — `<style>` tags and CSS class-based styling are ignored. Put all styling in inline `style=""` attributes with hardcoded hex values.
+- Obsidian's own CSS variables (`var(--text-normal)`, `var(--background-primary)`, etc.) work inside inline styles.
+- SVG with inline styles also renders.
+- CSS snippets in `.obsidian/snippets/` style Obsidian's UI chrome, not user HTML in notes.
+
+<!-- kepano:end -->

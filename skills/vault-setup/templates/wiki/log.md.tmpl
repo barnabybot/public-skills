@@ -1,0 +1,25 @@
+---
+type: operational-log
+created: {{CREATED}}
+append_only: true
+---
+
+# {{WIKI_NAME}} wiki — operational log
+
+## {{CREATED}} — wiki-vault scaffolded
+
+- Created by the `vault-setup` skill (wiki workflow)
+- Location: {{LOCATION}}
+- Domain: {{DOMAIN}}
+- Ingestion cadence: {{INGEST_CADENCE}}
+- Lint cadence: {{LINT_CADENCE}}
+- Wrote AGENTS.md (vault_type: wiki, search_collection: {{SEARCH_COLLECTION}})
+- Wrote schema.md (schema_version 4: page taxonomy, ingestion rules, evidence roles, confidence tests, page status, index entry contract, log entry shape, lint criteria)
+- Wrote index.md (empty catalog — populates on first ingestion)
+- Created raw/{_inbox,Articles,Books,images}
+- Created Concepts/, People/, Books/, 00-Hubs/, Routes/{{ADDITIONAL_WIKI_FOLDERS_LOG}}
+- Seed Concept pages: {{SEED_CONCEPTS_COUNT}}
+- Seed People pages: {{SEED_PEOPLE_COUNT}}
+- Search collection registration: {{SEARCH_REGISTERED}}
+
+No source ingestion in this pass. The wiki pages are stubs awaiting the first ingest. Drop sources into `raw/_inbox/` to begin. Every later entry follows the log-entry shape in `schema.md`.

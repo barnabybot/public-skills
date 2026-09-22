@@ -1,0 +1,377 @@
+---
+vault_type: projects
+search_collection: {{SEARCH_COLLECTION}}
+created: {{CREATED}}
+project_type: {{PROJECT_TYPE}}
+project_lead: {{PROJECT_LEAD}}
+start_date: {{START_DATE}}
+target_completion: {{TARGET_COMPLETION}}
+---
+
+# Obsidian Vault: {{VAULT_NAME}}
+
+## Project Context
+
+{{PROJECT_CONTEXT}}
+
+- **Sponsor**: {{SPONSOR_NAME}}
+- **Counterparty**: {{COUNTERPARTY_NAME}}
+- **Project type**: {{PROJECT_TYPE}}
+- **Project lead**: {{PROJECT_LEAD}}
+- **Start date**: {{START_DATE}}
+- **Target completion**: {{TARGET_COMPLETION}}
+
+## Lifecycle phases
+
+This vault is organised around three phases. Planning is a light setup phase anchored on the Scope of Work. The bulk of day-to-day knowledge work then happens inside Delivery (Meetings, Correspondence, Analysis, Working Files). Reporting holds outputs and close-out artefacts.
+
+| Phase | Folder | Hub | Anchor artefacts |
+|-------|--------|-----|------------------|
+| **1. Planning** | `Planning/` | [[Planning]] | Scope of Work, Team RACI, Session Schedule, Open Questions, Assumptions Log |
+| **2. Delivery** | `Delivery/` | [[Delivery]] | Analysis hubs, Meetings, Correspondence, Working Files |
+| **3. Reporting** | `Reporting/` | [[Reporting]] | Draft Report, Findings Log, Final Report, Debrief, Lessons Learned |
+
+Cross-phase content (People, Entities, Concepts, References, Deliverables, Attachments) lives at the vault root because it is read from every phase. Meetings, Correspondence and Analysis live under Delivery because that is where the bulk of work happens; they carry `phase:` frontmatter so the Dashboard can render per-phase cuts.
+
+## Project structure
+
+Analytical work is partitioned by **{{STRUCTURE_AXIS}}**:
+
+{{STRUCTURE_VALUES_LIST}}
+
+Workstream hubs live at `Delivery/Analysis/{{STRUCTURE_AXIS}}/<value>/<value>.md`.
+
+## Relevant skills
+
+| Surface | Skill | When to invoke |
+|---------|-------|----------------|
+| Context recovery | `recall` | Any phase - what was done yesterday, last week, or on a topic |
+| Session succession | `handoff` | Any phase - before a session runs out of context |
+| Voice check | `editorial-review` | Planning (scope) and Reporting (before sign-off) |
+
+Add your own rows. This table is short on purpose: it names the skills that
+apply to any project, and the ones specific to your work belong beside them.
+
+## Key stakeholders
+
+### Project team
+
+| Name | Role | Phase focus |
+|------|------|-------------|
+{{PROJECT_TEAM_TABLE}}
+
+### Sponsor ({{SPONSOR_NAME}})
+
+| Name | Role |
+|------|------|
+{{SPONSOR_STAKEHOLDERS_TABLE}}
+
+### Counterparty ({{COUNTERPARTY_NAME}})
+
+| Name | Role |
+|------|------|
+{{COUNTERPARTY_STAKEHOLDERS_TABLE}}
+
+### External parties
+
+{{EXTERNAL_PARTIES_LIST}}
+
+## Root Cockpit Documents
+
+| # | Document | Purpose |
+|---|----------|---------|
+| 00 | [[00 Start]] | Vault entry point — one-screen orientation |
+| 00 | [[00 To Do]] | Active task list (kanban) |
+| 01 | [[01 Dashboard]] | Phase RAG + workstream RAG + deliverable status |
+| 02 | [[02 Action Tracker]] | Cross-meeting action register |
+| 03 | [[03 Decision Log]] | Formal decisions (D01 onwards) |
+| 04 | [[04 Issues & Risks Log]] | Issues, risks, strategic blockers |
+
+## Folder Structure
+
+| Location | Contents |
+|----------|----------|
+| **Root cockpit** | `00 Start.md`, `00 To Do.md`, `01 Dashboard.md`, `02 Action Tracker.md`, `03 Decision Log.md`, `04 Issues & Risks Log.md`, `Project {{VAULT_NAME}}.md` |
+| **Planning/** | Phase 1 anchor artefacts — Scope of Work, Team RACI, Session Schedule, Execution Plan, Open Questions, Assumptions Log. See [[Planning]] |
+| **Delivery/** | Phase 2 working folder — see [[Delivery]]. Holds `Analysis/{{STRUCTURE_AXIS}}/`, `Meetings/` (site visits carry `type: site-visit`), `Correspondence/` and `Working Files/` |
+| **Reporting/** | Phase 3 outputs and close-out — Draft Report, Key Findings Overview, Findings Log, Review Notes, Final Report, Debrief, Lessons Learned. See [[Reporting]] |
+| **People/** | Stakeholder files — one per named person |
+| **Entities/** | Organisation profiles — the sponsor, a counterparty, any third party named in the work |
+| **Concepts/** | Project-specific concept definitions, code-names, key abbreviations |
+| **References/** | External entity profiles and third-party documents |
+| **Deliverables/** | Named output shells with `phase:` and `status:` frontmatter |
+| **Attachments/** | PDFs, images, source documents |
+| **Templates/** | Project-specific templates |
+| **Archive/** | Retired content |
+
+## Filing Rules
+
+Decision tree for where a new note belongs:
+
+1. Is it a phase-anchored artefact (Scope of Work, Draft Report, Debrief)? → Phase folder
+2. Is it a meeting note (including a site visit, a kickoff, a debrief, a Q&A session)? → `Delivery/Meetings/` with `phase:` and `type:` frontmatter
+3. Is it processed correspondence? → `Delivery/Correspondence/` with `phase:` frontmatter
+4. Is it a source file being worked on (a spreadsheet, an extract, an export)? → `Delivery/Working Files/`
+5. Is it a workstream-specific analytical note? → `Delivery/Analysis/{{STRUCTURE_AXIS}}/<value>/`
+6. Is it about a person? → `People/`
+7. Is it about an organisation? → `Entities/`
+8. Is it a definition or code-name? → `Concepts/`
+9. Is it an external reference document? → `References/`
+10. Is it a named deliverable? → `Deliverables/`
+
+## Key Abbreviations
+
+{{ABBREVIATIONS_TABLE}}
+
+## Naming Conventions
+
+- Meeting files: `YYYY-MM-DD Title.md` (site visits use `YYYY-MM-DD Site Visit - <location>.md` and carry `type: site-visit`)
+- Correspondence files: `YYYY-MM-DD Subject.md` (add the sender where the subject alone is ambiguous)
+- Workstream hub files: `<item>.md` (e.g. `Module 1 - Discovery.md`)
+- Phase hub files: `<Phase>.md` (e.g. `Planning.md`)
+
+## YAML Properties
+
+### Property Key Rules
+
+- **Lowercase property keys are mandatory**: `created:` not `Created:` or `CREATED:`
+- **Lowercase snake_case for multi-word keys**: `business_unit`, `rag_status`, `target_entity`
+- **Only property keys are constrained**: values may use normal casing
+- **Before saving frontmatter**: scan keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case
+
+### Meeting Notes
+
+```yaml
+---
+type: meeting | kickoff | workshop | site-visit | debrief | review
+date: YYYY-MM-DD
+time: "HH:MM"
+location:
+attendees: []
+topics: []
+phase: planning | delivery | reporting
+workstream:
+---
+```
+
+### Correspondence notes
+
+```yaml
+---
+type: "[[Correspondence]]"
+date: YYYY-MM-DD
+from:
+to: []
+cc: []
+subject:
+phase: planning | delivery | reporting
+workstream:
+---
+```
+
+### Workstream Hub Notes
+
+```yaml
+---
+categories:
+  - "[[Workstreams]]"
+type: "[[Workstream]]"
+workstream_id: "<ID>"
+{{STRUCTURE_AXIS_LOWERCASE}}: "[[<value>]]"
+status: "Not Started" | "Planning" | "Delivery" | "Reporting" | "Complete"
+rag_status: "Green" | "Amber" | "Red"
+lead: "[[Person]]"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+
+### Phase Hub Notes
+
+```yaml
+---
+categories:
+  - "[[Lifecycle]]"
+type: "[[Phase Hub]]"
+phase: planning | delivery | reporting
+status: "Not Started" | "Active" | "Complete"
+rag_status: "Green" | "Amber" | "Red"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+---
+```
+
+### Deliverables
+
+```yaml
+---
+categories:
+  - "[[Deliverables]]"
+type: "[[Deliverable]]"
+phase: planning | delivery | reporting
+status: planned | drafting | review | final | sent
+created: YYYY-MM-DD
+description: "<one sentence from scope of work>"
+---
+```
+
+### People
+
+```yaml
+---
+type: "[[People]]"
+organisation:
+role:
+email:
+phone:
+topics: []
+relationship: sponsor | counterparty | third-party | colleague
+created: YYYY-MM-DD
+---
+```
+
+## Correspondence processing rules
+
+1. **Extract contact details** (phone, title) from signatures.
+2. **Update People files** with any new contact information found.
+3. **Standardise the role or title** to the signature where it is more specific than what is on file.
+4. File the processed item under `Delivery/Correspondence/` with `phase:` frontmatter.
+
+## Vault log
+
+`log.md` at the vault root is an append-only runtime log. Every skill that
+mutates the vault appends an entry after finishing its work.
+
+## Boundary rules
+
+- **This vault may hold confidential material.** Do not write to other vaults
+  from inside it without explicit approval, and check what leaves it.
+- Reusable patterns that generalise are extracted into an operations vault
+  after the project closes. The project vault then stops growing and becomes a
+  record.
+
+## Editing files outside the editor
+
+Obsidian caches open files in memory, so a bulk edit made on disk while it is
+running can be overwritten when it next writes. Quit it first, make the edits,
+then reopen.
+
+<!-- kepano:begin -->
+
+## Kepano knowledge rules
+
+Universal note-keeping rules. If you keep one canonical copy of these rules elsewhere and sync it into each vault, the sentinel comments mark the managed region and edits inside the pair are overwritten on the next sync. Otherwise treat this block as yours to edit.
+
+### Categories vs folders
+
+- Categories drive filtering via Bases; folders carry only the coarse split between own writing, content by others, and external references.
+- `[[Clippings]]` category ↔ `Clippings/` folder (loose coupling — categories sort, folders contain).
+- `[[Inbox]]` category = "needs processing". File stays where it is until processed.
+- Personal-writing categories (`[[Essays]]`, `[[Thoughts]]`, `[[Journals]]`) live at vault root.
+
+### Wikilink conventions
+
+When creating or editing notes, add wikilinks following these rules:
+
+1. **First occurrence only** — link the first mention of a term in the body text, not every instance.
+2. **Skip zones** — never add wikilinks inside:
+   - YAML frontmatter (between `---` markers)
+   - Code blocks (between `` ``` `` markers)
+   - Headings (lines starting with `#`)
+   - URLs
+   - Existing wikilinks or markdown links
+3. **Whole word matching** — don't link substrings (e.g., don't link "Integration" inside "Disintegration").
+4. **People** — use display name format: `[[Full Name|First Name]]`.
+5. **Don't self-link** — a note should not wikilink to itself.
+6. **Longest match first** — when two targets overlap (e.g., "Total Cost of Ownership" vs "Cost"), prefer the longer match.
+7. **What earns a link** — a passing mention qualifies: parenthetical lists, quote attributions and yardstick uses ("the next Amazon") all link on first mention. Three disqualifiers only: **sense mismatch** (the surface must carry the sense the target note carries — common-noun titles link the concept under discussion, while instances of it stay bare); **fragment of a longer term** (a phrase naming a different entity keeps its parts bare: "leveraged finance", "Carolingian Renaissance"; a compound whose head concept IS the target links: "the finance industry", "AI datacenters"); **rhetorical stand-in** (aphorism, personification, idiom — "History does not punish optimism" stays bare). Quotation marks alone disqualify nothing.
+
+### Property standards
+
+#### Naming rules
+
+- **Lowercase property keys are mandatory**: `source:` not `Source:`, `created:` not `CREATED:`.
+- **Never uppercase YAML property keys**: no `TITLE:`, `SOURCE:`, `Created:`, or `kindle-bookId:` unless preserving an external import field intentionally.
+- **Lowercase snake_case for multi-word keys**: `prep_time`, `cost_tier`, `weight_g`, not `prepTime`, `Prep Time`, `prep-time`, or `PREP_TIME`.
+- **Only property keys are constrained**: values may use normal casing (e.g. `status: "In Progress"`, `region: "North America"`).
+- **Plural for lists**: `categories:`, `topics:`, `tags:`.
+- **Singular for single values**: `author:`, `rating:`.
+- **Before saving frontmatter**: scan the keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case.
+
+#### Standard properties
+
+| Property | Type | Usage |
+|----------|------|-------|
+| `categories` | list | Top-level organisation (wikilinks) |
+| `topics` | list | Thematic tags (wikilinks) |
+| `author` | single or list | Creator (wikilink) |
+| `people` | list | Related people (wikilinks) |
+| `source` | single | Origin reference (wikilink) |
+| `type` | single | Content type (wikilink, plural: `[[Books]]`) |
+| `genre` | single or list | Media genre (wikilink) |
+| `description` | text | One-sentence summary of the note |
+| `notes` | text | Additional commentary or observations |
+| `rating` | number | 1-7 scale |
+| `created` | date | YYYY-MM-DD |
+| `published` | date | YYYY-MM-DD |
+| `date` | date | Event or occurrence date |
+| `last_reviewed` | datetime | Last reviewed or updated date |
+| `modified` | date | Last modified date |
+| `status` | text | e.g., `published`, `draft` |
+| `project` | text | Project name |
+
+#### Cross-category reusability
+
+- `genre` shared across Books, Movies, Shows, Podcasts.
+- `author` shared across Books, Articles, Quotes.
+- `type` uses wikilinks: `type: "[[Books]]"`.
+
+#### Deprecated property names
+
+| Old name | Use instead | Reason |
+|----------|-------------|--------|
+| `category` | `categories` | Non-standard singular form |
+| `summary` | `description` | Standardised Feb 2026 |
+| `comment` | `notes` | Standardised Feb 2026 |
+| `colour` | `colours` | Standardised to plural |
+| `resolution` | `resolution_mp` | Explicit unit suffix |
+| `weight` | `weight_g` | Explicit unit suffix |
+| `time` | `prep_time` | Vague name |
+| `last` | `last_reviewed` | Vague name |
+| `cost-tier` | `cost_tier` | Hyphen → underscore |
+| `secondary_status` | `artist_subtype` | Clearer name |
+| `person` | — | Redundant with filename |
+| `loc` | `location` | Unused abbreviation |
+| `project name` | `project` | No spaces in property names |
+| `maker` | `brand` | Standardised |
+| `attendees` | `people` | Merged into standard property |
+| `role` | `roles` | Standardised to plural |
+
+### Naming conventions
+
+- **Dated content** (date IS part of identity): `YYYY-MM-DD Title.md` — meeting notes, event or conference notes, dated proposal versions, daily notes.
+- **Everything else**: descriptive name, **no date prefix**. Sort via frontmatter `created:` and the vault's sort configuration rather than filenames.
+- **Templates**: `[Type] Template.md` (e.g., `Methodology Note Template.md`).
+- **People**: `Full Name.md`.
+- **Clippings**: `Clean Title.md` — **no date prefix**. Capture the date in `published` (priority: `published` > content-inferred > URL path date > `created`) and sort/filter via frontmatter, not the filename. Clean titles: remove site names, author attribution, URL artefacts, ticker symbols. Exception: annual shareholder letters keep the year (e.g. `1999 Berkshire Hathaway Shareholder Letter.md`).
+
+### Dates — YYYY-MM-DD everywhere
+
+- Filenames, frontmatter, directory names — one format.
+- ISO-8601 ordering means filesystem-collation matches chronological order.
+- Avoid locale-specific date formats (no `MM/DD/YYYY`, no `5 May 2026`).
+
+### Rating scale
+
+- Ratings use the 7-point scale: `1` through `7`.
+- Why 7: middle is `4`, leaves `2`/`3` and `5`/`6` for forced discrimination on either side. Five-point scales collapse to "good / OK / bad"; ten-point scales lose precision via false granularity.
+
+### HTML in notes
+
+- Obsidian renders inline HTML in reading view and live preview.
+- **Inline `style=""` only** — `<style>` tags and CSS class-based styling are ignored. Put all styling in inline `style=""` attributes with hardcoded hex values.
+- Obsidian's own CSS variables (`var(--text-normal)`, `var(--background-primary)`, etc.) work inside inline styles.
+- SVG with inline styles also renders.
+- CSS snippets in `.obsidian/snippets/` style Obsidian's UI chrome, not user HTML in notes.
+
+<!-- kepano:end -->

@@ -1,0 +1,208 @@
+---
+vault_type: wiki
+search_collection: {{SEARCH_COLLECTION}}
+created: {{CREATED}}
+last_modified: {{CREATED}}
+wiki_pattern: karpathy-llm-wiki
+schema: schema.md
+---
+
+# Obsidian Vault: {{WIKI_NAME}}
+
+{{DOMAIN_DESCRIPTION}}
+
+{{LOCATION_NOTE}}
+
+## Three layers
+
+Per Karpathy's pattern:
+
+| Layer | What it holds | Owner | Folder |
+|-------|---------------|-------|--------|
+| **Raw** | Source documents — markdown extractions from PDFs, EPUBs, transcripts, web articles. Raw format save for minimal formatting, light frontmatter, and Obsidian wikilinks. Immutable. | curator drops sources; LLM reads, never modifies | `raw/` |
+| **Wiki** | LLM-generated concept pages, people pages, book-summary pages, hub pages. All cross-references, syntheses, comparisons, retrieved-and-filed-back queries live here. | LLM owns entirely | `Concepts/`, `People/`, `Books/`, `00-Hubs/`, `Routes/`{{ADDITIONAL_WIKI_FOLDERS_ROW}} |
+| **Schema** | This file + `schema.md` + `index.md` + `log.md`. Tells the LLM how the wiki is structured and what conventions to follow. | curator and LLM co-evolve | vault root |
+
+## Raw layer layout
+
+```
+raw/
+├── Articles/                              web clippings, transcripts, blog posts
+├── Books/
+│   └── <Book Title>/                      one subfolder per book: chapter markdowns + PDF/symlink + INDEX.md
+├── images/                                images extracted from raw sources — referenced from chapter markdowns
+└── _inbox/                                new material awaiting ingest
+```
+
+Rules for raw:
+
+- **Each book is a peer subfolder** under `raw/Books/<Book Title>/`. Same shape, same role. Adding a new book means dropping a new subfolder with one markdown per chapter + the PDF (or a symlink) + an INDEX.md.
+- **Light frontmatter only.** Per-chapter markdown carries `chapter_order`, `chapter_title`, `location_year`, `page_start`, `page_end`, `source`, plus an optional `topics:` list of `[[Concept]]` wikilinks the LLM has tagged on ingest. The body is the extracted text. No synthesis, no analysis — that lives in the wiki layer.
+- **Images go in `raw/images/`** and are referenced from chapter markdowns via Obsidian wikilinks (e.g. `![[_page_133_Picture_0.jpeg]]`). Obsidian resolves bare wikilinks vault-wide, so chapter markdowns do not need to encode the path.
+- **PDFs are kept where they are already canonical.** Where a PDF already lives somewhere else, the file in `raw/Books/<Book>/` is a symlink back to that source, so there is one binary and not two.
+- **`raw/_inbox/`** holds anything not yet processed. After processing it moves into `raw/Articles/` or `raw/Books/<Book>/`.
+
+## Wiki layer
+
+| Folder | Role |
+|--------|------|
+| `Concepts/` | One page per recurring concept in the domain. Carries `## Synthesis`, `## Source evidence` (backlinks into `raw/Books/…` and `raw/Articles/…`), `## Cross-references`. |
+| `People/` | One page per person referenced in the corpus. Authors, primary subjects, public-figure references. |
+| `Books/` | One **summary** page per book (peer-level with other books). Premise, spine of arguments, coverage limits, links to the matching `raw/Books/<Book>/` subfolder. |
+| `00-Hubs/` | Map-of-content pages grouping related Concepts. |
+| `Routes/` | Practical audit checklists pairing a problem framing with the relevant Concepts. |{{ADDITIONAL_WIKI_FOLDERS_TABLE}}
+
+## Operations
+
+Per Karpathy: ingest, query, lint.
+
+### Ingest
+
+Drop a source into `raw/_inbox/`. Then:
+
+1. LLM reads the source. For a book, split into chapters using the document outline and write one chapter markdown per section into `raw/Books/<Book Title>/`.
+2. Extract any inline figures or diagrams to `raw/images/` and reference them via bare wikilinks in the chapter markdown.
+3. Identify which `Concepts/` and `People/` pages are touched. For each touched page, read what the held sources support, qualify and challenge, update the narrative synthesis, and add role-tagged source backlinks pointing into the raw chapter files (`schema.md`, Evidence roles).
+4. New Concepts or People discovered in the source get stub pages from the templates in `schema.md`.
+5. Create or update the wiki `Books/<Book>.md` summary page.
+6. Append a single entry to `log.md` in the log entry shape (`schema.md`).
+7. Refresh `index.md`; each new or changed page gets a row with claim, source and use (`schema.md`, Index entry contract).
+
+A single book ingest touches 15–30 wiki pages. Stay involved on the first pass; review the summary and the touched Concept pages before accepting.
+
+### Query
+
+Ask a question against the wiki. The LLM:
+
+1. Runs a scoped ranked search first, over the `{{SEARCH_COLLECTION}}` collection alone, confirming every returned path starts with `{{SEARCH_COLLECTION}}/` (the Retrieval rule in the shared block below). Then reads `index.md` for the neighbours the query missed.
+2. Drills into the Concept page first; reads `## Source evidence` to find which raw chapters back the claim and which challenge it.
+3. Reads the relevant raw chapters for direct quotes and dated episodes; opens raw images when a chapter references a diagram or figure.
+4. Synthesises an answer with citations. Good answers get filed back into the wiki — usually as a new `## Synthesis` section on the touched Concept page, occasionally as a new comparison hub under `00-Hubs/`.
+
+### Lint
+
+Periodic health-check. Looks for:
+
+- Broken wikilinks.
+- Concept pages with no `## Source evidence` backlinks.
+- Raw chapters with no inbound link from any Concept (orphan evidence).
+- Concepts mentioned in the source corpus but lacking a Concept page.
+- Stale Concept claims where a newer source has superseded the framing.
+- Contradictions between two Concept pages.
+- Images in `raw/images/` with no inbound wikilink.
+- A `challenges` evidence bullet on a page with no contradiction entry and no `status: disputed`; a `status` value outside the closed vocabulary.
+- An index row missing claim, source or use; a wiki page with no index row.
+
+## Property standards
+
+Lowercase snake_case keys. Plural list keys. YYYY-MM-DD dates. Read `schema.md` for the per-page-type schemas.
+
+## Cross-vault rule
+
+This vault carries no opinion, no personal voice and no draft prose. Where a draft needs {{WIKI_NAME}} material recast in an author's voice, write that draft in a personal vault and wikilink it back to here. Do not write opinion into wiki pages.
+
+## Maintenance operations
+
+| Mode | Behaviour on this vault |
+|------|-------------------------|
+| Ingest | Read from `raw/_inbox/`. Update the wiki pages. Move the source into its final raw location. Append to `log.md`. |
+| Validate | Run the `schema.md` lint criteria. Refresh `index.md`. Surface contradictions and stale claims. |
+| Review | Backward-pass an older Concept page against newer raw chapters. Add new claims, flag superseded ones. |
+| Cascade | After a large ingest, propagate claims across every linked Concept and People page. |
+| Sweep | The full pipeline, on a cadence. |
+
+<!-- kepano-wiki:begin -->
+
+## Kepano knowledge rules (wiki-vault subset)
+
+Property, wikilink and retrieval rules (schema 4). If you keep one canonical copy of these rules elsewhere and sync it into each wiki, the sentinel comments mark the managed region. Otherwise treat this block as yours to edit.
+
+### Wikilink conventions
+
+When creating or editing notes, add wikilinks following these rules:
+
+1. **First occurrence only** — link the first mention of a term in the body text, not every instance.
+2. **Skip zones** — never add wikilinks inside:
+   - YAML frontmatter (between `---` markers)
+   - Code blocks (between `` ``` `` markers)
+   - Headings (lines starting with `#`)
+   - URLs
+   - Existing wikilinks or markdown links
+3. **Whole word matching** — don't link substrings (e.g., don't link "Integration" inside "Disintegration").
+4. **People** — use display name format: `[[Full Name|First Name]]`.
+5. **Don't self-link** — a note should not wikilink to itself.
+6. **Longest match first** — when two targets overlap (e.g., "Total Cost of Ownership" vs "Cost"), prefer the longer match.
+
+### Property standards
+
+#### Naming rules
+
+- **Lowercase property keys are mandatory**: `source:` not `Source:`, `created:` not `CREATED:`.
+- **Never uppercase YAML property keys**: no `TITLE:`, `SOURCE:`, `Created:`, or `kindle-bookId:` unless preserving an external import field intentionally.
+- **Lowercase snake_case for multi-word keys**: `chapter_order`, `page_start`, `last_reviewed`, not `chapterOrder`, `Chapter Order`, `chapter-order`, or `CHAPTER_ORDER`.
+- **Only property keys are constrained**: values may use normal casing (e.g. `confidence: "High"`, `era: "Counterpoint Global"`).
+- **Plural for lists**: `categories:`, `topics:`, `tags:`, `people:`.
+- **Singular for single values**: `author:`, `source:`, `type:`.
+- **Before saving frontmatter**: scan the keys between `---` fences and convert accidental uppercase or camelCase keys to lowercase snake_case.
+
+#### Standard properties (wiki-vault relevant)
+
+| Property | Type | Usage |
+|----------|------|-------|
+| `categories` | list | Top-level organisation (wikilinks) |
+| `topics` | list | Thematic tags (wikilinks to `Concepts/` pages) |
+| `author` | single or list | Creator (wikilink) |
+| `people` | list | Related people (wikilinks to `People/` pages) |
+| `source` | single | Origin reference (wikilink) |
+| `type` | single | Page type (wikilink, plural: `[[Concepts]]`, `[[Books]]`, `[[People]]`) |
+| `description` | text | One-sentence summary of the note |
+| `notes` | text | Additional commentary or observations |
+| `confidence` | text | `high`, `medium`, `low` on synthesis pages. Tests: `high` needs two independent held sources, or one primary source that states the claim without qualification; `medium` is one clear held source; `low` is inference, or an ambiguous or second-hand source. "Held" means the source sits in `raw/` |
+| `created` | date | YYYY-MM-DD |
+| `published` | date | YYYY-MM-DD (for source materials) |
+| `last_reviewed` | datetime | Last reviewed or updated |
+| `modified` | date | Last modified date |
+| `status` | text | Closed vocabulary on concept and person pages: `stub`, `active`, `disputed`, `superseded`. Absent reads as `active` when the page carries claims and `stub` when it carries none. Other page types keep their own values |
+| `superseded_by` | single | Wikilink to the page that replaced this one. Required when `status: superseded`, absent otherwise |
+
+#### Cross-page reusability
+
+- `topics` is the primary cross-reference field — wikilinks to `Concepts/` pages.
+- `people` wikilinks to `People/` pages.
+- `source` wikilinks to `raw/Papers/...` or `raw/Books/<Book>/...`.
+
+#### Deprecated property names
+
+| Old name | Use instead | Reason |
+|----------|-------------|--------|
+| `category` | `categories` | Non-standard singular form |
+| `summary` | `description` | Standardised Feb 2026 |
+| `comment` | `notes` | Standardised Feb 2026 |
+| `last` | `last_reviewed` | Vague name |
+| `person` | — | Redundant with filename |
+| `tags` | `topics` | Wiki vaults use `topics` wikilinks, not string tags |
+
+### Retrieval
+
+A question against a wiki vault starts with a **scoped** ranked search: the
+search restricted to this wiki's collection alone.
+
+Scoping is easy to get wrong and fails quietly. A search tool that takes a list
+of collections will often accept a singular key that is not in its schema,
+ignore it, and search everything you have registered - and the results look
+plausible, because they are real pages from some other wiki. So confirm that
+every returned path starts with `<search_collection>/`, and reissue the call
+where any does not.
+
+Then read the top three to five pages, Concept pages first, and then `index.md`
+for the neighbours the query missed.
+
+Scoped retrieval beats pasting whole Concept pages into the prompt. In a head-to-head run on one wiki, scoped retrieval answered 5 of 5 questions with every citation correct and no page pulled from outside the wiki; the same questions with Concept pages pasted in answered 4 of 5, and one answer cited a page from a different wiki. Where no search tool is available, read `index.md`, then glob the wiki folders, and record in the output that you fell back.
+
+### Dates — YYYY-MM-DD everywhere
+
+- Frontmatter date fields, source-file dates, log entries — one format.
+- ISO-8601 ordering keeps filesystem and chronological collation aligned.
+- Avoid locale-specific date formats (no `MM/DD/YYYY`, no `5 May 2026`).
+
+<!-- kepano-wiki:end -->
