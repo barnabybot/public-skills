@@ -1,6 +1,6 @@
 # public-skills
 
-Six agent skills and one `AGENTS.md`, taken from a working setup and rewritten
+Eight agent skills and one `AGENTS.md`, taken from a working setup and rewritten
 so they run on somebody else's machine.
 
 They are for people who have started using a coding agent - Claude Code, Codex,
@@ -14,6 +14,8 @@ or another CLI harness - and want more from it than one conversation at a time.
 | [`recall`](skills/recall/) | Read your own history. What you did yesterday, or last week, or on a topic, from the transcripts your agent already writes. |
 | [`vault-setup`](skills/vault-setup/) | Scaffold a Markdown knowledge vault with the folder tree, templates and instruction file for its type. |
 | [`editorial-review`](skills/editorial-review/) | Review prose and argument across six lenses. Catches buried ledes, weak arguments and the specific tells that mark machine-written text. |
+| [`graph`](skills/graph/) | Track a programme of work as a dependency graph. Agents edit one YAML state file; a renderer draws the HTML, logs every status change, and marks a node stale when its inputs change after its output was built. |
+| [`skill-manager`](skills/skill-manager/) | Write and review skills. The description and length rules, a pre-ship checklist, the intake-panel contract, a validator script, and a workflow that audits a whole skills tree. |
 
 [`AGENTS.md`](AGENTS.md) is the instruction file that governs all of it: how an
 agent should think before it codes, how small a change should be, when it must
@@ -36,9 +38,12 @@ Be clear before you clone it.
 - **`orchestrator` needs the `cmux` skill, and `cmux` needs `orchestrator`.**
   The orchestrator owns the routing table and the resolver; the cmux helper
   calls it to route a spawn. Install the pair.
-- **`orchestrator` needs PyYAML** (`pip install PyYAML`). It is the only
-  non-stdlib dependency in the repository, and it fails with that install line
-  rather than a traceback.
+- **`orchestrator` and `graph` need PyYAML** (`pip install PyYAML`).
+  Both fail with an install line rather than a traceback. Apart from recall's
+  graph mode, it is the only non-stdlib dependency in the repository.
+- **`skill-manager` runs anywhere, except its audit.** `validate.sh` needs only
+  Bash. The whole-tree audit is a Claude Code dynamic workflow, so it needs the
+  `Workflow` tool.
 - **The routing table is a placeholder.** Every row in the orchestrator's
   `SKILL.md` is marked `basis: practice`, which means a shape rather than a
   finding about your stack. Its second provider resolves to deliberately invalid
@@ -125,6 +130,12 @@ skills/cmux/scripts/test-close-workspace.sh
 
 # Yesterday's sessions, read from your own transcripts
 python3 skills/recall/scripts/recall-day.py list yesterday --all-projects
+
+# The graph renderer's own suite
+python3 skills/graph/scripts/selftest.py
+
+# Validate every skill in the repository
+for d in skills/*/; do skills/skill-manager/scripts/validate.sh "$d"; done
 ```
 
 ## What these came from
