@@ -17,6 +17,12 @@ or another CLI harness - and want more from it than one conversation at a time.
 | [`graph`](skills/graph/) | Track a programme of work as a dependency graph. Agents edit one YAML state file; a renderer draws the HTML, logs every status change, and marks a node stale when its inputs change after its output was built. |
 | [`skill-manager`](skills/skill-manager/) | Write and review skills. The description and length rules, a pre-ship checklist, the intake-panel contract, a validator script, and a workflow that audits a whole skills tree. |
 
+`graph` turns one YAML state file into a page like this. The design-brief node
+reads stale because its input changed after it was built
+([source](skills/graph/assets/demo.state.yaml)):
+
+![graph render of a sample website relaunch](skills/graph/assets/preview.png)
+
 [`AGENTS.md`](AGENTS.md) is the instruction file that governs all of it: how an
 agent should think before it codes, how small a change should be, when it must
 stop and show you one example before doing something fifty times, and how to

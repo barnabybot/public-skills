@@ -1,0 +1,34 @@
+meta:
+  title: Website relaunch
+  lede: A small programme of work, drawn from one YAML file. Agents edit the state; the page is derived from it.
+  updated: "2026-09-27"
+  pills: {nodes: "10", open gates: "1"}
+  pills_hot: [open gates]
+  aria: Dependency graph of a website relaunch, from content audit to launch.
+
+layout:
+  - stage: 1 · DISCOVER
+    rows:
+      - - {id: audit, status: done, label: content audit, sub: 142 pages, note: owner mapped per page}
+        - {id: analytics, status: done, label: traffic baseline, sub: 12 months, note: top 20 pages flagged}
+        - {id: interviews, status: done, label: user interviews, sub: 8 of 8, note: notes filed}
+  - stage: 2 · DESIGN
+    rows:
+      - - {id: ia, status: done, label: site map, sub: v3, note: signed off}
+        - {id: brief, status: done, label: design brief, sub: brief.md, note: built from interview notes, output: brief.md, inputs: [interviews.md]}
+        - {id: tokens, status: ready, label: design tokens, sub: colour + type, note: can start now}
+  - stage: 3 · BUILD
+    rows:
+      - - {id: templates, status: queue, label: page templates, sub: 6 layouts, note: waits on tokens}
+        - {id: migrate, status: block, label: content migration, sub: CMS export, note: vendor access pending}
+        - {id: forms, status: fail, label: contact forms, sub: spam test, note: 3 of 5 cases failed}
+  - stage: 4 · LAUNCH
+    rows:
+      - - {id: go, status: gate, label: launch decision, sub: soft or hard launch, note: needs a human go, span: mid}
+
+sections:
+  - title: What is ready now
+    kind: list
+    items:
+      - "design tokens: no open dependencies"
+      - "design brief: rebuild, then the stale mark clears on its own"
