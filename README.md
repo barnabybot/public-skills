@@ -17,6 +17,12 @@ or another CLI harness - and want more from it than one conversation at a time.
 | [`graph`](skills/graph/) | Track a programme of work as a dependency graph. Agents edit one YAML state file; a renderer draws the HTML, logs every status change, and marks a node stale when its inputs change after its output was built. |
 | [`skill-manager`](skills/skill-manager/) | Write and review skills. The description and length rules, a pre-ship checklist, the intake-panel contract, a validator script, and a workflow that audits a whole skills tree. |
 
+`orchestrator` and `cmux` run several agents side by side. Here Claude
+coordinates Codex, Grok and Muse on a demo project, each in its own pane, and
+reports a gap one worker left:
+
+![cmux workspace with a Claude orchestrator and Codex, Grok and Muse workers](skills/orchestrator/assets/preview.png)
+
 `graph` turns one YAML state file into a page like this. The design-brief node
 reads stale because its input changed after it was built
 ([source](skills/graph/assets/demo.state.yaml)):
