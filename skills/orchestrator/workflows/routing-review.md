@@ -9,7 +9,7 @@ python3 scripts/check.py                    # add installed model and capacity c
 python3 scripts/routelog.py --since YYYY-MM-DD
 ```
 
-`check.py` validates every table row, model reference, effort and cross-provider backup. Live checks confirm installed model IDs where the CLI exposes them; Claude IDs receive a shape check and need a spawn to confirm. Capacity failures are reported as unread. Check and log commands append evidence under `Agents/Ops/orchestrator/`; use `--no-log` for validation runs.
+`check.py` validates every table row, model reference, effort and cross-provider backup. Live checks confirm installed model IDs where the CLI exposes them; Claude IDs receive a shape check and need a spawn to confirm. Capacity failures are reported as unread. Check and log commands append evidence under `$AGENT_NOTES/Ops/orchestrator/`; use `--no-log` for validation runs.
 
 ## Propose a revision
 
