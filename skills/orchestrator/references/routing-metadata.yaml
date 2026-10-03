@@ -48,13 +48,13 @@ providers:
     - max
 models:
   a_large:
-    id: claude-opus-5
-    aa_release: claude-opus-5
+    id: claude-opus-5-5
+    aa_release: claude-opus-5-5
     provider: provider_a
     display: A-Large
   a_mid:
-    id: claude-sonnet-5
-    aa_release: claude-sonnet-5
+    id: claude-sonnet-5-5
+    aa_release: claude-sonnet-5-5
     provider: provider_a
     display: A-Mid
   a_small:
@@ -77,7 +77,7 @@ models:
 # reports "none". `aa_exclude: [<class>]` on a model keeps it out of one class.
 aa:
   # Any AA model page embeds every model record; aa_refresh.py reads it.
-  source: https://artificialanalysis.ai/models/claude-opus-5
+  source: https://artificialanalysis.ai/models/claude-opus-5-5
   # US$ of AA cost per Intelligence Index task that one extra point of the
   # category measure may cost before the knee stops stepping up.
   cost_per_point:

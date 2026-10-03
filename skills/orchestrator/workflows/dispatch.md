@@ -27,7 +27,7 @@ Conventions:
 
 ```yaml
 agent: claude-code   # or codex | grok, per the provider's `agent` in the metadata
-model: claude-opus-5
+model: claude-opus-5-5
 effort: medium
 workspace_name: "📐 chart-recipes"
 workspace_id: workspace:N

@@ -119,7 +119,7 @@ scripts/spawn-workspace.sh "workspace-name" --tier systems --reason "prior pass 
   --prompt-file "$AGENT_NOTES/Sessions/Handoffs/2026-09-22 topic handoff.md"
 
 # A named model, bypassing the table (successors, and models the user names)
-scripts/spawn-workspace.sh "workspace-name" --model claude-opus-5 --effort medium --prompt "..."
+scripts/spawn-workspace.sh "workspace-name" --model claude-opus-5-5 --effort medium --prompt "..."
 
 # See the route without spawning
 scripts/spawn-workspace.sh "workspace-name" --tier systems --dry-run

@@ -216,7 +216,7 @@ EFFORT="$ROUTE_EFFORT"
 [[ -n "$ROUTE_LEGACY_NOTE" ]] && echo "deprecated: $ROUTE_LEGACY_NOTE" >&2
 
 # The launch command. $MODEL is single-quoted: 1M-context ids look like
-# `claude-opus-5[1m]`, and the brackets are glob metacharacters. Unquoted, zsh
+# `claude-opus-5-5[1m]`, and the brackets are glob metacharacters. Unquoted, zsh
 # fails the whole command with "no matches found" and the agent never starts.
 case "$AGENT" in
   codex)

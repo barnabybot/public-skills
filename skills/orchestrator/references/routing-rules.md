@@ -67,7 +67,7 @@ It writes `model:` and `effort:` into the new session note's frontmatter and thr
 
 ```
 - 2026-09-22: workspace spawned.
-- route default: tier systems → claude-opus-5 · xhigh
+- route default: tier systems → claude-opus-5-5 · xhigh
 - route dispatched: <the provider_b id you configured> · high
 - route reason: override: provider_a weekly 99% used, resets Sat 19 Sep 17:00. Category from "prior pass found no cause".
 ```

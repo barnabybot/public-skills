@@ -37,17 +37,17 @@ check() {  # check <label> <expected-rc> <grep-pattern> -- <helper args...>
 # The shipped placeholder table: A-* are real Claude IDs, B-* are deliberately invalid.
 check "bare call is refused with the category list"  2 "Pass --tier"                                            -- t-bare --dry-run
 check "housekeeping launches the small A model"     0 "exec claude --dangerously-skip-permissions --model 'claude-haiku-4-5-20251001' --effort 'medium'" -- t-a --tier housekeeping --dry-run
-check "coding launches the mid A model"             0 "exec claude --dangerously-skip-permissions --model 'claude-sonnet-5' --effort 'high'"  -- t-c --tier coding --dry-run
-check "systems launches the large A model at xhigh" 0 "exec claude --dangerously-skip-permissions --model 'claude-opus-5' --effort 'xhigh'"   -- t-e --tier systems --dry-run
+check "coding launches the mid A model"             0 "exec claude --dangerously-skip-permissions --model 'claude-sonnet-5-5' --effort 'high'"  -- t-c --tier coding --dry-run
+check "systems launches the large A model at xhigh" 0 "exec claude --dangerously-skip-permissions --model 'claude-opus-5-5' --effort 'xhigh'"   -- t-e --tier systems --dry-run
 check "the route line names category, model and provider" 0 "route: tier systems → A-Large · xhigh (provider_a)" -- t-e --tier systems --dry-run
 check "an unconfigured meter reads as unread"        0 "capacity unread"                                        -- t-e --tier systems --dry-run
 check "--reason reaches the route line"              0 "prior pass found no cause"                              -- t-rs --tier systems --reason "prior pass found no cause" --dry-run
 check "review of systems avoids the builder"         0 "route: tier review of systems → B-Large"                -- t-r --tier review --of systems --builder provider_a --dry-run
 check "legacy letter maps with a note"               0 "legacy tier word E resolved to systems"                 -- t-l --tier E --dry-run
 check "legacy word maps with a note"                 0 "legacy tier word basic resolved to housekeeping"        -- t-l --tier basic --dry-run
-check "explicit model and effort bypass the table"   0 "exec claude --dangerously-skip-permissions --model 'claude-opus-5' --effort 'medium'"  -- t-x --model claude-opus-5 --effort medium --dry-run
+check "explicit model and effort bypass the table"   0 "exec claude --dangerously-skip-permissions --model 'claude-opus-5-5' --effort 'medium'"  -- t-x --model claude-opus-5-5 --effort medium --dry-run
 check "an unknown category is refused"               2 "unknown tier"                                           -- t-z --tier Z --dry-run
-check "the effort reaches the session-note preview"  0 "dry-run: note agent=claude-code model=claude-opus-5 effort=xhigh" -- t-p --tier systems --prompt "hello" --dry-run
+check "the effort reaches the session-note preview"  0 "dry-run: note agent=claude-code model=claude-opus-5-5 effort=xhigh" -- t-p --tier systems --prompt "hello" --dry-run
 check "--help exits before anything is spawned"      0 "Spawn a named cmux workspace"                           -- --help
 check "a flag in the name position is refused"       2 "begins with a dash"                                     -- --tier systems
 

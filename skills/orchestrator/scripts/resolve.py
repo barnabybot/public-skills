@@ -7,7 +7,7 @@ candidate exhausted or excluded), with ROUTE_ASK naming them; exit 2 bad input.
 
     resolve.py --tier systems [--reason TEXT]
     resolve.py --tier review --of writing --builder provider_a
-    resolve.py --model claude-opus-5 --effort high [--agent claude]
+    resolve.py --model claude-opus-5-5 --effort high [--agent claude]
     resolve.py --list-tiers
 
 Test hooks: ROUTING_FIXTURE_DIR (read <dir>/<provider>.json instead of
