@@ -186,7 +186,7 @@ by side and the current one is unambiguous.
 
 Every non-trivial session needs a note at `$AGENT_NOTES/Sessions/YYYY-MM-DD
 <slug>.md`, using the local date and a three-to-five-word lowercase slug. Set
-`agent:` to what you actually are, because the dashboard groups on it.
+`agent:` to what you actually are, so a query tool can group on it.
 
 **Write it at the start**, once the user has stated a goal. A crash or a closed
 terminal loses a note that was only ever going to be written at the end.

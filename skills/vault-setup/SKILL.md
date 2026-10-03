@@ -139,18 +139,19 @@ type-specific tree and template; the procedure is identical.
 3. **Create the folder tree.** `mkdir -p` the workflow's type-specific tree at
    `$VAULT`. `$VAULT` is `${VAULTS_ROOT:-$HOME/vaults}/$VAULT_NAME` for every
    type except a wiki beside its skill, where the wiki workflow sets it.
-4. **Write AGENTS.md.** Read `templates/<type>/AGENTS.md.tmpl`, substitute
-   `{{VAULT_NAME}}`, `{{VAULT_PURPOSE}}`, `{{SEARCH_COLLECTION}}` and
-   `{{CREATED}}` by search-and-replace with no template engine, and write it to
-   `$VAULT/AGENTS.md`.
-5. **One instruction file.** `AGENTS.md` at the vault root is the instruction
-   file for every host: Codex reads it by name, and Claude Code reads it when no
-   `CLAUDE.md` is present. Where a host needs `CLAUDE.md`, symlink it to
-   `AGENTS.md` rather than writing a second file - a second file is a second
-   copy to keep in step.
+4. **Write AGENTS.md.** Read `templates/<type>/AGENTS.md.tmpl`. Substitute its
+   standard tokens (`{{VAULT_NAME}}`, `{{VAULT_PURPOSE}}`,
+   `{{SEARCH_COLLECTION}}`, `{{CREATED}}`) where present, plus the workflow's
+   type-specific tokens, by search-and-replace with no template engine. Write
+   the result to `$VAULT/AGENTS.md`.
+5. **One instruction file.** Keep `AGENTS.md` as the canonical instruction
+   file. For Claude Code, create a relative symlink at the vault root with
+   `ln -s AGENTS.md "$VAULT/CLAUDE.md"`. Other hosts can use the same alias
+   where needed. Both names must resolve to the same file.
 6. **Write log.md** from `templates/<type>/log.md.tmpl`, substituting
    `{{VAULT_NAME}}`, `{{CREATED}}`, `{{SEARCH_COLLECTION}}` and
-   `{{SEARCH_REGISTERED}}`.
+   `{{SEARCH_REGISTERED}}` where present, plus the workflow's type-specific
+   tokens.
 7. **Register the search collection** where `REGISTER_SEARCH = yes`. The shape
    depends on your tool. For [QMD](https://github.com/qmd-sh/qmd):
 

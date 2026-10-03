@@ -4,13 +4,13 @@ search_indexed: {{SEARCH_INDEXED}}
 created: {{CREATED}}
 ---
 
-# Obsidian Vault: {{VAULT_NAME}}
+# Agents vault: {{VAULT_NAME}}
 
 Agents workspace for {{ECOSYSTEM_NAME}}. {{VAULT_PURPOSE}} This is the vault every session from every tool writes to. It holds machine state, queues, session notes, handoffs and skill evidence. Human-curated knowledge belongs in a personal or operations vault.
 
 ## Vault root
 
-The root holds only `AGENTS.md`, `log.md`, the folders listed below and hidden tool-config folders (`.obsidian/`, `.claude/`). Anything else, including a loose `YYYY-MM-DD *.md` note, is a leaked write: file it or remove it. Every report a skill writes has a home in the table below, so do not invent a root folder for one.
+The root holds only `AGENTS.md`, `log.md`, an optional `CLAUDE.md` symlink to `AGENTS.md`, the folders listed below and hidden tool-config folders (`.obsidian/`, `.claude/`). Keep `AGENTS.md` as the single instruction file. Anything else, including a loose `YYYY-MM-DD *.md` note, is a leaked write: file it or remove it. Every report a skill writes has a home in the table below, so do not invent a root folder for one.
 
 {{TOP_LEVEL_FOLDERS_LIST}}
 
@@ -24,8 +24,8 @@ The root holds only `AGENTS.md`, `log.md`, the folders listed below and hidden t
 | A skill's evidence: renders, probes, measurements, extraction records, the work-graph trio of a programme | `Ops/<skill-or-programme>/` |
 | A skill's append-only journal | `Ops/<skill>-log.md` |
 | A current-state report, overwritten on each run | `Ops/<report>.md`, with `generated_at` in frontmatter so its freshness shows the job that writes it is alive |
-| Agent runtime state | `<Agent>/` |
-| Workstation setup note (fleet) | `Workstations/Setup/` |
+| Agent runtime state | `<agent>/` |
+{{WORKSTATION_SETUP_ROW}}
 
 A work graph lives with the project it describes, never here: its `derive:` block resolves sources relative to the state file.
 
@@ -33,11 +33,13 @@ A work graph lives with the project it describes, never here: its `derive:` bloc
 
 {{AGENT_UNIVERSES}}
 
+Agent IDs use lowercase letters, digits and hyphens. Use the same ID for an agent's folder, audit folder and `agent:` field. Shared folders retain their listed casing.
+
 Agent folders are runtime data. Do not hand-edit unless triaging; the next tick may overwrite. Give every new output folder a row in the agent's table, with a retention window, before the job that writes it goes live. Do not re-create a folder that a table marks deleted.
 
 ## Sessions
 
-Session notes file flat at `Sessions/` root, one note per session, `YYYY-MM-DD <slug>.md`, with the first eight characters of the session id appended when the name is taken that day. The `agent:` field discriminates the source (`claude-code`, `codex`, `cmux`, and whatever else you run); any dashboard over the folder groups on it. `Sessions/Handoffs/` holds pickup prompts and `Sessions/Archive/` older notes and retired working material.
+Session notes file flat at `Sessions/` root, one note per session, `YYYY-MM-DD <slug>.md`, with the first eight characters of the session id appended when the name is taken that day. The `agent:` field identifies the source (`claude-code`, `codex`, `cmux`, and whatever else you run); a query tool can group on it. `Sessions/Handoffs/` holds pickup prompts and `Sessions/Archive/` older notes and retired working material.
 
 Standard session frontmatter:
 
@@ -64,7 +66,7 @@ created: YYYY-MM-DD
 
 ### Session `status:` is a closed vocabulary
 
-A dashboard groups on the literal string, so a value outside this set gets its own one-off heading and the note is effectively lost.
+A query tool can group on the literal string. A fixed set keeps session states consistent across tools.
 
 `queued` → `in-progress` → `review` → `done`, plus `blocked` (waiting on a human or an external event) and `failed` (ended without achieving its goal). Six values, nothing else.
 
@@ -105,7 +107,7 @@ Master credentials never sit inline anywhere in this vault. Agents read entries 
 | `workspace_id` | text | cmux workspace UUID |
 | `workspace_name` | text | cmux workspace name |
 
-Only keys are constrained; values keep normal casing, except session `status:`.
+Values keep normal casing, except lowercase agent IDs and session `status:`.
 
 ## Retention
 
@@ -118,11 +120,11 @@ Agents vaults accumulate state and need periodic cleanup. Give every new output 
 | `Ops/<skill>-log.md` | indefinite |
 | `Ops/<report>.md` | superseded in place |
 | `Ops/<name>/` corpora | until the work they describe is retired |
-| `<Agent>/**` | per the agent's own table |
+| `<agent>/**` | per the agent's own table |
 
 ## Boundary rule
 
-Agents write freely to their own folders in this vault. Writes to **other** vaults need explicit cross-vault approval through the H0 primitive; agents never write across a vault boundary directly.
+Agents write freely to their own folders in this vault. Before writing to another vault, obtain explicit user approval for the destination and scope, then follow that vault's instruction file.
 
 ## Maintenance entrypoints
 
@@ -134,34 +136,14 @@ Agents write freely to their own folders in this vault. Writes to **other** vaul
 
 ## Vault log
 
-`log.md` is the append-only operational log for structural changes to this vault. Agents log their own runs to their own `<Agent>/ops/` or `<Agent>/sessions/` folders.
+`log.md` is the append-only operational log for structural changes to this vault. Agents log their own runs to their own `<agent>/ops/` or `<agent>/sessions/` folders.
 
-## QMD
+## Search
 
 This vault is {{SEARCH_INDEXED_DESCRIPTION}}.
 
 ## Editing files externally
 
-Most content here is written by agents. To hand-edit:
-
-```bash
-osascript -e 'quit app "Obsidian"' && sleep 2
-rm -f ".obsidian/workspace.json" ".obsidian/workspace-mobile.json"
-# ... make edits ...
-open -a Obsidian
-```
+Most content here is written by agents. If you use Obsidian, close it before bulk external edits and reopen it afterwards. The vault also works in any Markdown editor.
 
 Files under agent folders may be overwritten on the next tick.
-
-<!-- kepano-ops:begin -->
-
-## Kepano knowledge rules (agents-vault pointer)
-
-If you keep one canonical copy of these rules elsewhere and sync it into each vault, the sentinel comments mark the managed region and edits inside the pair are overwritten on the next sync. Otherwise treat this block as yours to edit.
-
-Agents vaults are runtime substrate: session logs, ops state and queues. Their local standards cover the property and retention rules needed in this vault.
-
-- **Rules that apply when writing notes in this vault** — YAML property naming (lowercase snake_case keys), `YYYY-MM-DD` dates everywhere, plural keys for lists / singular for single values — are stated in this vault's own **Property Standards** section above. That section is the operative reference.
-- **The full universal canon** — categories against folders, wikilink conventions, the standard-property and deprecated-property tables, the rating scale, HTML in notes — is carried in the personal and operations vault templates in this skill. An operational vault does not need it loaded every session, so read it there on demand.
-
-<!-- kepano-ops:end -->
