@@ -47,7 +47,8 @@ project, each in its own pane, and reports a gap one worker left:
 | Skill | Its part |
 |---|---|
 | [`vault-setup`](skills/vault-setup/) | Creates each vault type with its folder tree, templates and instruction file |
-| [`recall`](skills/recall/) | Reads your own history: yesterday, last week, or one topic, from the transcripts your agent already writes |
+| [`recall`](skills/recall/) | Finds past work in session notes where available, with native transcripts for missing detail or a setup without notes |
+| [`retrospective`](skills/retrospective/) | Reviews a session or a bounded recent sample, verifies repeated problems and proposes small fixes. Uses recall for historical evidence |
 | [`orchestrator`](skills/orchestrator/) | Coordinates workers, routes each job to a model and effort level, and hands a session on before its context runs out. Owns the routing table, the category rule and the resolver |
 | [`cmux`](skills/cmux/) | Starts and closes workspaces and writes their session notes. It calls the orchestrator to route |
 | [`graph`](skills/graph/) | Tracks a programme of work as a dependency graph, and marks a node stale when its inputs change after its output was built |
@@ -134,9 +135,14 @@ yourself before you say go.
 
 ## What this assumes
 
-- **`recall` reads transcripts on disk.** `~/.claude/projects/` for Claude Code
-  and `~/.codex/sessions/` for Codex, which is where those tools already write
-  them. The graph mode also wants `networkx` and `pyvis`.
+- **`recall` uses session notes when available.** It discovers the configured
+  search collection or searches files under `$AGENT_NOTES/Sessions/`. Without
+  notes, it reads native Claude Code and Codex transcripts. Graph mode also
+  needs `networkx` and `pyvis`.
+- **`retrospective` uses `recall` for earlier sessions.** Install both for the
+  recent-sessions mode. A review of the visible conversation can run alone.
+  `/retrospective recent sessions <project-path>` reviews up to ten eligible
+  sessions and proposes zero to three fixes. It runs when invoked.
 - **Two skills need nothing.** `vault-setup` and `editorial-review` run
   anywhere.
 - **`orchestrator` needs the `cmux` skill, and `cmux` needs `orchestrator`.**
