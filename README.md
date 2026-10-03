@@ -8,7 +8,7 @@ or another CLI harness - and want more from it than one conversation at a time.
 
 | Skill | What it does |
 |---|---|
-| [`orchestrator`](skills/orchestrator/) | Run several agents at once. One coordinator spawns named workspaces, routes each job to a model and effort level, reads their screens, and relays your comments. Owns the routing table, the tiering rule and the resolver. |
+| [`orchestrator`](skills/orchestrator/) | Run several agents at once. One coordinator spawns named workspaces, routes each job to a model and effort level, reads their screens, and relays your comments. Owns the routing table, the category rule and the resolver. |
 | [`cmux`](skills/cmux/) | The mechanics underneath: spawn a workspace, write the session note, close it cleanly. Two scripts; it calls the orchestrator to route. |
 | [`handoff`](skills/handoff/) | Move context from one session to the next before it runs out, as a new workspace, a clipboard brief, or a parked note. |
 | [`recall`](skills/recall/) | Read your own history. What you did yesterday, or last week, or on a topic, from the transcripts your agent already writes. |
@@ -126,7 +126,7 @@ the part worth keeping.
 
 ```bash
 # The routing table resolves, and no workspace is spawned
-skills/cmux/scripts/spawn-workspace.sh test --tier E --dry-run
+skills/cmux/scripts/spawn-workspace.sh test --tier systems --dry-run
 
 # The routing table and metadata are structurally valid
 python3 skills/orchestrator/scripts/check.py --no-live --no-log

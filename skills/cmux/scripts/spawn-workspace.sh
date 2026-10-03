@@ -2,7 +2,7 @@
 # Spawn a named cmux workspace with Claude Code, Codex or Grok (no focus steal).
 #
 # Usage:
-#   spawn-workspace.sh <name> (--tier <letter> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <letter>] [--builder <model-id>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]
+#   spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]
 #
 # By default a session note is created in $AGENT_NOTES/Sessions/
 # ($AGENT_NOTES defaults to ~/agent-notes). Pass --no-session to skip.
@@ -12,15 +12,18 @@
 #                 parent runtime detected from the environment:
 #                 CMUX_AGENT_LAUNCH_KIND, then CLAUDECODE=1 (claude), then the
 #                 script path.
-# --tier          Routing tier: O A B C D E F V, and R with --of and --builder.
-#                 Resolved by the orchestrator skill's scripts/resolve.py against
-#                 the marked table in its SKILL.md. A call with neither --tier nor
-#                 --model is refused before any cmux call. The tiering rule - how a
-#                 request becomes a letter - is in the orchestrator skill's
+# --tier          Routing category: finance, strategy, legal, writing, visual,
+#                 coding, systems, classification, housekeeping, orchestrator,
+#                 and review with --of and --builder. Resolved by the orchestrator
+#                 skill's scripts/resolve.py against the marked table in its
+#                 SKILL.md. Old tier letters and the words basic|moderate|complex
+#                 map to categories and print a deprecation line. A call with
+#                 neither --tier nor --model is refused before any cmux call. The
+#                 category rule is in the orchestrator skill's
 #                 references/routing-rules.md.
-# --of            With --tier R: the tier of the work under review.
-# --builder       With --tier R: the model id that built the work; it is excluded.
-# --reason        Why this tier. Written into the route log on the session note.
+# --of            With --tier review: the category of the work under review.
+# --builder       With --tier review: the provider that built the work; it is excluded.
+# --reason        Why this category. Written into the route log on the session note.
 # --model         Explicit model id, passed to the child CLI. Bypasses the table,
 #                 for successors and for models named in the request.
 # --effort        Effort level passed to the child CLI: claude --effort, codex
@@ -51,7 +54,7 @@
 
 set -e
 
-USAGE='Usage: spawn-workspace.sh <name> (--tier <letter> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <letter>] [--builder <model-id>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]'
+USAGE='Usage: spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]'
 
 # The routing canon and its resolver, found from this script's real path so a
 # copy reads its own canon. ROUTING_RESOLVER overrides for tests.
@@ -165,10 +168,10 @@ if [[ ! -d "$WORKDIR" ]]; then
   fi
 fi
 
-# Route before anything is created. A bare call is refused: the tier is the one
-# routing decision the caller owns, and the usage text carries the tiers.
+# Route before anything is created. A bare call is refused: the category is the
+# one routing decision the caller owns, and the usage text carries the categories.
 if [[ -z "$MODEL" && -z "$TIER" ]]; then
-  echo "Pass --tier <letter>, or --model <id> with --effort <level>. Tiers:" >&2
+  echo "Pass --tier <category>, or --model <id> with --effort <level>. Categories:" >&2
   "$PYTHON" "$RESOLVER" --list-tiers >&2 || true
   echo "$USAGE" >&2
   exit 2

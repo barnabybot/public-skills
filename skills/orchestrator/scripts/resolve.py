@@ -5,9 +5,9 @@ Called by cross-cutting/cmux/scripts/spawn-workspace.sh. Prints shell-safe
 KEY=value lines for `eval`. Exit 0 resolved; exit 3 a ruling is needed (every
 candidate exhausted or excluded), with ROUTE_ASK naming them; exit 2 bad input.
 
-    resolve.py --tier E [--reason TEXT]
-    resolve.py --tier R --of F --builder claude
-    resolve.py --model claude-fable-5-1 --effort high [--agent claude]
+    resolve.py --tier systems [--reason TEXT]
+    resolve.py --tier review --of writing --builder provider_a
+    resolve.py --model claude-opus-5 --effort high [--agent claude]
     resolve.py --list-tiers
 
 Test hooks: ROUTING_FIXTURE_DIR (read <dir>/<provider>.json instead of
@@ -52,11 +52,11 @@ def load_canon(path: Path) -> dict:
         if not line.startswith("|"):
             continue
         cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if cells[0] == "Tier" or all(set(cell) <= set("-: ") for cell in cells):
+        if cells[0] == "Category" or all(set(cell) <= set("-: ") for cell in cells):
             continue
-        if len(cells) != 6:
-            raise ValueError("routing rows must have six columns")
-        tier, name, first, effort, backup, backup_effort = cells
+        if len(cells) != 7:
+            raise ValueError("routing rows must have seven columns")
+        tier, name, _use_when, first, effort, backup, backup_effort = cells
         if tier in seen or tier not in canon["tiers"]:
             raise ValueError(f"duplicate or unknown tier: {tier}")
         seen.add(tier)
@@ -64,7 +64,7 @@ def load_canon(path: Path) -> dict:
         row["metadata_name"] = row["name"]
         row["name"] = name
         if row.get("of") == "required":
-            if cells[2:] != ["Inherit reviewed tier", "—", "Exclude builder", "—"]:
+            if cells[3:] != ["Inherit reviewed category", "—", "Exclude builder", "—"]:
                 raise ValueError("review must inherit its tier and exclude the builder")
             continue
         for slot, model, level in (("first", first, effort), ("backup", backup, backup_effort)):
@@ -242,11 +242,11 @@ def list_tiers(canon: dict) -> str:
             m = canon["models"][first["model"]]
             seat = f" → {m['display']} · {first['effort']}"
         elif row.get("of") == "required":
-            seat = " → the tier of the work it checks, on another provider (--of, --builder)"
-        lines.append(f"  {key:<11} {row['name']}: {row['what']}{seat}")
+            seat = " → the category of the work it checks, on another provider (--of, --builder)"
+        lines.append(f"  {key:<15} {row['name']}: {row['what']}{seat}")
     legacy = ", ".join(f"{k}→{v}" for k, v in (canon.get("legacy_tiers") or {}).items())
     if legacy:
-        lines.append(f"  legacy      {legacy} (deprecated words, one release)")
+        lines.append(f"  legacy          {legacy} (deprecated words, one release)")
     return "\n".join(lines)
 
 
@@ -256,7 +256,7 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
     key = args.tier
     legacy_note = ""
     if key in legacy:
-        legacy_note = f"legacy tier word {key} resolved to {legacy[key]}; pass the letter next time"
+        legacy_note = f"legacy tier word {key} resolved to {legacy[key]}; pass the category next time"
         key = legacy[key]
     if key not in tiers:
         sys.stderr.write(f"unknown tier: {args.tier}\n{list_tiers(canon)}\n")
@@ -268,6 +268,7 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
         if not args.of or not args.builder:
             sys.stderr.write(f"tier {key} needs --of <tier of the work> and --builder <provider>\n")
             return 2
+        args.of = legacy.get(args.of, args.of)
         if args.of not in tiers or tiers[args.of].get("of") == "required":
             sys.stderr.write(f"--of must name a tier with a seat, got {args.of}\n")
             return 2
@@ -378,7 +379,7 @@ def main(argv: list[str] | None = None) -> int:
         return resolve_model(canon, args)
     if args.tier:
         return resolve_tier(canon, args)
-    sys.stderr.write("pass --tier <letter>, or --model <id> with --effort <level>\n" + list_tiers(canon) + "\n")
+    sys.stderr.write("pass --tier <category>, or --model <id> with --effort <level>\n" + list_tiers(canon) + "\n")
     return 2
 
 

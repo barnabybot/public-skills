@@ -19,6 +19,6 @@ Use this workflow when asked to refresh preferences or assess a new model. Keep 
 2. Read current primary model documentation and relevant benchmark results. Record dates, tested effort and limitations. Existing evidence is in `references/routing-metadata.yaml`. Where a model refuses briefs in a particular vocabulary, keep your own rewrite table beside that file.
 3. Compare candidate changes with the user's recorded rulings and actual route outcomes. State which choices are measured, inherited practice or user rulings.
 4. Write `YYYY-MM-DD Routing proposal.md` somewhere durable, with evidence, expected effects and a diff against the table in `SKILL.md`. Include any needed metadata changes.
-5. Apply preference changes only after the user approves the proposal. Every table edit must carry matching `basis` and `evidence` updates in `references/routing-metadata.yaml`; keep the tier name aligned and record the revision date and approval source. Run structural checks, resolver tests and cmux spawn fixtures before publication.
+5. Apply preference changes only after the user approves the proposal. Every table edit must carry matching `basis` and `evidence` updates in `references/routing-metadata.yaml`; keep the category name aligned and record the revision date and approval source. Run structural checks, resolver tests and cmux spawn fixtures before publication.
 
 Structural validation does not test live launches, output quality or available subscription capacity. Report those limits with the result.

@@ -52,9 +52,11 @@ class ShippedDefaults(unittest.TestCase):
 
     def test_every_tier_resolves_with_capacity_unread(self):
         for tier, model, effort in [
-            ("O", A_LARGE, "high"), ("A", A_SMALL, "medium"), ("B", A_MID, "high"),
-            ("C", A_MID, "high"), ("D", A_LARGE, "high"), ("E", A_LARGE, "xhigh"),
-            ("F", A_LARGE, "high"), ("V", A_LARGE, "medium"),
+            ("finance", A_LARGE, "xhigh"), ("strategy", A_LARGE, "xhigh"),
+            ("legal", A_LARGE, "high"), ("writing", A_LARGE, "high"),
+            ("visual", A_LARGE, "medium"), ("coding", A_MID, "high"),
+            ("systems", A_LARGE, "xhigh"), ("classification", A_MID, "medium"),
+            ("housekeeping", A_SMALL, "medium"), ("orchestrator", A_LARGE, "high"),
         ]:
             with self.subTest(tier=tier):
                 rc, r, err = run("--tier", tier)
@@ -63,17 +65,17 @@ class ShippedDefaults(unittest.TestCase):
                 self.assertIn("capacity unread", r["ROUTE_REASON"])
 
     def test_unconfigured_provider_reads_as_unread_not_as_failure(self):
-        rc, r, err = run("--tier", "E")
+        rc, r, err = run("--tier", "systems")
         self.assertEqual(rc, 0, err)
         self.assertIn("no CodexBar provider", r["ROUTE_REASON"])
 
-    def test_tier_letters_are_case_sensitive(self):
-        rc, _, err = run("--tier", "e")
+    def test_categories_are_case_sensitive(self):
+        rc, _, err = run("--tier", "Systems")
         self.assertEqual(rc, 2)
         self.assertIn("unknown tier", err.lower())
 
     def test_reason_reaches_the_route_line(self):
-        rc, r, _ = run("--tier", "E", "--reason", "prior pass found no cause")
+        rc, r, _ = run("--tier", "systems", "--reason", "prior pass found no cause")
         self.assertEqual(rc, 0)
         self.assertIn("prior pass found no cause", r["ROUTE_LINE"])
 
@@ -81,8 +83,25 @@ class ShippedDefaults(unittest.TestCase):
         proc = subprocess.run([sys.executable, str(RESOLVE), "--list-tiers"],
                               capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        for tier in "OABCDEFVR":
+        for tier in ("finance", "strategy", "legal", "writing", "visual", "coding",
+                     "systems", "classification", "housekeeping", "orchestrator", "review"):
             self.assertIn(tier, proc.stdout)
+
+    def test_legacy_letters_and_words_map_with_a_note(self):
+        for old, new in [("basic", "housekeeping"), ("moderate", "coding"),
+                         ("complex", "systems"), ("E", "systems"), ("F", "writing"),
+                         ("A", "housekeeping"), ("O", "orchestrator")]:
+            with self.subTest(old=old):
+                rc, r, err = run("--tier", old)
+                self.assertEqual(rc, 0, err)
+                self.assertEqual(r["ROUTE_TIER"], new)
+                self.assertIn(f"legacy tier word {old} resolved to {new}", r["ROUTE_LEGACY_NOTE"])
+
+    def test_legacy_review_of_a_letter_maps_both(self):
+        rc, r, err = run("--tier", "R", "--of", "F", "--builder", "provider_a")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(r["ROUTE_TIER"], "review of writing")
+        self.assertEqual(r["ROUTE_MODEL"], B_LARGE)
 
 
 class CapacityBehaviour(unittest.TestCase):
@@ -111,13 +130,13 @@ class CapacityBehaviour(unittest.TestCase):
         self.assertNotIn("codexbar: PROVIDER", meta, "metadata rewrite missed a provider")
 
     def test_healthy_meter_holds_the_default(self):
-        rc, r, err = run("--skill", str(self.skill), "--tier", "E", fixture_dir=FIXTURES)
+        rc, r, err = run("--skill", str(self.skill), "--tier", "systems", fixture_dir=FIXTURES)
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], A_LARGE)
         self.assertNotIn("unread", r["ROUTE_REASON"])
 
     def test_exhausted_default_takes_the_cross_provider_backup(self):
-        rc, r, err = run("--skill", str(self.skill), "--tier", "E",
+        rc, r, err = run("--skill", str(self.skill), "--tier", "systems",
                          fixture_dir=FIXTURES / "scarce")
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], B_LARGE)
@@ -125,14 +144,14 @@ class CapacityBehaviour(unittest.TestCase):
         self.assertIn("provider_a weekly 97% used", r["ROUTE_REASON"])
 
     def test_both_exhausted_exits_3_before_any_workspace(self):
-        rc, r, err = run("--skill", str(self.skill), "--tier", "E",
+        rc, r, err = run("--skill", str(self.skill), "--tier", "systems",
                          fixture_dir=FIXTURES / "exhausted")
         self.assertEqual(rc, 3)
         self.assertIn("first A-Large", err)
         self.assertIn("backup B-Large", err)
 
     def test_missing_meter_data_dispatches_as_written(self):
-        rc, r, err = run("--skill", str(self.skill), "--tier", "A", fixture_dir=HERE)
+        rc, r, err = run("--skill", str(self.skill), "--tier", "housekeeping", fixture_dir=HERE)
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], A_SMALL)
         self.assertIn("unread", r["ROUTE_REASON"])
@@ -153,18 +172,18 @@ class ExplicitModel(unittest.TestCase):
 
 
 class ReviewTier(unittest.TestCase):
-    def test_review_inherits_the_tier_and_excludes_the_builder(self):
-        rc, r, err = run("--tier", "R", "--of", "E", "--builder", "provider_a")
+    def test_review_inherits_the_category_and_excludes_the_builder(self):
+        rc, r, err = run("--tier", "review", "--of", "systems", "--builder", "provider_a")
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], B_LARGE)
 
     def test_review_of_the_other_provider_comes_back(self):
-        rc, r, err = run("--tier", "R", "--of", "E", "--builder", "provider_b")
+        rc, r, err = run("--tier", "review", "--of", "systems", "--builder", "provider_b")
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], A_LARGE)
 
     def test_review_without_of_is_refused(self):
-        rc, _, err = run("--tier", "R")
+        rc, _, err = run("--tier", "review")
         self.assertNotEqual(rc, 0)
 
 
@@ -196,53 +215,62 @@ class VisibleTable(unittest.TestCase):
         self.assertIn(before, text)
         self.skill.write_text(text.replace(before, after))
 
+    HK = ("| housekeeping | Housekeeping | Apply listed changes with no judgement: "
+          "rename, move, given edits | A-Small | medium | B-Mid | medium |")
+
+    def row(self, before, after):
+        self.change(self.HK, self.HK.replace(before, after))
+
     def test_editing_the_table_changes_the_dispatch(self):
-        self.change("| A | Mechanical | A-Small | medium |", "| A | Mechanical | A-Large | high |")
-        rc, r, err = run("--skill", str(self.skill), "--tier", "A")
+        self.row("| A-Small | medium |", "| A-Large | high |")
+        rc, r, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 0, err)
         self.assertEqual((r["ROUTE_MODEL"], r["ROUTE_EFFORT"]), (A_LARGE, "high"))
 
     def test_trailing_whitespace_is_tolerated(self):
-        row = "| A | Mechanical | A-Small | medium | B-Mid | medium |"
-        self.change(row, row + "  ")
-        rc, r, err = run("--skill", str(self.skill), "--tier", "A")
+        self.change(self.HK, self.HK + "  ")
+        rc, r, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_MODEL"], A_SMALL)
 
     def test_same_provider_backup_is_rejected(self):
-        self.change("| A | Mechanical | A-Small | medium | B-Mid | medium |",
-                    "| A | Mechanical | A-Small | medium | A-Large | medium |")
-        rc, _, err = run("--skill", str(self.skill), "--tier", "A")
+        self.row("| B-Mid | medium |", "| A-Large | medium |")
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 2)
         self.assertIn("another provider", err)
 
     def test_missing_tier_fails_before_dispatch(self):
-        self.change("| A | Mechanical | A-Small | medium | B-Mid | medium |", "")
-        rc, _, err = run("--skill", str(self.skill), "--tier", "A")
+        self.change(self.HK + "\n", "")
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 2)
-        self.assertIn("missing tiers: A", err)
+        self.assertIn("missing tiers: housekeeping", err)
 
     def test_invalid_effort_fails_before_dispatch(self):
-        self.change("| A-Small | medium | B-Mid |", "| A-Small | ultra | B-Mid |")
-        rc, _, err = run("--skill", str(self.skill), "--tier", "A")
+        self.row("| A-Small | medium |", "| A-Small | ultra |")
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 2)
         self.assertIn("invalid effort", err)
 
+    def test_six_column_row_is_rejected(self):
+        self.row("| Apply listed changes with no judgement: rename, move, given edits ", "")
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
+        self.assertEqual(rc, 2)
+        self.assertIn("seven columns", err)
+
     def test_duplicate_row_is_rejected(self):
-        row = "| A | Mechanical | A-Small | medium | B-Mid | medium |"
-        self.change(row, row + "\n" + row)
-        rc, _, err = run("--skill", str(self.skill), "--tier", "A")
+        self.change(self.HK, self.HK + "\n" + self.HK)
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 2)
         self.assertIn("duplicate or unknown tier", err)
 
     def test_unknown_model_name_is_rejected(self):
-        self.change("| A | Mechanical | A-Small | medium |", "| A | Mechanical | Nonesuch | medium |")
-        rc, _, err = run("--skill", str(self.skill), "--tier", "A")
+        self.row("| A-Small | medium |", "| Nonesuch | medium |")
+        rc, _, err = run("--skill", str(self.skill), "--tier", "housekeeping")
         self.assertEqual(rc, 2)
         self.assertIn("unknown model", err)
 
     def test_check_warns_when_a_row_name_drifts_from_the_metadata(self):
-        self.change("| A | Mechanical |", "| A | Renamed |")
+        self.row("| Housekeeping |", "| Renamed |")
         result = subprocess.run(
             [sys.executable, str(CHECK), "--skill", str(self.skill),
              "--no-live", "--no-log", "--json"], capture_output=True, text=True)

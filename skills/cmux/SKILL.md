@@ -1,6 +1,6 @@
 ---
 name: cmux
-version: 1.0.0
+version: 1.1.0
 description: >-
   Manage cmux workspaces and browser panes. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
 fallback: If cmux is unavailable, write the prompt or handoff file under $AGENT_NOTES/Sessions/Handoffs/ and tell the user the workspace could not be opened.
@@ -37,7 +37,7 @@ scripts care only that the folder exists and that they may write to it.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <letter>`), sets effort on the launched CLI, and writes the session note with model, effort and the route log. The canonical helper. |
+| `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <category>`), sets effort on the launched CLI, and writes the session note with model, effort and the route log. The canonical helper. |
 | `scripts/test-spawn-workspace.sh` | Dry-run fixture test for the helper's routing. Nothing is spawned. Run it after any edit to `spawn-workspace.sh`, or to the orchestrator's table, metadata or resolver. |
 | `scripts/close-workspace.sh` | Close a workspace AND flip its session note to `status: done` with an `ended:` stamp. Flips only a note still open. cmux reuses workspace numbers, so closed notes on the same id are reported and left alone. Use this instead of raw `cmux close-workspace`. |
 | `scripts/test-close-workspace.sh` | Fixture test for that guard. Run it after any edit to `close-workspace.sh`. |
@@ -53,7 +53,7 @@ Reference docs:
   (window-scoping, multi-line send, current-workspace drift, shared-branch
   commits).
 - the **orchestrator** skill's `references/routing-rules.md` - how a request
-  becomes a tier letter, and what the route log is for.
+  becomes a category, and what the route log is for.
 
 ## Runtime and permission mode
 
@@ -71,12 +71,14 @@ the loop, put checkpoints in the prompt instead.
 
 ## Model selection
 
-`spawn-workspace.sh --tier <letter>` resolves agent, model and effort by calling
-the **orchestrator** skill's `scripts/resolve.py`, which reads the marked table
-in that skill's `SKILL.md`. The tiering rule is in its
+`spawn-workspace.sh --tier <category>` resolves agent, model and effort by
+calling the **orchestrator** skill's `scripts/resolve.py`, which reads the marked
+table in that skill's `SKILL.md`. The category rule is in its
 `references/routing-rules.md`. `--model` with `--effort` bypasses
-the resolver, for successors and for models named in the request. A call with
-neither `--tier` nor `--model` is refused, and the usage text lists the tiers.
+the resolver, for successors and for models named in the request. Old tier
+letters and the words `basic`, `moderate` and `complex` map to categories with a
+deprecation line. A call with neither `--tier` nor `--model` is refused, and the
+usage text lists the categories.
 
 **Aliases float.** `sonnet` and `opus` re-resolve to whatever the current
 generation ships. The table pins ids, and a successor of a live lineage passes
@@ -84,7 +86,7 @@ the predecessor's `--model` and `--effort` explicitly so an upgrade never lands
 mid-lineage.
 
 **Routing lives in the orchestrator skill, and not here.** The seat that
-dispatches keeps the dispatch policy, so the table, the tiering rule and the
+dispatches keeps the dispatch policy, so the table, the category rule and the
 resolver sit together in one package. This helper reads them; it does not own
 them. Install both skills, or `--tier` has nothing to resolve against.
 
@@ -99,28 +101,28 @@ earn their seat.
 # List workspaces (window-scoped - see references/pitfalls.md)
 cmux list-workspaces
 
-# Spawn a named workspace with a prompt; the tier is required
-scripts/spawn-workspace.sh "workspace-name" --tier C --prompt "Your prompt here"
+# Spawn a named workspace with a prompt; the category is required
+scripts/spawn-workspace.sh "workspace-name" --tier coding --prompt "Your prompt here"
 
 # Project-specific cwd
-scripts/spawn-workspace.sh "workspace-name" --tier C --cwd "$HOME/code/repo" --prompt "..."
+scripts/spawn-workspace.sh "workspace-name" --tier coding --cwd "$HOME/code/repo" --prompt "..."
 
 # New window instead of the caller's window
-scripts/spawn-workspace.sh "workspace-name" --tier C --prompt "..." --new-window
+scripts/spawn-workspace.sh "workspace-name" --tier coding --prompt "..." --new-window
 
 # Long handoff prompt - store it as a file first
-scripts/spawn-workspace.sh "workspace-name" --tier F \
+scripts/spawn-workspace.sh "workspace-name" --tier writing \
   --prompt-file "$AGENT_NOTES/Sessions/Handoffs/2026-09-22 topic handoff.md"
 
-# Hard investigation - tier E, with the word that decided the tier
-scripts/spawn-workspace.sh "workspace-name" --tier E --reason "prior pass found no cause" \
+# Failed first pass - systems, with the word that decided the category
+scripts/spawn-workspace.sh "workspace-name" --tier systems --reason "prior pass found no cause" \
   --prompt-file "$AGENT_NOTES/Sessions/Handoffs/2026-09-22 topic handoff.md"
 
 # A named model, bypassing the table (successors, and models the user names)
 scripts/spawn-workspace.sh "workspace-name" --model claude-opus-5 --effort medium --prompt "..."
 
 # See the route without spawning
-scripts/spawn-workspace.sh "workspace-name" --tier E --dry-run
+scripts/spawn-workspace.sh "workspace-name" --tier systems --dry-run
 
 # Rename / select
 cmux rename-workspace --workspace workspace:N "Name"

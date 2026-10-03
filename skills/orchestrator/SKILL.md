@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-version: 1.1.0
+version: 1.2.0
 description: >-
   Coordinate cmux agents and maintain model routing. Use for /orchestrator,
   /orchestrate, orchestrator mode, dispatching workers, fleet status, relaying
@@ -52,7 +52,7 @@ its receiver and its message and goes straight to the status workflow.
 ## Model routing table
 
 This is the editable preference table. `scripts/resolve.py` reads these rows
-directly. Choose the tier with `references/routing-rules.md`; model IDs and
+directly. Choose the category with `references/routing-rules.md`; model IDs and
 provider settings are in `references/routing-metadata.yaml`.
 
 > **The rows below are a placeholder.** They carry no
@@ -63,22 +63,27 @@ provider settings are in `references/routing-metadata.yaml`.
 > anything you care about.
 
 <!-- routing-table:start -->
-| Tier | Work | Default model | Effort | Backup model | Backup effort |
-|---|---|---|---|---|---|
-| O | Orchestrator | A-Large | high | B-Large | high |
-| A | Mechanical | A-Small | medium | B-Mid | medium |
-| B | Bounded | A-Mid | high | B-Mid | high |
-| C | Everyday | A-Mid | high | B-Mid | high |
-| D | Iterative | A-Large | high | B-Large | high |
-| E | Hard | A-Large | xhigh | B-Large | high |
-| F | Consequential | A-Large | high | B-Large | high |
-| V | Visual | A-Large | medium | B-Large | high |
-| R | Review | Inherit reviewed tier | — | Exclude builder | — |
+| Category | Name | Use when the task is to… | Default model | Effort | Backup model | Backup effort |
+|---|---|---|---|---|---|---|
+| finance | Finance & accounting | Build or check a financial model, databook, reconciliation, valuation or tax calculation | A-Large | xhigh | B-Large | xhigh |
+| strategy | Strategy & economics | Write a plan, proposal, market sizing, competitor view, unit economics or investment thesis | A-Large | xhigh | B-Large | xhigh |
+| legal | Legal | Read or mark up a contract, terms of business or regulation | A-Large | high | B-Large | high |
+| writing | Writing | Draft or edit prose you present: memo, essay, post, speaker notes, fiction | A-Large | high | B-Large | high |
+| visual | Visual | Make or fix how something looks: deck, slide, chart, page, image | A-Large | medium | B-Large | high |
+| coding | Coding | Build or change software: skill, script, site code, scheduled job | A-Mid | high | B-Mid | high |
+| systems | Systems debugging | Find why a machine, server or tool failed | A-Large | xhigh | B-Large | high |
+| classification | Classification | Read each note and decide its properties, categories or links | A-Mid | medium | B-Mid | low |
+| housekeeping | Housekeeping | Apply listed changes with no judgement: rename, move, given edits | A-Small | medium | B-Mid | medium |
+| orchestrator | Orchestrator | Dispatch, relay, hand off | A-Large | high | B-Large | high |
+| review | Review | Check finished work | Inherit reviewed category | — | Exclude builder | — |
 <!-- routing-table:end -->
 
-Review (R) inherits the reviewed tier and excludes the builder's provider. F
-uses max for the final look. These preferences stay fixed when capacity is
-scarce: scarcity changes the dispatched model, and never the table.
+Three rules apply on top of the table. Presented work (finance, strategy,
+legal, writing) uses max for the final look. Work the user steers through the
+composer keeps its category one effort step lower. A failed first pass changes
+to the backup model. Review inherits the reviewed category and excludes the
+builder's provider. These preferences stay fixed when capacity is scarce:
+scarcity changes the dispatched model, and never the table.
 
 ## What you must supply
 
@@ -88,7 +93,7 @@ The rule generalises. The table does not. Four things are yours:
    `REPLACE-WITH-...` value with an ID your CLI accepts. Pin full IDs, because
    aliases like `opus` and `sonnet` re-resolve to whatever the current
    generation ships and a seat pinned to an alias changes model under you.
-2. **Which model sits in which tier**, in the marked table above. Start from the
+2. **Which model sits in which category**, in the marked table above. Start from the
    shape, then let the route logs tell you which rows earn their seat.
 3. **A second provider.** The resolver refuses a table whose backup shares a
    provider with its default, because a same-provider backup fails at exactly
@@ -102,11 +107,11 @@ The rule generalises. The table does not. Four things are yours:
 
 ## Dispatch contract
 
-Choose the tier, then call the cmux helper:
+Choose the category, then call the cmux helper:
 
 ```bash
 <path-to>/skills/cmux/scripts/spawn-workspace.sh "<name>" \
-  --tier E --reason "prior pass found no cause" \
+  --tier systems --reason "prior pass found no cause" \
   --cwd "$HOME/code/<repo>" --worktree \
   --prompt-file "$AGENT_NOTES/Sessions/Handoffs/YYYY-MM-DD <slug>.md"
 ```
@@ -139,7 +144,7 @@ model the user names explicitly also uses `--model` and `--effort`. See
 
 ## Ownership
 
-This skill owns the routing table, the tiering rule, the resolver and their
+This skill owns the routing table, the category rule, the resolver and their
 checks. Routing is dispatch policy, and the seat that dispatches keeps the
 policy. Splitting the table from the rule that reads it gives one table two
 owners, which is how a table and its documentation drift apart.

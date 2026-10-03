@@ -5,12 +5,12 @@
 #
 # `provider_b` ships with obviously fake model IDs so a wrong model can never
 # launch silently. `provider_a` ships with real Claude IDs, so a Claude-only
-# reader can run `--tier` today and edit the rest later.
+# reader can run `--tier <category>` today and edit the rest later.
 #
 # Three rules the resolver enforces, so you cannot get them wrong quietly:
-#   1. Every tier in this file must appear in the SKILL.md table, and the other
+#   1. Every category in this file must appear in the SKILL.md table, and the other
 #      way round.
-#   2. Every tier's backup must sit on a DIFFERENT provider from its default.
+#   2. Every category's backup must sit on a DIFFERENT provider from its default.
 #      A backup on the same provider fails at the moment you need it, which is
 #      when that provider's allowance runs out.
 #   3. Every effort named in the table must be in that provider's `efforts`.
@@ -20,8 +20,8 @@
 # provider name your meter reports, and the same resolver starts taking the
 # backup when the default is exhausted. Nothing else changes.
 # ---------------------------------------------------------------------------
-version: 2
-revised: 2026-09-22
+version: 3
+revised: 2026-10-03
 revised_by: "placeholder table shipped with the public skill"
 evidence_date: none
 evidence_digest: "No evidence. Every row below is a shape to edit."
@@ -73,67 +73,90 @@ capacity:
   read_timeout_seconds: 20
   timezone: UTC
 tiers:
-  O:
+  finance:
+    name: Finance & accounting
+    what: Build or check a financial model, databook, reconciliation, valuation or tax
+      calculation
+    stop: Figures tie to source. Max for the final look.
+    basis: practice
+    evidence: placeholder
+  strategy:
+    name: Strategy & economics
+    what: Write a plan, proposal, market sizing, competitor view, unit economics or
+      investment thesis
+    stop: An argument you would present. Max for the final look.
+    basis: practice
+    evidence: placeholder
+  legal:
+    name: Legal
+    what: Read or mark up a contract, terms of business or regulation
+    stop: Every clause named with its issue. Max for the final look.
+    basis: practice
+    evidence: placeholder
+  writing:
+    name: Writing
+    what: Draft or edit prose you present, including memos, essays, posts, speaker
+      notes and fiction
+    stop: Prose you would publish. Max for the final look.
+    basis: practice
+    evidence: placeholder
+  visual:
+    name: Visual
+    what: Make or fix how something looks, such as a deck, slide, chart, page or image
+    stop: Screenshots at 1920x1080 plus one phone viewport. The backup is the visual
+      QA gate.
+    basis: practice
+    evidence: placeholder
+  coding:
+    name: Coding
+    what: Build or change software, such as a skill, script, site code or scheduled
+      job
+    stop: It runs, and tests or a validator pass.
+    basis: practice
+    evidence: placeholder
+  systems:
+    name: Systems debugging
+    what: Find why a machine, server or tool failed
+    stop: Cause named and demonstrated.
+    basis: practice
+    evidence: placeholder
+  classification:
+    name: Classification
+    what: Read each note and decide its properties, categories or links
+    stop: Every note labelled; a sample checked against the user's labels.
+    basis: practice
+    evidence: placeholder
+  housekeeping:
+    name: Housekeeping
+    what: Apply listed changes with no judgement, such as rename, move or given edits
+    stop: The named files only.
+    basis: practice
+    evidence: placeholder
+  orchestrator:
     name: Orchestrator
     what: 'This seat: dispatch, relay, judgement, succession'
     stop: A seat that compacts in place recycles on a new phase; a seat with a fixed
       window hands off at about 30%.
     basis: practice
-    evidence: none
-  A:
-    name: Mechanical
-    what: Named files, explicit instruction, machine-checkable
-    stop: The named files only.
-    basis: practice
-    evidence: none
-  B:
-    name: Bounded
-    what: Plan locked, tests define done, long agentic loop
-    stop: Diff plus green tests. Raise effort one step only after high stalls.
-    basis: practice
-    evidence: none
-  C:
-    name: Everyday
-    what: Ordinary coding, ordinary debugging, first structure of a page or deck
-    stop: It runs and you can watch it run. A structure exists; the spec waits for
-      tier F.
-    basis: practice
-    evidence: none
-  D:
-    name: Iterative
-    what: The user will steer it through the composer several times
-    stop: The user stops correcting.
-    basis: practice
-    evidence: none
-  E:
-    name: Hard
-    what: Ambiguous debugging, architecture, terminal investigation, difficult document
-      reasoning
-    stop: Cause named and demonstrated.
-    basis: practice
-    evidence: none
-  F:
-    name: Consequential
-    what: Final argument, written spec, working prose, editorial judgement
-    stop: An artefact you would present or merge. Max for the last look.
-    basis: practice
-    evidence: none
-  V:
-    name: Visual
-    what: Visual system, UI, slide look
-    stop: Screenshots at 1920x1080 plus one phone viewport. The backup is the visual
-      QA gate.
-    basis: practice
-    evidence: none
-  R:
+    evidence: placeholder
+  review:
     name: Review
-    what: Independent check of finished work; takes the tier of the work it checks,
+    what: Independent check of finished work; takes the category of the work it checks,
       on a different provider
     of: required
     stop: Every finding with confidence and severity, plus a coverage statement.
     basis: practice
     evidence: Never the builder's provider.
 legacy_tiers:
-  basic: A
-  moderate: C
-  complex: E
+  O: orchestrator
+  A: housekeeping
+  B: coding
+  C: coding
+  D: visual
+  E: systems
+  F: writing
+  V: visual
+  R: review
+  basic: housekeeping
+  moderate: coding
+  complex: systems

@@ -1,15 +1,15 @@
 # Dispatch
 
-Read `references/routing-rules.md` before choosing a tier. Use the model table in `SKILL.md`.
+Read `references/routing-rules.md` before choosing a category. Use the model table in `SKILL.md`.
 
 ## Spawning a new session
 
-Use the helper script — it creates the workspace AND the linked session note in one shot, and it routes the seat. Name the tier: `--tier <letter>` resolves agent, model and effort from the marked table in this skill's `SKILL.md`, reads the capacity meter for the candidate providers where one is configured, takes the row's cross-provider backup when the first preference is exhausted, and writes the route log onto the note. Pass `--model` with `--effort` only for a successor or a model the user names. A call with neither is refused before any cmux call.
+Use the helper script — it creates the workspace AND the linked session note in one shot, and it routes the seat. Name the category: `--tier <category>` resolves agent, model and effort from the marked table in this skill's `SKILL.md`, reads the capacity meter for the candidate providers where one is configured, takes the row's cross-provider backup when the first preference is exhausted, and writes the route log onto the note. Pass `--model` with `--effort` only for a successor or a model the user names. A call with neither is refused before any cmux call.
 
 ```bash
 ~/.claude/skills/cmux/scripts/spawn-workspace.sh \
   "<workspace-name>" \
-  --tier E \
+  --tier systems \
   --reason "prior pass found no cause" \
   --cwd "$HOME/code/<repo>" --worktree \
   --worktree \

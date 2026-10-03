@@ -57,7 +57,7 @@ above the panel.
 Text fields, one message after the panel: the priority, the note name, and the
 workspace name where Mode is Live peer. The seat, model and effort come from the
 routing canon, never from a question. Step 5 of `workflows/auto-spawn.md` names
-the tier and the helper resolves it. A model the user names in the request wins
+the category and the helper resolves it. A model the user names in the request wins
 and is logged as named.
 
 ## Workflow routing
@@ -76,7 +76,7 @@ Choose the delivery that fits the user's intent. Three modes:
 |---|---|---|
 | `/handoff` (default) | Clipboard - `workflows/immediate.md` | write the brief under `Handoffs/`, copy it to the clipboard, then report the path first and the clipboard second |
 | `/handoff park` | Park - `workflows/park.md` | append the full Progress entry to the session note and stop |
-| `/handoff to a new session` / `to a new workspace` / `and open it` | Auto-spawn - `workflows/auto-spawn.md` | write the brief under `Handoffs/`, name the tier, run `spawn-workspace.sh --tier <letter> --prompt-file "$PROMPT_FILE"`, quote the route line it prints, return the workspace name |
+| `/handoff to a new session` / `to a new workspace` / `and open it` | Auto-spawn - `workflows/auto-spawn.md` | write the brief under `Handoffs/`, name the category, run `spawn-workspace.sh --tier <category> --prompt-file "$PROMPT_FILE"`, quote the route line it prints, return the workspace name |
 
 **Routing rule:** scan the user's `/handoff` arguments for the phrases `to a new
 session`, `to a new workspace`, or `and open it`, in any case. If one is

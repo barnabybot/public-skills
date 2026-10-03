@@ -78,33 +78,33 @@ agent. Auto-spawning closes the loop in one step.
    The helper prepends `Effort: <level>` as the brief's first line from the
    resolved route, so the brief and the seat agree without a placeholder.
 
-5. **Name the tier, then spawn.** The routing canon is the **orchestrator**
-   skill: `references/routing-rules.md` carries the tiering rule and the marked
+5. **Name the category, then spawn.** The routing canon is the **orchestrator**
+   skill: `references/routing-rules.md` carries the category rule and the marked
    table in its `SKILL.md` the preferences. The
-   helper resolves the tier, sets the effort and writes the route log. Your job
-   is the letter. Three branches, in order:
+   helper resolves the category, sets the effort and writes the route log. Your
+   job is the category. Three branches, in order:
 
    **Successor to a recycled seat.** Pass the predecessor's `--model` and
-   `--effort` verbatim, with `--reason "inherited from <predecessor>"`. No tier.
+   `--effort` verbatim, with `--reason "inherited from <predecessor>"`. No category.
    A successor on a different model breaks the lineage, so that is a question
    rather than a default.
 
    **A model named in the request.** Pass `--model` and the effort its row
    gives, with `--reason "named in request"`.
 
-   **Everything else.** Tier the request with the rule in `routing-rules.md`: the verb
-   and object, whether done is machine-checkable, whether inputs are named,
-   whether the user presents or rules on the output, and the tier of the work
-   being continued. Pass the letter and the word that decided it:
+   **Everything else.** Choose the category with the rule in
+   `routing-rules.md`: the verb, the object, the output the user receives, and
+   the category of the work being continued. Pass the category and the word
+   that decided it:
 
    ```bash
    <path-to>/skills/cmux/scripts/spawn-workspace.sh "<workspace-name>" \
-     --tier E --reason 'Tier from "prior pass found no cause"' \
+     --tier systems --reason 'Category from "prior pass found no cause"' \
      --prompt-file "$PROMPT_FILE"
    ```
 
-   A review passes `--tier R --of <letter> --builder <model-id>`, and the
-   builder is usually this session's model. Repository work adds `--cwd` and
+   A review passes `--tier review --of <category> --builder <provider>`, and
+   the builder is usually this session's provider. Repository work adds `--cwd` and
    `--worktree`, as the orchestrator requires; the default cwd is the notes
    root. The script creates the session note at `$AGENT_NOTES/Sessions/YYYY-MM-DD
    <workspace-name>.md` with `model:`, `effort:` and the three route lines
@@ -112,14 +112,14 @@ agent. Auto-spawning closes the loop in one step.
    `--new-window` unless asked), and seeds it with the brief.
 
 6. **Read the route line and finish the notes.** The helper's last line is the
-   route: tier, dispatched model and effort, default, and reason. The new note
+   route: category, dispatched model and effort, default, and reason. The new note
    already carries `model:`, `effort:` and the route log. Add one line to your
-   own session's Progress entry naming the workspace, tier, model and effort.
+   own session's Progress entry naming the workspace, category, model and effort.
 
 7. **Confirm in one line, with the route visible.** Name the workspace; the note
    carries its id.
 
-   > Spawned **`<workspace-name>`** on tier **<letter>** → **<model> ·
+   > Spawned **`<workspace-name>`** on **<category>** → **<model> ·
    > <effort>**. Brief at `<path>`; note at `<path>`. The seat presents its
    > reading and waits.
 
@@ -140,7 +140,7 @@ where the user explicitly asks for one.
 
 ## Hard rules for auto-spawn
 
-- **Name the tier; the helper routes.** Every spawn carries `--tier <letter>`,
+- **Name the category; the helper routes.** Every spawn carries `--tier <category>`,
   or `--model` with `--effort` for a successor or a named model. The route line,
   the note's route log and the confirmation line carry the same facts, so a
   wrong route is visible before the seat's first tool turn.
