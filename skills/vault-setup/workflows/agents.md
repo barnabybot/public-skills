@@ -82,7 +82,7 @@ Run the shared scaffolding contract in [`../SKILL.md`](../SKILL.md). This workfl
 
 - **Search registration is usually off.** Agents read these files by direct access. Register only where the Intake panel said Now; the collection name is the lowercased `VAULT_NAME`.
 - **Sync toggles.** An agents vault usually holds non-Markdown state - JSON snapshots, chart images, an encrypted credentials file - so the Intake Files answer is Mixed in practice and step 9 of the shared contract applies on every device.
-- **The final report** (step 10) restates the cross-vault boundary rule, and reminds the user to point every scheduled writer at the new per-agent paths and to give each output folder a retention row before its job goes live.
+- **The final report** (step 10) restates the cross-vault boundary rule, tells the user to set `AGENT_NOTES` to the vault root in `~/.zshenv` (the orchestrator, cmux and recall skills write `Sessions/`, `Sessions/Handoffs/` and `Ops/` beneath it), and reminds the user to point every scheduled writer at the new per-agent paths and to give each output folder a retention row before its job goes live.
 - This workflow creates the vault scaffold. Agent configuration, server runtime stores, credential-manager setup and scheduled-job mirrors are separate work.
 
 ## Template files (self-contained)
