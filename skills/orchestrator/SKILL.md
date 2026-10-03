@@ -14,7 +14,7 @@ One skill owns coordination, handoff and model routing. `cmux` supplies the
 workspace commands. Resolve workflow and script paths from this skill directory.
 
 **Requires** the `cmux` skill for anything that spawns. `scripts/resolve.py`
-needs **PyYAML** (`pip install PyYAML`); it is the one non-stdlib dependency in
+needs **PyYAML** (`python3 -m pip install --user PyYAML`); it is the one non-stdlib dependency in
 this repository and it fails with that install line rather than a traceback.
 
 ## Configuration

@@ -7,7 +7,7 @@ A scheduled check of the routing table against Artificial Analysis (AA). The scr
 Run it weekly from any scheduler (cron, launchd, a CI timer). From the skill directory:
 
 ```bash
-AGENT_NOTES="$HOME/agent-notes" python3 scripts/aa_refresh.py --quiet
+python3 scripts/aa_refresh.py --quiet    # writes under $AGENT_NOTES
 ```
 
 A crontab line for Monday 07:00:

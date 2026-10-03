@@ -18,7 +18,7 @@ if [[ ! -f "$RESOLVER" ]]; then
 fi
 if ! python3 -c 'import yaml' 2>/dev/null; then
   echo "SKIP  PyYAML is not installed, so the resolver cannot read the table." >&2
-  echo "      Install it with: pip install PyYAML" >&2
+  echo "      Install it with: python3 -m pip install --user PyYAML" >&2
   exit 0
 fi
 

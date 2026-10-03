@@ -15,7 +15,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-import yaml
+try:
+    import yaml
+except ImportError:  # PyYAML is not in the standard library.
+    sys.exit(
+        "check.py needs PyYAML to read references/routing-metadata.yaml.\n"
+        "Install it with:  python3 -m pip install --user PyYAML\n"
+    )
 
 HERE = Path(__file__).resolve().parent
 from routing_log import append_evidence

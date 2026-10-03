@@ -30,7 +30,7 @@ try:
 except ImportError:  # PyYAML is not in the standard library.
     sys.exit(
         "resolve.py needs PyYAML to read references/routing-metadata.yaml.\n"
-        "Install it with:  pip install PyYAML\n"
+        "Install it with:  python3 -m pip install --user PyYAML\n"
     )
 
 HERE = Path(__file__).resolve().parent

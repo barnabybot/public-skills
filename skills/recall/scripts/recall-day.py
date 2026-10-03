@@ -152,6 +152,9 @@ def get_project_dirs(project_path: str | None, all_projects: bool) -> list[Path]
         print(f"Error: Project path not found: {project_path}", file=sys.stderr)
         sys.exit(1)
 
+    if not CLAUDE_PROJECTS.is_dir():
+        return []  # No Claude Code transcripts yet, e.g. a Codex-only machine.
+
     if all_projects:
         return [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir()]
 
