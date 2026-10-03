@@ -216,5 +216,5 @@ or pre-populate `Templates/`. New vaults start empty.
 
 - Type workflows: `workflows/{personal,projects,operations,agents,wiki}.md`
 - Per-type templates: `templates/<type>/`
-- The `agents` type pairs with the `orchestrator`, `handoff` and `recall` skills
+- The `agents` type pairs with the `orchestrator` and `recall` skills
   in this repository, which write into exactly the tree it scaffolds.

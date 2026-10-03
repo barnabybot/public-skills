@@ -53,9 +53,9 @@ as written would have restored the defect that PR fixed. The worker stopped at t
 thin-slice gate and was right to. But the brief gave it no branch, so it had to invent
 the refusal and argue for it. A conditional DoD makes that outcome a success path.
 
-## Why this lives in the handoff skill
+## Why this lives in the orchestrator skill
 
-A project's own instruction file usually warns that reference anchors - the palette source, the template source, the launcher - are the forks most often missed, and that deployment context is easy to get wrong. It rarely goes on to tell an agent to re-verify what a brief asserts. The handoff skill produces and consumes these briefs, so the instruction to label premises on the way out and re-confirm them on the way in belongs here.
+A project's own instruction file usually warns that reference anchors - the palette source, the template source, the launcher - are the forks most often missed, and that deployment context is easy to get wrong. It rarely goes on to tell an agent to re-verify what a brief asserts. The orchestrator handoff workflow produces and consumes these briefs, so the instruction to label premises on the way out and re-confirm them on the way in belongs here.
 
 ## Worked example
 

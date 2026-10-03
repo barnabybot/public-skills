@@ -1,18 +1,17 @@
 ---
 name: orchestrator
-version: 1.2.0
+version: 1.3.0
 description: >-
-  Coordinate cmux agents and maintain model routing. Use for /orchestrator,
-  /orchestrate, orchestrator mode, dispatching workers, fleet status, relaying
-  comments or reviewing model routing.
+  Coordinate cmux agents, hand off sessions and maintain model routing. Use for
+  /orchestrator, /orchestrate, /handoff, handover, pickup prompts, parking notes,
+  dispatching workers, fleet status, relaying comments or reviewing model routing.
 fallback: If cmux is unavailable, write the brief under $AGENT_NOTES/Sessions/Handoffs/ and report the path. If capacity cannot be read, report it as unread.
 ---
 
 # Orchestrator
 
-One skill owns coordination and model routing. `cmux` supplies the workspace
-commands; `handoff` carries session succession. Resolve workflow and script
-paths from this skill directory.
+One skill owns coordination, handoff and model routing. `cmux` supplies the
+workspace commands. Resolve workflow and script paths from this skill directory.
 
 **Requires** the `cmux` skill for anything that spawns. `scripts/resolve.py`
 needs **PyYAML** (`pip install PyYAML`); it is the one non-stdlib dependency in
@@ -33,10 +32,11 @@ project path.
 **Intent** - What is required?
 - Status - inspect running work and report progress
 - Dispatch - start a worker for the stated goal
+- Handoff - continue, recycle, copy or park the current session
 - Routing review - check preferences or prepare a proposed update
-- settled by: status or "what are my agents doing" (Status); spawn or dispatch (Dispatch); model routing or table check (Routing review)
+- settled by: status or "what are my agents doing" (Status); spawn or dispatch (Dispatch); handoff, handover, recycle, copy or park (Handoff); model routing or table check (Routing review)
 
-A handoff goes to the `handoff` skill and needs no fleet scan. A relay names
+A handoff goes straight to its workflow and needs no fleet scan. A relay names
 its receiver and its message and goes straight to the status workflow.
 
 ## Workflows
@@ -45,10 +45,10 @@ its receiver and its message and goes straight to the status workflow.
 |---|---|
 | Status, coordination or relay | `workflows/status.md` |
 | Start a worker | `workflows/dispatch.md` |
-| Recycle a worker or the orchestrator | `workflows/recycle.md` |
+| Handoff, handover, pickup prompt, clipboard or park | `workflows/handoff.md` |
+| Recycle a worker or the orchestrator | `workflows/recycle.md`, then `workflows/handoff.md` |
 | Check routing, review route logs or propose new preferences | `workflows/routing-review.md` |
 | Weekly Artificial Analysis ranking, or an alert from it | `workflows/routing-refresh.md` |
-| Hand off, park, or write a pickup prompt | the `handoff` skill |
 
 ## Model routing table
 
@@ -130,6 +130,8 @@ model the user names explicitly also uses `--model` and `--effort`. See
 ## Operating rules
 
 - One workspace per goal. Use workspace names in reports and IDs in tool calls.
+- A handoff or handover opens a new workspace. Clipboard and park require an
+  explicit request.
 - Write the brief under `$AGENT_NOTES/Sessions/Handoffs/` before delivery. Keep
   session records under `$AGENT_NOTES/Sessions/`.
 - Carry existing authorisation into the brief. Ask only for an unresolved

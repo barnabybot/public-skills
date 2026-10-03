@@ -232,6 +232,6 @@ note before assuming context.
 **"Handoff" and "handover" mean spawn a new workspace.** They do not mean a
 clipboard, a file path, or a question about whether to spawn. Write the prompt
 under `$AGENT_NOTES/Sessions/Handoffs/` with a dated filename, then spawn it and
-report the workspace name. The `handoff` and `cmux` skills in this repository do
+report the workspace name. The `orchestrator` and `cmux` skills in this repository do
 this. Produce a clipboard handoff only on an explicit request to copy, and park
 only on an explicit `park`.

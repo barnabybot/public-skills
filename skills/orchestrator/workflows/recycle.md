@@ -1,6 +1,6 @@
 # Recycle
 
-Read the `handoff` skill for the brief and delivery procedure.
+Read `workflows/handoff.md` for the brief and delivery procedure.
 
 ## Recycle discipline
 

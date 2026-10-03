@@ -1,6 +1,6 @@
 # public-skills
 
-Eight agent skills and one `AGENTS.md`, taken from a working setup and rewritten
+Seven agent skills and one `AGENTS.md`, taken from a working setup and rewritten
 so they run on somebody else's machine.
 
 They are for people who have started using a coding agent - Claude Code, Codex,
@@ -8,9 +8,8 @@ or another CLI harness - and want more from it than one conversation at a time.
 
 | Skill | What it does |
 |---|---|
-| [`orchestrator`](skills/orchestrator/) | Run several agents at once. One coordinator spawns named workspaces, routes each job to a model and effort level, reads their screens, and relays your comments. Owns the routing table, the category rule and the resolver. |
+| [`orchestrator`](skills/orchestrator/) | Run several agents at once. One coordinator spawns named workspaces, routes each job to a model and effort level, reads their screens, and relays your comments. Hands a session on before it runs out of context, as a new workspace, a clipboard brief or a parked note. Owns the routing table, the category rule and the resolver. |
 | [`cmux`](skills/cmux/) | The mechanics underneath: spawn a workspace, write the session note, close it cleanly. Two scripts; it calls the orchestrator to route. |
-| [`handoff`](skills/handoff/) | Move context from one session to the next before it runs out, as a new workspace, a clipboard brief, or a parked note. |
 | [`recall`](skills/recall/) | Read your own history. What you did yesterday, or last week, or on a topic, from the transcripts your agent already writes. |
 | [`vault-setup`](skills/vault-setup/) | Scaffold a Markdown knowledge vault with the folder tree, templates and instruction file for its type. |
 | [`editorial-review`](skills/editorial-review/) | Review prose and argument across six lenses. Catches buried ledes, weak arguments and the specific tells that mark machine-written text. |
@@ -45,8 +44,8 @@ Be clear before you clone it.
 - **`recall` reads transcripts on disk.** `~/.claude/projects/` for Claude Code
   and `~/.codex/sessions/` for Codex, which is where those tools already write
   them. The graph mode additionally wants `networkx` and `pyvis`.
-- **Three skills need nothing.** `handoff` (except for its auto-spawn mode),
-  `vault-setup` and `editorial-review` run anywhere.
+- **Two skills need nothing.** `vault-setup` and `editorial-review` run
+  anywhere. The orchestrator's clipboard and park handoffs also run without cmux.
 - **`orchestrator` needs the `cmux` skill, and `cmux` needs `orchestrator`.**
   The orchestrator owns the routing table and the resolver; the cmux helper
   calls it to route a spawn. Install the pair.
@@ -65,7 +64,7 @@ Be clear before you clone it.
 
 ## Where things get written
 
-Four of the skills write session notes and handoff briefs. They agree on one
+Three of the skills write session notes and handoff briefs. They agree on one
 root, set by one environment variable:
 
 ```bash
@@ -103,7 +102,7 @@ project.
 
 ```bash
 mkdir -p ~/.codex/skills
-ln -s ~/public-skills/skills/handoff ~/.codex/skills/handoff
+ln -s ~/public-skills/skills/recall ~/.codex/skills/recall
 ```
 
 **Another harness.** A `SKILL.md` is Markdown with YAML frontmatter, so most of
