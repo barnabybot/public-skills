@@ -134,6 +134,9 @@ python3 skills/orchestrator/scripts/check.py --no-live --no-log
 # The resolver's own suite, against invented capacity fixtures
 python3 skills/orchestrator/scripts/test_resolve.py
 
+# The weekly Artificial Analysis ranking, against an invented page
+python3 skills/orchestrator/scripts/test_aa_refresh.py
+
 # The helper's routing, end to end through the orchestrator
 skills/cmux/scripts/test-spawn-workspace.sh
 

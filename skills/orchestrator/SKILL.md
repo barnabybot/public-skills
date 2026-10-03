@@ -47,6 +47,7 @@ its receiver and its message and goes straight to the status workflow.
 | Start a worker | `workflows/dispatch.md` |
 | Recycle a worker or the orchestrator | `workflows/recycle.md` |
 | Check routing, review route logs or propose new preferences | `workflows/routing-review.md` |
+| Weekly Artificial Analysis ranking, or an alert from it | `workflows/routing-refresh.md` |
 | Hand off, park, or write a pickup prompt | the `handoff` skill |
 
 ## Model routing table
@@ -154,7 +155,9 @@ owners, which is how a table and its documentation drift apart.
 ```bash
 python3 scripts/check.py --no-live --no-log     # after editing the table
 python3 scripts/test_resolve.py                 # after changing routing code
+python3 scripts/test_aa_refresh.py              # after changing the AA refresh
 ```
 
-Both run against the fixtures in `scripts/fixtures/`, so neither creates a
-workspace or contacts a provider.
+All three run against fixtures, so none creates a workspace or contacts a
+provider. `workflows/routing-refresh.md` proposes table changes weekly from
+Artificial Analysis.

@@ -49,24 +49,64 @@ providers:
 models:
   a_large:
     id: claude-opus-5
+    aa_release: claude-opus-5
     provider: provider_a
     display: A-Large
   a_mid:
     id: claude-sonnet-5
+    aa_release: claude-sonnet-5
     provider: provider_a
     display: A-Mid
   a_small:
     id: claude-haiku-4-5-20251001
+    aa_release: claude-4-5-haiku
     provider: provider_a
     display: A-Small
   b_large:
     id: REPLACE-WITH-YOUR-PROVIDER-B-LARGE-MODEL-ID
+    # aa_release: <the model's release slug on artificialanalysis.ai>
     provider: provider_b
     display: B-Large
   b_mid:
     id: REPLACE-WITH-YOUR-PROVIDER-B-MID-MODEL-ID
+    # aa_release: <the model's release slug on artificialanalysis.ai>
     provider: provider_b
     display: B-Mid
+# scripts/aa_refresh.py ranks every model that carries `aa_release`. A model
+# without one is left out of the ranking; a category with no ranked model
+# reports "none". `aa_exclude: [<class>]` on a model keeps it out of one class.
+aa:
+  # Any AA model page embeds every model record; aa_refresh.py reads it.
+  source: https://artificialanalysis.ai/models/claude-opus-5
+  # US$ of AA cost per Intelligence Index task that one extra point of the
+  # category measure may cost before the knee stops stepping up.
+  cost_per_point:
+    presented: 0.75
+    build: 0.5
+    volume: 0.1
+    mechanical: 0.02
+  categories:
+    finance:
+      measure: [capabilities.financeAndAccounting]
+      class: presented
+    strategy:
+      measure: [capabilities.strategyAndOps, capabilities.economics]
+      class: presented
+    legal:
+      measure: [capabilities.legal]
+      class: presented
+    coding:
+      measure: [terminalBench40]
+      class: build
+    systems:
+      measure: [terminalBench40]
+      class: build
+    classification:
+      measure: [intelligenceIndex]
+      class: volume
+    housekeeping:
+      measure: [intelligenceIndex]
+      class: mechanical
 capacity:
   exhausted_used_percent: 95
   exhausted_min_hours_to_reset: 1
