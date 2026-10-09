@@ -7,8 +7,13 @@ presentations, and who run AI agents in a terminal to produce it. You use
 Claude Code or Codex already, or you are about to. You want several agents
 working on one goal, each starting from the right context.
 
-The repository holds seven skills and one [`AGENTS.md`](AGENTS.md), taken from a
+The repository holds eight skills and one [`AGENTS.md`](AGENTS.md), taken from a
 working setup and rewritten so they run on somebody else's machine.
+
+Download individual skills or the complete collection as ZIP files at
+[barnabyrobson.org/downloads](https://barnabyrobson.org/downloads/). The page
+includes installation guidance. This repository holds the source; each download
+links to the source commit used to build it.
 
 ## Context engineering
 
@@ -198,7 +203,7 @@ for d in ~/public-skills/skills/*/; do
 done
 ```
 
-This links all seven and leaves any skill you already have under the same name
+This links all eight and leaves any skill you already have under the same name
 alone. Restart Claude Code, then type `/recall` to check it loaded.
 Project-scoped instead of global? Use `.claude/skills/` inside the project.
 
