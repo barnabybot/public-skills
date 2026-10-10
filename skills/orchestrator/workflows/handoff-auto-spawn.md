@@ -98,3 +98,7 @@ The cmux convention is same-window — the spawned workspace appears below the o
 - **Don't summarise the work into the prompt body** — pass the full handoff brief verbatim. The new agent should be able to start cold.
 - Carry existing authorisation into the prompt. Identify any decision that still needs the user.
 - **Don't reuse an existing workspace name** — append a date or suffix if there's a collision; the helper will error otherwise.
+
+## Group placement
+
+The successor inherits its predecessor's workspace group through the cmux spawn helper. It appears immediately after the predecessor and preserves the selected workspace. Verify membership with `cmux workspace-group list --json`. An ungrouped predecessor stays ungrouped. Explicit `--new-window` starts outside the source group.

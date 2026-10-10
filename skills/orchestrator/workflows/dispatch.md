@@ -86,3 +86,7 @@ Before writing a handoff brief, verify the assumptions the workspace will depend
 2. **Verify naming and paths match current disk layout.** Skill names, directory structures, and scope tags drift. Read the actual files rather than relying on memory or prior session notes.
 3. **Separate checkable facts from design decisions.** Checkable facts (does this file exist? what version is this? are these two copies in sync?) should be resolved before dispatch. Design decisions (sidecar vs parse, standalone vs gateway integration) belong in the handoff as explicit forks for the workspace to reason about.
 4. **For gateway/service work, read the existing service code.** A handoff that says "add a standalone poller" when the existing gateway already owns the polling loop creates an architectural conflict the workspace must resolve before writing any code.
+
+## Group placement
+
+The cmux helper inherits the caller workspace group and places the worker immediately after the parent. Verify the returned workspace ID with `cmux workspace-group list --json`. Keep later handoffs in the same group. Use `--new-window` only when explicitly requested.

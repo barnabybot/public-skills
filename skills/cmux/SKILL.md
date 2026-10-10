@@ -39,6 +39,7 @@ scripts care only that the folder exists and that they may write to it.
 |--------|---------|
 | `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <category>`), sets effort on the launched CLI, and writes the session note with model, effort and the route log. The canonical helper. |
 | `scripts/test-spawn-workspace.sh` | Dry-run fixture test for the helper's routing. Nothing is spawned. Run it after any edit to `spawn-workspace.sh`, or to the orchestrator's table, metadata or resolver. |
+| `scripts/test-spawn-group.sh` | Fixture check for group inheritance, handoff prompts, focus preservation and creation errors. Runs without live workspaces. |
 | `scripts/close-workspace.sh` | Close a workspace AND flip its session note to `status: done` with an `ended:` stamp. Flips only a note still open. cmux reuses workspace numbers, so closed notes on the same id are reported and left alone. Use this instead of raw `cmux close-workspace`. |
 | `scripts/test-close-workspace.sh` | Fixture test for that guard. Run it after any edit to `close-workspace.sh`. |
 | `scripts/cmux-session-map.py` | Optional `SessionStart` / `SessionEnd` hook. Maps Claude Code sessions to cmux surfaces in `/tmp/cmux-session-map.json`. Save it to `~/.claude/hooks/` and register it if you want session-to-surface tracking. |
@@ -178,6 +179,7 @@ may be stale.
 
 ## Key patterns
 
+- **Keep workers and handoffs in the caller's group.** The spawn helper inherits group membership and inserts the new workspace immediately after its parent. It uses caller identity and preserves the selected workspace. Ungrouped parents stay ungrouped; explicit `--new-window` launches outside the source group. Verify membership with `cmux workspace-group list --json`.
 - **Automatic conversation titles.** Enable cmux `automation.workspaceAutoNaming`. If Codex workspaces retain directory titles, use `automation.autoNamingAgent: "claude"`. This selects Claude for short titles across supported agent sessions. See `references/auto-naming.md` for the local setting, verification and version limits.
 - **Name every active agent workspace.** Use `Orchestrator - <task>` for the
   coordinator and `Worker - <task>` for executors. After spawning or taking over

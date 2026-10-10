@@ -143,3 +143,7 @@ not repeat them.
   silently does nothing in zsh. Use `while IFS= read -r line; do ... done <<<
   "$out"` instead. Suspect the instrument first when a poller reports nothing
   while a direct check finds plenty.
+
+## Workspace groups
+
+Use the spawn helper for workers and handoffs. It resolves the caller workspace from its stable identity, finds its group and creates the child with `--group`, `--group-placement afterCurrent` and `--group-reference`. The selected sidebar workspace may belong to another goal. Verify the returned workspace ID in `cmux workspace-group list --json`. A group lookup failure stops the spawn before creating a workspace. Explicit `--new-window` launches outside the source group. Older notes that prescribe manual grouping describe the previous helper.

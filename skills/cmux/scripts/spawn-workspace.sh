@@ -280,13 +280,73 @@ if [[ "${USE_WORKTREE:-0}" == "1" ]]; then
   echo "worktree: $WORKDIR ($(git -C "$WORKDIR" branch --show-current))"
 fi
 
-CURRENT=$(cmux current-workspace 2>&1 | awk '{print $1}')
+SPAWN_ARGS=()
+CURRENT=""
 NEW_WINDOW=""
 NEW_WINDOW_DEFAULT_WORKSPACE=""
+CMUX_HELP=$(cmux new-workspace --help 2>&1)
+if [[ "$CMUX_HELP" == *"--group-reference"* ]]; then
+  SPAWN_ARGS+=(--focus false)
+  if [[ "$OPEN_NEW_WINDOW" != "1" ]]; then
+    IDENTITY=$(cmux identify --json --id-format uuids)
+    CALLER=$(printf '%s' "$IDENTITY" | "$PYTHON" -c '
+import json, os, sys
+try:
+    caller = json.load(sys.stdin).get("caller")
+    expected = os.environ.get("CMUX_WORKSPACE_ID")
+    if caller is None and not expected:
+        sys.exit(0)
+    workspace, window = caller["workspace_id"], caller["window_id"]
+    if not workspace or not window or (expected and workspace.lower() != expected.lower()):
+        raise ValueError("caller identity does not match CMUX_WORKSPACE_ID")
+    print(workspace, window)
+except (ValueError, KeyError, TypeError) as exc:
+    sys.exit(f"Cannot resolve cmux caller: {exc}")
+')
+    if [[ -n "$CALLER" ]]; then
+      read -r CALLER_WORKSPACE CALLER_WINDOW <<< "$CALLER"
+      GROUPS_JSON=$(cmux --json --id-format uuids workspace-group list --window "$CALLER_WINDOW")
+      CALLER_GROUP=$(printf '%s' "$GROUPS_JSON" | "$PYTHON" -c '
+import json, sys
+try:
+    data = json.load(sys.stdin)
+    if data["window_id"].lower() != sys.argv[2].lower() or not isinstance(data["groups"], list):
+        raise ValueError("unexpected group window or groups")
+    matches = []
+    for group in data["groups"]:
+        members = group["member_workspace_ids"]
+        if not isinstance(members, list) or not isinstance(group["id"], str) or not group["id"]:
+            raise ValueError("invalid group membership")
+        if sys.argv[1].lower() in [member.lower() for member in members]:
+            matches.append(group["id"])
+    if len(matches) > 1:
+        raise ValueError("caller belongs to multiple groups")
+    print(matches[0] if matches else "")
+except (ValueError, KeyError, TypeError, AttributeError) as exc:
+    sys.exit(f"Cannot resolve cmux group: {exc}")
+' "$CALLER_WORKSPACE" "$CALLER_WINDOW")
+      SPAWN_ARGS+=(--window "$CALLER_WINDOW")
+      if [[ -n "$CALLER_GROUP" ]]; then
+        SPAWN_ARGS+=(--group "$CALLER_GROUP" --group-placement afterCurrent --group-reference "$CALLER_WORKSPACE")
+      fi
+    fi
+  fi
+else
+  echo "warning: this cmux lacks workspace group placement; spawning without group inheritance" >&2
+  CURRENT=$(cmux current-workspace 2>&1 | awk '{print $1}')
+fi
 
 if [[ "$OPEN_NEW_WINDOW" == "1" ]]; then
-  NEW_WINDOW=$(cmux new-window 2>&1 | awk '{print $1}')
+  NEW_WINDOW_OUTPUT=$(cmux new-window 2>&1) || { echo "$NEW_WINDOW_OUTPUT" >&2; exit 1; }
+  NEW_WINDOW=$(printf '%s\n' "$NEW_WINDOW_OUTPUT" | grep -oE 'window:[0-9]+|[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}' | tail -1)
+  if [[ -z "$NEW_WINDOW" ]]; then
+    echo "cmux did not return a new window reference" >&2
+    exit 1
+  fi
   NEW_WINDOW_DEFAULT_WORKSPACE=$(cmux list-workspaces --window "$NEW_WINDOW" 2>&1 | awk '/workspace:/ {print $1; exit}')
+  if [[ -z "$CURRENT" ]]; then
+    SPAWN_ARGS+=(--window "$NEW_WINDOW")
+  fi
 fi
 
 if [[ -n "$PROMPT" ]]; then
@@ -298,15 +358,23 @@ if [[ -n "$PROMPT" ]]; then
   LAUNCH_INSTRUCTION="Read the file at $TMPFILE in full. First, output its contents so the user can see the handoff brief in this workspace. Then execute its instructions."
   # CMUX_QUIET=1 + pattern-extract: alias-deprecation notices land in 2>&1 and
   # break positional `awk '{print $2}'`, making rename target the wrong workspace.
-  NEW_UUID=$(CMUX_QUIET=1 cmux new-workspace --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER \"$LAUNCH_INSTRUCTION\"" 2>&1 | grep -oE 'workspace:[0-9]+' | tail -1)
+  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER \"$LAUNCH_INSTRUCTION\"" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
 else
-  NEW_UUID=$(CMUX_QUIET=1 cmux new-workspace --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER" 2>&1 | grep -oE 'workspace:[0-9]+' | tail -1)
+  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
+fi
+
+NEW_UUID=$(printf '%s\n' "$NEW_OUTPUT" | grep -oE 'workspace:[0-9]+' | tail -1)
+if [[ -z "$NEW_UUID" ]]; then
+  echo "cmux did not create the workspace; check its caller window and group" >&2
+  exit 1
 fi
 
 cmux rename-workspace --workspace "$NEW_UUID" "$NAME" 2>&1
 
 if [[ -n "$NEW_WINDOW" ]]; then
-  cmux move-workspace-to-window --workspace "$NEW_UUID" --window "$NEW_WINDOW" 2>&1 || true
+  if [[ -n "$CURRENT" ]]; then
+    cmux move-workspace-to-window --workspace "$NEW_UUID" --window "$NEW_WINDOW" 2>&1 || true
+  fi
   if [[ -n "$NEW_WINDOW_DEFAULT_WORKSPACE" && "$NEW_WINDOW_DEFAULT_WORKSPACE" != "$NEW_UUID" ]]; then
     cmux close-workspace --workspace "$NEW_WINDOW_DEFAULT_WORKSPACE" >/dev/null 2>&1 || true
   fi
@@ -396,7 +464,9 @@ EOF
   SESSION_PATH="$SESSION_FILE"
 fi
 
-cmux select-workspace --workspace "$CURRENT" 2>&1
+if [[ -n "$CURRENT" ]]; then
+  cmux select-workspace --workspace "$CURRENT" 2>&1
+fi
 echo "Workspace '$NAME' ready (uuid: $NEW_UUID)"
 if [[ -n "$SESSION_PATH" ]]; then
   echo "Session note: $SESSION_PATH"
