@@ -178,6 +178,7 @@ may be stale.
 
 ## Key patterns
 
+- **Automatic conversation titles.** Enable cmux `automation.workspaceAutoNaming`. If Codex workspaces retain directory titles, use `automation.autoNamingAgent: "claude"`. This selects Claude for short titles across supported agent sessions. See `references/auto-naming.md` for the local setting, verification and version limits.
 - **Name every active agent workspace.** Use `Orchestrator - <task>` for the
   coordinator and `Worker - <task>` for executors. After spawning or taking over
   workspaces, list them, replace generic titles, and check each final name
