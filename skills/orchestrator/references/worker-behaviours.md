@@ -21,10 +21,9 @@ can tell a measurement from a habit.
   verified, say so explicitly."
 - **Carry intent.** State the larger task, the intended reader, and what the
   output enables.
-- **Succession is the orchestrator's call.** A seat with a fixed context window
-  keeps working at full quality until asked to hand off. A seat that compacts in
-  place continues through compaction and recycles on a new phase.
-  `workflows/recycle.md` carries the thresholds.
+- **Succession is the orchestrator's call.** Every seat works until the
+  orchestrator asks it to hand off, at 30% of its window or 300k tokens,
+  whichever comes first. `workflows/recycle.md` carries the thresholds.
 - **Cap a seat's own delegation.** Delegated work inherits the parent model
   unless told otherwise, so a seat that fans out freely bills its subagents at
   its own rate. Say "do this yourself; delegate only if a track is large and

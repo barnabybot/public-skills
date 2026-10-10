@@ -235,3 +235,11 @@ under `$AGENT_NOTES/Sessions/Handoffs/` with a dated filename, then spawn it and
 report the workspace name. The `orchestrator` and `cmux` skills in this repository do
 this. Produce a clipboard handoff only on an explicit request to copy, and park
 only on an explicit `park`.
+
+**Context budget: hand off early, never compact.** Hand off when the session
+reaches 30% of its context window or 300k tokens, whichever comes first.
+Quality falls as a session grows, on every model. Compaction drops instructions
+and decisions without notice, so treat it as a failure. Check context usage at
+each milestone. At the threshold, finish the current step, update the session
+note, then hand off as above. The pickup prompt states the goal, the decisions
+made, the files touched and the next step. Subagents are exempt.

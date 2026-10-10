@@ -175,8 +175,8 @@ tiers:
   orchestrator:
     name: Orchestrator
     what: 'This seat: dispatch, relay, judgement, succession'
-    stop: A seat that compacts in place recycles on a new phase; a seat with a fixed
-      window hands off at about 30%.
+    stop: Hands off at 30% context or 300k tokens, whichever comes first, and on
+      a new phase.
     basis: practice
     evidence: placeholder
   review:

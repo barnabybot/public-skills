@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-version: 1.3.0
+version: 1.3.1
 description: >-
   Coordinate cmux agents, hand off sessions and maintain model routing. Use for
   /orchestrator, /orchestrate, /handoff, handover, pickup prompts, parking notes,
