@@ -2,6 +2,21 @@
 
 The model table in `SKILL.md` is the only preference table. `scripts/resolve.py` reads it and the provider metadata, checks capacity, and returns the route. The cmux helper launches that route.
 
+## Required tool capabilities
+
+Check the tools required by the task before choosing its category. Image
+generation and image editing need a runtime with an exposed image generation
+tool. Mac app interaction needs connected Computer Use tools; prefer Codex
+Desktop when available. A model name alone does not establish tool access.
+
+Confirm the receiving runtime has the tool before launch and require it to
+check again at pickup. Record the tool in the brief and route reason. Use an
+explicit configured model and effort for this route. Any capacity fallback
+must provide the same tool. If an inherited or user-named model conflicts with
+the requirement, resolve the conflict before dispatch. HTML, chart and slide
+layout continues through the normal visual category.
+
+
 ## Choosing a category
 
 The category names the work. Read the request's verb, its object and the output the user will receive, then take the first match:

@@ -56,11 +56,13 @@ A handoff or handover opens a fresh cmux workspace. First prepare the brief usin
    ```
    The helper prepends `Effort: <level>` as the brief's first line from the resolved route, so the brief and the seat agree without a placeholder.
 
-5. **Name the category, then spawn.** The model table is in `SKILL.md`; `references/routing-rules.md` carries the category rule. The helper resolves the category, reads capacity, sets effort and writes the route log; your job is the category. Three branches, in order:
+5. **Name the category, then spawn.** The model table is in `SKILL.md`; `references/routing-rules.md` carries the category rule. The helper resolves the category, reads capacity, sets effort and writes the route log; your job is the category. Four branches, in order:
 
    **Successor to a recycled seat.** Pass the predecessor's `--model` and `--effort` verbatim, with `--reason "inherited from <predecessor>"`. No category. The helper still reads capacity for the inherited provider and stops with exit 3 if it is exhausted; ask before spawning, because a successor on a different provider breaks the lineage.
 
    **A model or provider named in the request.** Pass `--model` and the effort its row gives, with `--reason "named in request"`. A provider whose allowance the meter cannot read runs only this way, with `--reason "manual budget"` and a budget line in the brief.
+
+   **Required image generation or Computer Use tool.** Apply `references/routing-rules.md#required-tool-capabilities`. Confirm the receiving runtime has the tool, record it in the brief, and pass an explicit configured `--model` and `--effort`, with the tool as `--reason`. Resolve any conflict with an inherited or named model before spawning. Capacity fallbacks must preserve the same tool.
 
    **Everything else.** Choose the category with the rule in `references/routing-rules.md` (verb, object, the output the user receives, the category of the work being continued). Pass the category and the word that decided it:
    ```bash
@@ -91,7 +93,7 @@ The cmux convention is same-window — the spawned workspace appears below the o
 
 ## Hard rules for auto-spawn
 
-- **Name the category; the helper routes.** Every spawn carries `--tier <category>`, or `--model` with `--effort` for a successor or a named model. The route line, the note's route log and the confirmation line carry the same facts, so a wrong route is visible before the seat's first tool turn.
+- **Name the category; the helper routes.** Every spawn carries `--tier <category>`, or `--model` with `--effort` for a successor, a named model or a required-tool route. The route line, the note's route log and the confirmation line carry the same facts, so a wrong route is visible before the seat's first tool turn.
 - **Capacity is read on every spawn.** The helper does it. A route that leaves the table (both providers exhausted, a reset credit, a recycle onto an exhausted provider) is a question.
 - **An unreadable provider only when named.** Its allowance cannot be read, so it is never an inferred route.
 - Use the delivery selected in `workflows/handoff.md`: a bare handoff opens a workspace; copy and clipboard require an explicit request.

@@ -241,3 +241,5 @@ newline-terminated JSON. Methods: `workspace.list`, `workspace.create`,
 `set-progress`, `notification.create`. CLI flags: `--json`, `--workspace ID`,
 `--surface ID`, `--id-format refs|uuids|both`. Docs:
 https://www.cmux.dev/docs/api
+
+Follow the orchestrator handoff policy at 30% context or 300k tokens, whichever comes first. The public helper does not install a context-monitoring loop; check usage at each milestone.
