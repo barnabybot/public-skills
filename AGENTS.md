@@ -77,6 +77,14 @@ For multi-step tasks, state a brief plan:
 3. [Step] -> verify: [check]
 ```
 
+**Completion requires evidence.**
+
+- Read the current source and applicable instructions before acting.
+- Verify the actual output against the stated success criteria. Use checks appropriate to the deliverable.
+- Report what passed, with evidence, and identify what remains unverified. State the cause and the next required check.
+- Treat source checks, rendered review and publication approval as separate gates.
+- For recurring or material failures, record the cause and add a regression check. Propose changes to the existing instruction or skill.
+
 ## 5. Thin-slice gate
 
 Before any action that repeats across more than one item (fan-out), or writes to
