@@ -1,0 +1,12 @@
+{
+  "seat": "seat-note-write",
+  "record": "Past mistake: a five-minute gap with no worktree write was called a stall while a session-note write sat inside the window.",
+  "started_at": "2026-10-04T11:00:00Z",
+  "now": "2026-10-04T11:49:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-04T11:20:00Z", "kind": "tool_call"},
+    {"at": "2026-10-04T11:40:00Z", "kind": "promise"},
+    {"at": "2026-10-04T11:47:00Z", "kind": "session_note_write"}
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "window_uuid": "11111111-1111-4111-8111-111111111111",
+  "today": "2026-10-16",
+  "successor": {
+    "session_note": "sessions/2026-10-16-successor.md",
+    "handoff": "handoffs/2026-10-16-successor.md"
+  },
+  "predecessors": [
+    {
+      "name": "fleet-coordinator",
+      "uuid": null,
+      "window_uuid": "11111111-1111-4111-8111-111111111111",
+      "ref": "workspace:4",
+      "session_note": "sessions/2026-10-16-fleet-coordinator.md",
+      "handoff": "handoffs/2026-10-16-fleet-coordinator.md",
+      "closure": "pending"
+    }
+  ],
+  "workspaces": [
+    {
+      "window_uuid": "11111111-1111-4111-8111-111111111111",
+      "id": "33333333-3333-4333-8333-333333333333",
+      "ref": "workspace:4",
+      "title": "fleet-coordinator"
+    }
+  ],
+  "notes": {
+    "sessions/2026-10-16-fleet-coordinator.md": "---\nstatus: in-progress\nworkspace_id: \"workspace:4\"\nworkspace_name: \"fleet-coordinator\"\n---\n\n## Outcome\n\nStopped at the outgoing handoff.\n"
+  },
+  "screens": {
+    "33333333-3333-4333-8333-333333333333": {
+      "stopped": true,
+      "handoff": "handoffs/2026-10-16-unrelated.md"
+    }
+  }
+}

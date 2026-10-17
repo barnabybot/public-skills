@@ -1,0 +1,7 @@
+{
+  "composer_mark": "›",
+  "placeholders": ["Ask Codex to do anything"],
+  "active_markers": ["esc to interrupt", "Shutting down", "• Working"],
+  "tail_lines": 6,
+  "shortcuts": "\\? for shortcuts(?:\\s+⚠ \\d+ warnings? · f2 to view)?"
+}

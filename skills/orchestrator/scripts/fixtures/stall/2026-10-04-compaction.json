@@ -1,0 +1,12 @@
+{
+  "seat": "seat-compaction",
+  "record": "Past mistake: compaction was treated as silence. Compaction is activity.",
+  "started_at": "2026-10-04T07:40:00Z",
+  "now": "2026-10-04T08:25:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-04T07:50:00Z", "kind": "tool_call"},
+    {"at": "2026-10-04T08:10:00Z", "kind": "promise"},
+    {"at": "2026-10-04T08:24:00Z", "kind": "compaction"}
+  ]
+}

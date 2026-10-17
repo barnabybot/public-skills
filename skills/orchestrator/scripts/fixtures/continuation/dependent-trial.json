@@ -1,0 +1,18 @@
+{
+  "context_percent": 18,
+  "approvals": [],
+  "items": [
+    {
+      "id": "media-trial",
+      "owner": "Media trial",
+      "action": "dispatch",
+      "authority": "local-trial"
+    },
+    {
+      "id": "publication",
+      "owner": "Site release",
+      "action": "publish",
+      "gate": "push-approval"
+    }
+  ]
+}

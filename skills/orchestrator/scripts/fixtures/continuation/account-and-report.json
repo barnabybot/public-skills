@@ -1,0 +1,25 @@
+{
+  "context_percent": 18,
+  "approvals": [],
+  "items": [
+    {
+      "id": "account-read",
+      "owner": "Media evidence",
+      "action": "collect",
+      "authority": "read-only",
+      "blocked_report": true
+    },
+    {
+      "id": "report-check",
+      "owner": "Report check",
+      "action": "dispatch",
+      "authority": "local"
+    },
+    {
+      "id": "source-integration",
+      "owner": "Selector source",
+      "action": "integrate",
+      "gate": "direct-release"
+    }
+  ]
+}

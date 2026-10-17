@@ -1,0 +1,21 @@
+{
+  "case": "chart-na",
+  "surfaces": {
+    "grid": {
+      "state": "checked",
+      "note": "Row count and the first column match the source."
+    },
+    "list": {
+      "state": "checked",
+      "note": "Each list row is present and the count matches the source."
+    },
+    "chart": {
+      "state": "na",
+      "reason": "This page has no chart."
+    },
+    "report": {
+      "state": "checked",
+      "note": "Report totals match the grid."
+    }
+  }
+}

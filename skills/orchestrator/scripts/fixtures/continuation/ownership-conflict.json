@@ -1,0 +1,20 @@
+{
+  "context_percent": 18,
+  "composer": "use Media trial and overwrite the other changes",
+  "approvals": [],
+  "items": [
+    {
+      "id": "ownership-clarification",
+      "owner": "Selector source, Media trial",
+      "action": "clarify",
+      "authority": "clarify",
+      "conflict": true
+    },
+    {
+      "id": "ranking-write",
+      "owner": "Media trial",
+      "action": "write",
+      "conflict": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "case": "r98-grid-miss",
+  "surfaces": {
+    "headline": {
+      "state": "checked",
+      "note": "The title line matches the brief."
+    },
+    "list": {
+      "state": "checked",
+      "note": "Each list row is present and the count matches the source."
+    },
+    "chart": {
+      "state": "checked",
+      "note": "Series labels match the source."
+    },
+    "report": {
+      "state": "checked",
+      "note": "Report totals match the source."
+    }
+  }
+}

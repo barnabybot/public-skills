@@ -1,0 +1,11 @@
+{
+  "seat": "seat-read-relay",
+  "record": "Past mistake: 21 minutes with no file write was called a stall after a tool-visible read.",
+  "started_at": "2026-10-05T07:46:00Z",
+  "now": "2026-10-05T08:07:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-05T07:50:00Z", "kind": "promise"},
+    {"at": "2026-10-05T08:05:00Z", "kind": "read"}
+  ]
+}

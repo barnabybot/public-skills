@@ -1,0 +1,11 @@
+{
+  "seat": "seat-read-then-hang",
+  "record": "Promise, one read, then silence past the window. The seat stalls.",
+  "started_at": "2026-10-11T08:00:00Z",
+  "now": "2026-10-11T09:00:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-11T08:16:00Z", "kind": "promise"},
+    {"at": "2026-10-11T08:20:00Z", "kind": "read"}
+  ]
+}

@@ -11,8 +11,12 @@ Context is a consumable. Plan succession before it runs out.
   meter on each status line every tick. The running agent commits its work and writes its own handoff to
   `$AGENT_NOTES/Sessions/Handoffs/` (it holds the punch-list); you spawn the successor from
   that file with the same `--agent`, `--model`, and `Effort:` as the
-  predecessor, verify the new status line, and close the old workspace
-  with `close-workspace.sh`. Treat compaction as a failure: it drops
+  predecessor and verify the new status line. For a worker, the coordinator closes
+  the old workspace with `close-workspace.sh`. For an orchestrator, the successor
+  owns retirement of the predecessor chain through
+  [orchestrator succession](handoff.md#orchestrator-succession). Keep the predecessor
+  available until the successor has read the skill and brief and recorded takeover
+  readiness. Treat compaction as a failure: it drops
   instructions and decisions without notice, and quality falls as a session
   grows on every model. A large window does not change this.
 - **A new work phase always gets a fresh workspace.** Never reactivate a

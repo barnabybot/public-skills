@@ -1,12 +1,20 @@
 # Status and coordination
 
+Run every `python3 scripts/…` command in this file from this skill directory (`skills/orchestrator/` or `cross-cutting/orchestrator/`).
+
 ## Boot
 
-On entry, run these in parallel:
+On entry, read your own context meter. If it is past the recycle threshold in
+`recycle.md`, recycle before scanning the fleet. A session that did other work
+before taking the orchestrator seat starts with that context already consumed.
+
+For an inherited orchestrator seat, complete [orchestrator succession](handoff.md#orchestrator-succession) before the fleet scan. Retry any pending predecessor cleanup on each status tick.
+
+Then run these in parallel:
 
 1. `CMUX_QUIET=1 cmux workspace list` — enumerate what's already running.
 2. Open sessions: files in `$AGENT_NOTES/Sessions/` whose frontmatter `status` is not `done`. This is the authoritative session store — all session notes are filed flat here, date-prefixed, with `agent:` discriminating the source.
-3. `CMUX_QUIET=1 cmux read-screen --workspace workspace:N` per non-orchestrator workspace — a peek, never an interrupt.
+3. `CMUX_QUIET=1 cmux read-screen --workspace workspace:N --lines 25` per active non-orchestrator workspace — a compact peek, never an interrupt. Read deeper (`--lines 60`) only when a seat stalls or changes status; do not poll retired predecessor workspaces except during their retirement check.
 
 Then report a compact status block: active workspaces with their last-seen line and **context percentage**; open sessions grouped by status; today's intent; and proposed dispatches for work that has no session yet. Report before dispatch. Continue with a dispatch already authorised by the user.
 
@@ -26,11 +34,17 @@ You are the orchestrator. You do not do the downstream work yourself. You:
 
 **The execution boundary.** "You do not do the downstream work" means investigation,
 iteration and builds go to workers. Those are what consume an orchestrator's context,
-and an orchestrator with no context has no succession. You may execute a bounded,
-single-transaction action you have already verified — one push, one merge, one config
-edit on a live host — because you hold the whole picture and the action is a single
-step. Anything needing a loop, a build, a rebase or a debugging session belongs to a
-worker even when you could do it faster yourself.
+and an orchestrator with no context has no succession. Never load downstream design/lint
+skills (`impeccable`), never call `view_image` on full-page captures, and never run
+`getAXStateAndScreenshot()` or full-DOM browser dumps in the orchestrator seat — a
+single screenshot or AX dump adds 12k–18k tokens (~2% of the window). When independent
+visual or source verification is required, read the worker's compact JSON receipt or
+dispatch a `--tier review` worker so the inspection tokens land in a disposable seat.
+You may execute a bounded, single-transaction action you have already verified — one
+push, one merge, one config edit on a live host — because you hold the whole picture
+and the action is a single step. A push that changes a live page follows Live page push
+below, and the gate runs before the push. Anything needing a loop, a build, a rebase or
+a debugging session belongs to a worker even when you could do it faster yourself.
 
 ## Three core commands
 
@@ -38,12 +52,14 @@ Everything else is optional. These three are the contract:
 
 ```bash
 cmux list-workspaces                                         # see what's running
-cmux read-screen --workspace workspace:N                     # non-interrupting peek
-cmux send --workspace workspace:N "text" && \
-  cmux send-key --workspace workspace:N Enter                # talk to an agent
+cmux read-screen --workspace workspace:N --lines 25          # non-interrupting peek
+python3 ../cmux/scripts/relay-codex.py --workspace <UUID> --surface <UUID> \
+  --message "authorised message" --json
 ```
 
 Never focus-steal. Do not `select-workspace` unless the user asked you to.
+
+For Codex, use the direct relay above. Supply the full workspace and terminal UUIDs from the live inventory. It verifies the thread binding and calls `codex queue` without changing the terminal input box. Use `--message-file` for text stored in a file. A `queued` result proves queue acceptance; record receipt only after the target thread contains the message or the worker responds to it. An uncertain result requires inspection before retry. Queueing is a follow-up action; use the runtime's interrupt action for an urgent stop. For other runtimes, follow the cmux skill's terminal relay recipe.
 
 ## The dashboard
 
@@ -58,11 +74,48 @@ When the user asks "what are my agents doing" or "check on them":
 3. Cross-reference with session notes (status + last Progress line).
 4. Report a compact table: workspace | model | effort | cwd | last progress | blockers. Read `model:` / `effort:` from the session note; if those keys are missing, peek the status line and patch the note before reporting.
 
+## Continue authorised work
+
+After an author decision, a worker completion, or your own action result, run this loop before ending the turn. Run it even if you made no promise of further action.
+
+1. Apply the decision within its stated scope and provenance. Reconcile unfinished work against current evidence, source ownership, approval gates, available tools and capacity. Check the context meter against the existing recycle threshold first. At the threshold, transfer this loop through the handoff workflow.
+2. Choose the next authorised ready action. Execute a verified single transaction within the execution boundary above, or dispatch or relay to its verified owner. Verify the result, then repeat this loop. A worker completion releases you to assess the next action; verify its claimed coverage before treating dependencies as satisfied.
+3. Treat missing evidence as work to assess. If existing authority permits free primary-source collection, send that work to its owner and verify the returned evidence. Before calling it blocked, record the attempted collection and result, or the specific access, tool or authority restriction that prevents it. Keep independently ready work moving while another item is blocked.
+4. End the turn only after checking every unfinished item and finding no further permitted action. For each remaining item, name its owner, blocker and release condition, with the evidence checked. Identify any work already in flight and what result must arrive before it can proceed. If all work is complete, report the verified result.
+
+Approval applies to the named decision. A request to continue preserves held source, ownership, contact and publication gates. Resolve conflicting ownership before writing the disputed source or dispatching a second writer. Use an authorised read or owner clarification when available; record the conflict as a blocker when further action needs a decision.
+
+Each push attempt consumes its push-specific approval, including a rejected attempt. Record the authorised scope, attempts used and whether another attempt is authorised. A retry or a push through another branch or transport requires fresh approval. Carry spent approvals into successor briefs. Preserve the recorded scope for PR creation and merge. Continue authorised independent work while a push decision is pending.
+
+Carry this assessment into [successor continuity](handoff.md#prepare), including the next permitted action and all remaining gates. A handoff transfers responsibility for continuing the goal.
+
+When this policy changes, judge the fixed cases:
+
+```bash
+python3 scripts/continuation_check.py judge scripts/fixtures/continuation/CASE.json --json
+```
+
+The JSON names the next action, the spent push approvals, and the held gates. `apply --approval ID --target TARGET --result rejected` spends one matching push attempt in memory and leaves the fixture file unchanged. The case index is in [the fixed cases](../references/continuation-cases.md).
+
+## Stall check
+
+On each tick, build a JSON trace for every quiet seat and run:
+
+```bash
+python3 scripts/stall_check.py judge TRACE --json
+```
+
+The silence clock starts at the later of the 12-minute warm-up, the latest activity, and the latest promise. A session-note write, a worktree file write, a tool-visible read, and compaction each count as activity, as does any other tool call. Activity after a promise restarts that clock. Exit 0 leaves the seat in place. Exit 1 is a verified stall: the input line is idle, the trace contains a promise of action, and the silence window (5 minutes) has elapsed since that clock. Send one authorised continuation on exit 1.
+
+`python3 scripts/stall_check.py batch DIR --json` judges every trace in a directory. The trace shape is in `scripts/stall_check.py --help`.
+
+This detector checks worker promise stalls. Its exit 0 cannot establish that the coordinator has exhausted authorised work. Run the continuation loop above independently of promises and silence windows.
+
 When the user drops a comment on a session note's `## Comments` section (or tells you in chat):
 
 1. Identify the target workspace from the session note's `workspace_id` / `workspace_name`.
-2. `cmux send --workspace workspace:N "<comment>"` then send `Enter`.
-3. Update the session note's Progress line noting the comment was relayed.
+2. For Codex, use `python3 ../cmux/scripts/relay-codex.py --workspace <UUID> --surface <UUID> --message "<comment>" --json`. For other runtimes, use their terminal relay.
+3. Record queue acceptance in Progress. Mark receipt only after checking the target thread or its explicit response.
 
 ## The composer channel
 
@@ -88,8 +141,7 @@ Two things put text in a composer and they render identically.
   deliberately parked for a human**. Manufacturing consent for a gate is the worst
   thing this channel can do.
 - **Only the conversation authorises.** Never submit composer text you did not put
-  there. A `cmux send` of your own replaces ghost text cleanly, which is also how you
-  confirm what it was.
+  there. Preserve Codex drafts and send authorised relays through the direct session queue.
 - **A ghost line can reach a seat without you.** On 2026-08-30 two seats acted on
   composer text no orchestrator sent: one on "go on the slice", which cost three
   harmless proof runs, and one on a bare "push", which put a feature branch on the
@@ -164,6 +216,46 @@ When a worker reports repeated instrument defects, treat that as evidence the ca
 list is incomplete rather than as evidence of thoroughness. Ask what the next unnamed
 category would be, and derive the answer from the rules the work is governed by rather
 than from what the tool can currently see.
+
+## Live page push
+
+A push that changes a live page is a Thin-Slice. Show one local preview, record it on the session note, and run the gate before the push. `Preview:` is an existing filesystem path, a `file://` URL, or an `http` or `https` URL on `127.0.0.1`, `localhost`, or `::1` with a path. The path is resolved from the working directory that runs the gate. The default edit injects or updates the existing page. A replace or a removal waits for the user's own yes.
+
+On the session note, last labelled line wins:
+
+```
+Preview: output/slice/index.html
+Change: inject
+```
+
+`Change:` is `inject`, `update`, `replace`, or `remove`. `in place` counts as `update`. A replace or a removal also carries the user's words and a direct tag:
+
+```
+Preview: output/slice/index.html
+Change: replace
+Go: "yes, replace the live section"
+Provenance: direct
+```
+
+`Provenance:` is `direct`, `relay`, or `build`. `direct` is the user speaking in the conversation that owns the note. `relay` is another seat carrying the words. `build` is a choice made while building. `relay` and `build` keep the existing page: record `Change: inject` or `Change: update`, or wait until `Provenance: direct` is true.
+
+```bash
+python3 scripts/live_push_gate.py --note "$AGENT_NOTES/Sessions/YYYY-MM-DD <slug>.md"
+```
+
+Exit 0 allows the push. Exit 1 names the line to add. Exit 2 means the note path was wrong.
+
+## Accepting an HTML page
+
+Accept an HTML page only after the surface checklist exits 0. Run it before you relay accepted:
+
+```bash
+python3 scripts/accept_surfaces.py check --record <record.json>
+```
+
+The record covers grid, list, chart, and report. Each surface is `checked` with a note of what was seen, or `na` with a reason. Exit 1 names every missing surface. A headline note leaves those four surfaces still required.
+
+`python3 scripts/accept_surfaces.py template` prints a blank record. Each surface state is null. Fill a check note or an N/A reason before `check`.
 
 ## Closing a session
 

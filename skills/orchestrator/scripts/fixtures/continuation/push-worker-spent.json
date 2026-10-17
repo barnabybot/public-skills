@@ -1,0 +1,39 @@
+{
+  "context_percent": 18,
+  "approvals": [
+    {
+      "id": "push-worker",
+      "kind": "push",
+      "target": "worker-branch",
+      "authorised": 1,
+      "used": 1
+    }
+  ],
+  "items": [
+    {
+      "id": "worker-push",
+      "owner": "coordinator",
+      "action": "push",
+      "gate": "push-approval",
+      "target": "worker-branch"
+    },
+    {
+      "id": "local-test",
+      "owner": "coordinator",
+      "action": "test",
+      "authority": "local"
+    },
+    {
+      "id": "create-pr",
+      "owner": "coordinator",
+      "action": "create-pr",
+      "gate": "pr-approval"
+    },
+    {
+      "id": "merge",
+      "owner": "coordinator",
+      "action": "merge",
+      "gate": "merge-approval"
+    }
+  ]
+}

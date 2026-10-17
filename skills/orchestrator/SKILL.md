@@ -158,6 +158,12 @@ model the user names explicitly also uses `--model` and `--effort`. See
   did not.
 - Close workers with `cmux/scripts/close-workspace.sh`, so their notes close
   too.
+- A live-page push runs `scripts/live_push_gate.py --note <session-note>` before
+  the push. The note records `Preview:` for the Thin-Slice: an existing
+  filesystem path, a `file://` URL, or an `http` or `https` loopback URL
+  (`127.0.0.1`, `localhost`, or `::1`) with a path. The default edit is inject
+  or update in place. `Change: replace` or `Change: remove` also records `Go:`
+  and `Provenance: direct`. `relay` and `build` fail that tag.
 
 ## Ownership
 
@@ -169,11 +175,16 @@ owners, which is how a table and its documentation drift apart.
 ## Verification
 
 ```bash
-python3 scripts/check.py --no-live --no-log     # after editing the table
-python3 scripts/test_resolve.py                 # after changing routing code
-python3 scripts/test_aa_refresh.py              # after changing the AA refresh
+python3 scripts/check.py --no-live --no-log        # after editing the table
+python3 scripts/test_resolve.py                    # after changing routing code
+python3 scripts/test_aa_refresh.py                 # after changing the AA refresh
+python3 scripts/test_retire_predecessors.py        # after changing predecessor retirement
+python3 scripts/test_continuation_check.py         # after changing continuation gates
+python3 scripts/test_stall_check.py                # after changing stall detection
+python3 scripts/test_live_push_gate.py             # after changing the live-push gate
+python3 scripts/test_accept_surfaces.py            # after changing acceptance checks
 ```
 
-All three run against fixtures, so none creates a workspace or contacts a
+All eight run against fixtures, so none creates a workspace or contacts a
 provider. `workflows/routing-refresh.md` proposes table changes weekly from
 Artificial Analysis.

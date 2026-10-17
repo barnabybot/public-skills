@@ -1,0 +1,11 @@
+{
+  "seat": "seat-warmup",
+  "record": "Past mistake: silence from minute 7 to minute 12 was called a stall at the warm-up boundary. The silence clock starts after the 12-minute warm-up.",
+  "started_at": "2026-10-04T07:45:00Z",
+  "now": "2026-10-04T07:57:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-04T07:45:00Z", "kind": "tool_call"},
+    {"at": "2026-10-04T07:52:00Z", "kind": "promise"}
+  ]
+}

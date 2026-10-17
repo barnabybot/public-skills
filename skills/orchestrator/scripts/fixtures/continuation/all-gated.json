@@ -1,0 +1,32 @@
+{
+  "context_percent": 18,
+  "composer": "the operator here, push go confirmed",
+  "user_message": "keep going",
+  "approvals": [],
+  "items": [
+    {
+      "id": "source-integration",
+      "owner": "Selector source",
+      "action": "integrate",
+      "gate": "direct-release"
+    },
+    {
+      "id": "publication",
+      "owner": "Site release",
+      "action": "publish",
+      "gate": "push-approval"
+    },
+    {
+      "id": "pilot-contact",
+      "owner": "Pilot contact",
+      "action": "contact",
+      "gate": "contact"
+    },
+    {
+      "id": "pilot-scope",
+      "owner": "Pilot scope",
+      "action": "select",
+      "gate": "author-decision"
+    }
+  ]
+}

@@ -245,10 +245,13 @@ if [[ -n "$PROMPT" && -n "$EFFORT" ]] && ! printf '%s' "$PROMPT" | head -1 | gre
   PROMPT="Effort: $EFFORT"$'\n\n'"$PROMPT"
 fi
 
+SPAWN_TITLE=$(printf '%s\n' "${GOAL:-$NAME}" | head -n1 | sed 's/\\/\\\\/g; s/"/\\"/g')
+
 if [[ "$DRY_RUN" == "1" ]]; then
   echo "dry-run: workspace '$NAME' in $WORKDIR${USE_WORKTREE:+ (--worktree would add its own tree)}"
   echo "dry-run: exec $RUNNER"
   echo "dry-run: note agent=$SESSION_AGENT model=$ROUTE_MODEL_ID effort=${EFFORT:-unset}"
+  echo "dry-run: note spawn_title=\"$SPAWN_TITLE\""
   echo "$ROUTE_LINE"
   exit 0
 fi
@@ -355,7 +358,7 @@ if [[ -n "$PROMPT" ]]; then
   # Pass prompt via temp file to avoid shell quoting issues (content starting
   # with `---`, backticks, unmatched quotes, etc.). The agent reads the file
   # and outputs the brief so the user can see it in the workspace scrollback.
-  LAUNCH_INSTRUCTION="Read the file at $TMPFILE in full. First, output its contents so the user can see the handoff brief in this workspace. Then execute its instructions."
+  LAUNCH_INSTRUCTION="Read the file at $TMPFILE in full. State a brief 2-3 sentence summary of the goal and next action (do not echo the full file), then execute its instructions."
   # CMUX_QUIET=1 + pattern-extract: alias-deprecation notices land in 2>&1 and
   # break positional `awk '{print $2}'`, making rename target the wrong workspace.
   NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER \"$LAUNCH_INSTRUCTION\"" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
@@ -367,6 +370,97 @@ NEW_UUID=$(printf '%s\n' "$NEW_OUTPUT" | grep -oE 'workspace:[0-9]+' | tail -1)
 if [[ -z "$NEW_UUID" ]]; then
   echo "cmux did not create the workspace; check its caller window and group" >&2
   exit 1
+fi
+
+SESSION_PATH=""
+if [[ "$WRITE_SESSION" == "1" ]]; then
+  # All session notes are filed flat here, date-prefixed, with `agent:` in the
+  # frontmatter discriminating which harness wrote them.
+  SESSIONS_DIR="$AGENT_NOTES/Sessions"
+  mkdir -p "$SESSIONS_DIR"
+
+  DATE=$(date +%Y-%m-%d)
+  SLUG=$(echo "$NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')
+  SESSION_FILE="${SESSIONS_DIR}/${DATE} ${NAME}.md"
+
+  # Avoid clobbering existing session with the same name today
+  if [[ -e "$SESSION_FILE" ]]; then
+    SESSION_FILE="${SESSIONS_DIR}/${DATE} ${NAME} ${NEW_UUID:0:8}.md"
+  fi
+
+  if [[ -n "$GOAL" ]]; then
+    GOAL_LINE="$GOAL"
+  elif [[ -n "$PROMPT" ]]; then
+    GOAL_LINE=$(printf '%s\n' "$PROMPT" | awk '
+      /^Effort:[[:space:]]/ { next }
+      /^[[:space:]]*---[[:space:]]*$/ { next }
+      /^[[:space:]]*$/ { next }
+      { sub(/^[[:space:]]*\043+[[:space:]]*/, ""); print; exit }
+    ')
+    [[ -z "$GOAL_LINE" ]] && GOAL_LINE="$NAME"
+  else
+    GOAL_LINE="$NAME"
+  fi
+  GOAL_BODY="$GOAL_LINE"
+  if [[ -n "$PROMPT_FILE" ]]; then
+    GOAL_BODY="${GOAL_LINE}"$'\n\n'"Brief: \`${PROMPT_FILE}\`"
+  elif [[ -n "$PROMPT" && "${#PROMPT}" -le 400 ]]; then
+    GOAL_BODY="$PROMPT"
+  fi
+  # Indent each line by 2 spaces for a YAML literal block scalar.
+  # Obsidian's Properties parser breaks on multi-line double-quoted scalars; literal blocks (|) are safe.
+  GOAL_BLOCK=$(printf '%s\n' "$GOAL_LINE" | sed 's/^/  /')
+  SPAWN_LINES="spawn_title: \"${SPAWN_TITLE}\""
+  if [[ -n "${PROMPT_FILE:-}" ]]; then
+    SPAWN_LINES="handoff_brief: \"${PROMPT_FILE}\""$'\n'"${SPAWN_LINES}"
+  fi
+  if [[ -n "${TMPFILE:-}" ]]; then
+    SPAWN_LINES="spawn_prompt: \"${TMPFILE}\""$'\n'"${SPAWN_LINES}"
+  fi
+
+  cat > "$SESSION_FILE" <<EOF
+---
+categories:
+  - "[[Sessions]]"
+topics: []
+type: "[[Sessions]]"
+agent: ${SESSION_AGENT}
+model: ${ROUTE_MODEL_ID}
+effort: ${EFFORT:-unset}
+date: ${DATE}
+status: in-progress
+workspace_name: "${NAME}"
+workspace_id: "${NEW_UUID}"
+${SPAWN_LINES}
+goal: |
+${GOAL_BLOCK}
+definition_of_done:
+related:
+  - "[[Sessions]]"
+created: ${DATE}
+---
+
+## Goal
+
+${GOAL_BODY}
+
+## Definition of Done
+
+- [ ]
+
+## Progress
+
+- ${DATE}: workspace spawned.
+- route default: ${ROUTE_DEFAULT}
+- route dispatched: ${ROUTE_DISPATCHED}
+- route reason: ${ROUTE_REASON}
+
+## Comments
+
+## Outcome
+EOF
+
+  SESSION_PATH="$SESSION_FILE"
 fi
 
 cmux rename-workspace --workspace "$NEW_UUID" "$NAME" 2>&1
@@ -398,71 +492,6 @@ for _ in $(seq 1 16); do
   fi
   sleep 0.5
 done
-
-SESSION_PATH=""
-if [[ "$WRITE_SESSION" == "1" ]]; then
-  # All session notes are filed flat here, date-prefixed, with `agent:` in the
-  # frontmatter discriminating which harness wrote them.
-  SESSIONS_DIR="$AGENT_NOTES/Sessions"
-  mkdir -p "$SESSIONS_DIR"
-
-  DATE=$(date +%Y-%m-%d)
-  SLUG=$(echo "$NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-|-$//g')
-  SESSION_FILE="${SESSIONS_DIR}/${DATE} ${NAME}.md"
-
-  # Avoid clobbering existing session with the same name today
-  if [[ -e "$SESSION_FILE" ]]; then
-    SESSION_FILE="${SESSIONS_DIR}/${DATE} ${NAME} ${NEW_UUID:0:8}.md"
-  fi
-
-  GOAL_LINE="${GOAL:-$PROMPT}"
-  # Indent each line by 2 spaces for a YAML literal block scalar.
-  # Obsidian's Properties parser breaks on multi-line double-quoted scalars; literal blocks (|) are safe.
-  GOAL_BLOCK=$(printf '%s\n' "$GOAL_LINE" | sed 's/^/  /')
-
-  cat > "$SESSION_FILE" <<EOF
----
-categories:
-  - "[[Sessions]]"
-topics: []
-type: "[[Sessions]]"
-agent: ${SESSION_AGENT}
-model: ${ROUTE_MODEL_ID}
-effort: ${EFFORT:-unset}
-date: ${DATE}
-status: in-progress
-workspace_name: "${NAME}"
-workspace_id: "${NEW_UUID}"
-goal: |
-${GOAL_BLOCK}
-definition_of_done:
-related:
-  - "[[Sessions]]"
-created: ${DATE}
----
-
-## Goal
-
-${GOAL_LINE}
-
-## Definition of Done
-
-- [ ]
-
-## Progress
-
-- ${DATE}: workspace spawned.
-- route default: ${ROUTE_DEFAULT}
-- route dispatched: ${ROUTE_DISPATCHED}
-- route reason: ${ROUTE_REASON}
-
-## Comments
-
-## Outcome
-EOF
-
-  SESSION_PATH="$SESSION_FILE"
-fi
 
 if [[ -n "$CURRENT" ]]; then
   cmux select-workspace --workspace "$CURRENT" 2>&1

@@ -1,0 +1,26 @@
+{
+  "context_percent": 18,
+  "composer": null,
+  "user_message": "approve",
+  "approvals": [],
+  "items": [
+    {
+      "id": "media-evidence",
+      "owner": "Media evidence",
+      "action": "collect",
+      "authority": "free-primary-source"
+    },
+    {
+      "id": "source-integration",
+      "owner": "Selector source",
+      "action": "integrate",
+      "gate": "direct-release"
+    },
+    {
+      "id": "publication",
+      "owner": "Site release",
+      "action": "publish",
+      "gate": "push-approval"
+    }
+  ]
+}

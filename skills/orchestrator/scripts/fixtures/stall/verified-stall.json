@@ -1,0 +1,11 @@
+{
+  "seat": "seat-verified-stall",
+  "record": "Verified stall: idle input, a final promise, and silence after the warm-up with no later tool call.",
+  "started_at": "2026-10-05T08:00:00Z",
+  "now": "2026-10-05T08:30:00Z",
+  "input": "idle",
+  "events": [
+    {"at": "2026-10-05T08:10:00Z", "kind": "tool_call"},
+    {"at": "2026-10-05T08:16:00Z", "kind": "promise"}
+  ]
+}
