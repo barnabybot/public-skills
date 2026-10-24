@@ -56,12 +56,13 @@ project, each in its own pane, and reports a gap one worker left:
 | [`retrospective`](skills/retrospective/) | Reviews a session or a bounded recent sample, verifies repeated problems and proposes small fixes. Uses recall for historical evidence |
 | [`orchestrator`](skills/orchestrator/) | Coordinates workers, routes each job to a model and effort level, and hands a session on before its context runs out. Owns the routing table, the category rule and the resolver |
 | [`cmux`](skills/cmux/) | Starts and closes workspaces and writes their session notes. It calls the orchestrator to route |
-| [`graph`](skills/graph/) | Tracks a programme of work as a dependency graph, and marks a node stale when its inputs change after its output was built |
+| [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches and node inspection. Marks a node stale when its inputs change after its output was built |
 | [`editorial-review`](skills/editorial-review/) | Checks prose and argument before it goes to a reader, including the tells that mark machine-written text |
 | [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a whole-tree audit |
 
-`graph` turns one YAML state file into a page like this. The design-brief node
-reads stale because its input changed after it was built
+`graph` turns one YAML state file into a page like this. Inspect nodes, filter the
+DAG and expand the folded content-audit branch. The design-brief node reads stale
+because its input changed after it was built
 ([source](skills/graph/assets/demo.state.yaml)):
 
 ![graph render of a sample website relaunch](skills/graph/assets/preview.png)

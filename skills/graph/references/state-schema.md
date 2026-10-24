@@ -4,7 +4,7 @@ One YAML file per programme, named `<stem>.state.yaml`. Everything the graph sho
 comes from it. Paths inside it are resolved relative to the file itself, so a state
 file travels with the project it describes.
 
-## `derive:` — optional
+## `derive:` (optional)
 
 Present only when the graph reports numbers a model already holds. Absent, no string
 in the file is touched, and prose containing `{` or `}` is safe.
@@ -104,10 +104,17 @@ is drawn dashed.
 |---|---|
 | `id` | Required for event tracking. A node without one is drawn and never logged. |
 | `status` | `done` `ready` `queue` `block` `gate` `fail` `stale`. |
-| `label` | First line, bold. |
-| `sub` | Second line, monospace. |
-| `note`, `note2` | Third and fourth lines. |
-| `span` | `mid` (480) · `wide` (680) · `full`. Single-node rows only. |
+| `label` | First line, in the semibold sans face. |
+| `sub` | Second line, in the monospace face. |
+| `note`, `note2` | Third and fourth lines, in the monospace face. |
+| `span` | `mid` (8 cols) · `wide` (10 cols) · `full` (12 cols). Single-node rows only. |
+| `dependencies` | Optional `[node_id, …]` list of upstream node IDs for directed SVG edges and `FRONTIER` calculation. Also auto-extracted from `Dependencies, owners and release conditions` tables or `Depends:` notes. |
+| `owner` | Optional custodian / owner string shown on card fallback and in the node inspector. |
+| `acceptance` | Optional release condition / acceptance criteria shown in the node inspector. |
+| `role` | Optional `worker` \| `checker` badge override (auto-detected when `checker`/`review`/`verify` appears in label/note). |
+| `children` | Optional foldable sub-branch rows (`rows` of child nodes nested under this parent node). |
+| `collapsed` | Boolean (`true` by default when `children` is present). Renders a stacked-card motif with a `▸ +N branch (done/total)` pill; expands into a `2px dotted` rounded sub-branch container. |
+| `branch_label` | Optional header title for the expanded sub-branch container. |
 | `output` | Path this node produces. Enables stale detection. |
 | `inputs` | Paths or globs this node consumes. |
 
@@ -172,7 +179,7 @@ fresh by hand. `--check` reads the file and never writes it.
 `<stem>.events.jsonl`, append-only, one JSON object per line:
 
 ```json
-{"ts":"2026-08-08T10:03:11+00:00","node":"survey","from":"queue","to":"done",
+{"ts":"2026-08-08T10:03:11+08:00","node":"revpath","from":"queue","to":"done",
  "actor":"codex","note":"status moved queue → done"}
 ```
 

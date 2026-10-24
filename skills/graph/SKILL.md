@@ -1,6 +1,6 @@
 ---
 name: graph
-version: 1.0.0
+version: 1.1.0
 description: >-
   Track a programme of work as a dependency graph of tasks and their status. Use for /graph,
   work graphs, project state, what is left to do, node status, blocked or stale work, gates
@@ -18,26 +18,27 @@ allowed-tools:
   - Bash
 ---
 
-# /graph — the work-graph renderer
+# /graph: the work-graph renderer
 
-One programme of work, one YAML state file, one rendered HTML graph, one append-only
-event log. Agents edit the state; the picture is derived from it. Nobody hand-edits
-the HTML, because the next render overwrites it.
+One programme of work, one YAML state file and one interactive HTML graph. Agents edit
+the state; the page is derived from it. The render also maintains a transition log and a
+fingerprint record beside the state file. Never hand-edit the HTML, because the next render
+overwrites it.
 
 ```bash
-R=scripts/render-graph.py                        # relative to this skill
-python3 $R <programme>.state.yaml                # render
-python3 $R <programme>.state.yaml --open         # render, then show it in cmux
-python3 $R <programme>.state.yaml --check        # validate, write nothing, exit 5 on drift
-python3 $R <programme>.state.yaml --permissive   # breaking checks become warnings
-python3 $R <programme>.state.yaml --actor codex  # attribute logged transitions
-python3 scripts/selftest.py                      # 26 assertions, run after any change
+R=scripts/render-graph.py                         # relative to this skill
+python3 $R <programme>.state.yaml                 # render
+python3 $R <programme>.state.yaml --open          # render, then show it in cmux
+python3 $R <programme>.state.yaml --check         # validate, write nothing, exit 5 on drift
+python3 $R <programme>.state.yaml --permissive    # breaking checks become warnings
+python3 $R <programme>.state.yaml --actor codex   # attribute logged transitions
+python3 scripts/selftest.py                       # 27 assertions, run after any change
 ```
 
 **Look at the page.** `--open` renders and then opens the file in the cmux browser
 pane, waits for the load to complete and prints the page title back. Use it whenever
-a human is going to read the result. It is never fatal — a run with no cmux on PATH
-prints one line and still renders, so cron and pre-commit are unaffected — and it
+a human is going to read the result. It is never fatal. A run with no cmux on PATH
+prints one line and still renders, so cron and pre-commit are unaffected. It
 refuses to combine with `--check`, which writes nothing and would therefore show a
 stale page.
 
@@ -56,26 +57,39 @@ Each programme owns a set of files beside its state file:
 | `<stem>.fingerprints.json` | Content hashes behind the `stale` status. Machine-managed. |
 
 Exit codes: `0` fine · `1` a check broke or the file is malformed · `5` (`--check` only)
-the render would change or a node reads stale (the same convention as `cog --check`;
-cog is not required).
+the render would change or a node reads stale. This follows the `cog --check` convention;
+`cog` is not required.
 
 ## Where a state file lives
 
 **A state file lives with the project it describes**, because `derive:` resolves its
-sources relative to the state file. Keep the files together and keep them beside the
-work, for example `docs/<programme>.state.yaml` in the project repository.
+sources relative to the state file. Keep the trio together and keep it beside the work.
+For example, use `docs/<programme>.state.yaml` in a project repository.
 
-In an Obsidian vault, turn on **Settings → Files & Links → Detect all file extensions**,
-or the `.state.yaml` and `.jsonl` files are invisible in the file explorer.
+A vault needs **Settings → Files & Links → Detect all file extensions** turned on, or the
+`.state.yaml` and `.jsonl` files are invisible in its file explorer.
 
 Needs Python 3.9+ and PyYAML (`python3 -m pip install --user pyyaml`). `--open` also needs
-[cmux](https://www.cmux.dev); without it, open the HTML in any browser.
+[cmux](https://cmux.com); without it, open the HTML in any browser.
+
+## Interactive graph
+
+The rendered page draws a dependency DAG across stages. It provides:
+
+- explicit dependency edges, with an optional all-edges or focused view;
+- a frontier filter for nodes whose upstream dependencies are done;
+- foldable stages, search, status filters and an inspector for each node;
+- foldable child branches declared with `children`;
+- owner, acceptance condition, output and dependency details in the inspector.
+
+Click a node to inspect it, a stage gutter to fold its stage, or a branch badge to expand
+its child nodes. These controls are local to the generated HTML and need no server.
 
 ## Statuses
 
 `done` · `ready` · `queue` · `block` · `gate` · `fail` · `stale`
 
-`gate` means an explicit human GO is needed. `stale` is never written by hand — see
+`gate` means an explicit human GO is needed. `stale` is never written by hand. See
 below. Everything else is a claim by whoever edited the file.
 
 ## The two things that stop a graph lying
@@ -93,7 +107,7 @@ guard for a rendered document sitting beside model files it no longer agrees wit
 
 Staleness compares **content hashes, never modification times.** A git checkout stamps
 every file with the checkout time, so an mtime comparison reports clean on a fresh
-clone — a false negative in the one guard whose job is catching drift. Rebuilding the
+clone. That false negative defeats the guard whose job is catching drift. Rebuilding the
 output re-blesses the node automatically; nothing is marked fresh by hand.
 
 A state file with no `derive:` block gets no substitution at all, so prose containing
@@ -132,6 +146,9 @@ layout:
           note: every ruling on the record
           output: report.html             # optional, enables stale detection
           inputs: [model/cases.json]
+          dependencies: []                # optional upstream node IDs
+          children:                       # optional foldable branch rows
+            - - {id: survey-a, status: ready, label: first site}
 
 sections:                                 # kind: callout | table | list
   - {title: …, kind: list, items: […]}
@@ -152,9 +169,9 @@ write `{CS['segments']['core']}`, never `{CS["segments"]["core"]}`.
 - **Why the guard changed.** `maxlen` counted characters against one budget shared by
   all three text rows, but `.nsub` is 12px monospace and `.nown` is 11.5px proportional
   sans. At 46 characters a monospace sub sets 332px into a 246px box and the check
-  passed it. When the pixel guard first ran, two live graphs overflowed, one on 45 of
-  179 rows, with note text visibly crossing into neighbouring boxes. That is why the new guard warns instead of breaking: it would otherwise stop
-  those programmes rendering at all.
+  passed it. Measured graphs showed note text crossing into neighbouring boxes. The
+  pixel guard therefore warns by default; a programme with clean text can set
+  `meta.width_check: break`.
 - Set `--actor` to whoever moved the work: `claude-code`, `codex`, `workspace:19`,
   or your own name. It lands in the event log and is how a multi-day programme reads back.
 - Keep `gate` nodes hand-set. A gate is a judgement, and deriving one would defeat it.

@@ -44,7 +44,6 @@ def main():
     with tempfile.TemporaryDirectory() as td:
         d = pathlib.Path(td)
 
-        # 1. No derive block: braces in prose survive untouched.
         s = write(d, "plain.state.yaml", BASE + textwrap.dedent("""\
             layout:
               - stage: S
@@ -55,7 +54,6 @@ def main():
         html = (d / "plain.html").read_text(encoding="utf-8")
         check("no-derive leaves braces alone", "a {not an expression}" in html, r.stderr)
 
-        # 2. Derive substitutes from a JSON source.
         (d / "m.json").write_text(json.dumps({"n": 1234567.0}))
         s = write(d, "der.state.yaml", textwrap.dedent("""\
             derive:
@@ -113,7 +111,6 @@ def main():
         check("first sight records a fingerprint and stays done",
               '<g class="s-done">' in html and (d / "stale.fingerprints.json").exists(), r.stdout)
 
-        # Changing an input, leaving the output alone, is what stale means.
         (d / "in.txt").write_text("in, edited")
         r = run(s3)
         html = (d / "stale.html").read_text(encoding="utf-8")
@@ -127,14 +124,12 @@ def main():
         check("a rewrite with identical bytes stays stale",
               '<g class="s-stale">' in (d / "stale.html").read_text(encoding="utf-8"))
 
-        # Rebuilding the output re-blesses the node, with nothing marked by hand.
         (d / "out.txt").write_text("out, rebuilt")
         r = run(s3)
         html = (d / "stale.html").read_text(encoding="utf-8")
         check("rebuilt output clears stale",
               '<g class="s-stale">' not in html and '<g class="s-done">' in html)
 
-        # A missing output is stale whatever the fingerprints say.
         (d / "out.txt").unlink()
         r = run(s3)
         check("missing output reads stale",
@@ -177,7 +172,6 @@ def main():
         r = run(s3c, "--check")
         check("--check exits 0 once the render is current", r.returncode == 0, r.stdout)
 
-        # 5. Events: first render records every node, a status change records one more.
         ev = d / "der.events.jsonl"
         recs = [json.loads(x) for x in ev.read_text(encoding="utf-8").splitlines() if x.strip()]
         check("first render logs the node", len(recs) == 1 and recs[0]["to"] == "done", str(recs))
@@ -191,7 +185,6 @@ def main():
         recs2 = [json.loads(x) for x in ev.read_text(encoding="utf-8").splitlines() if x.strip()]
         check("an unchanged render logs nothing", len(recs2) == 2, str(recs2))
 
-        # 6. --check writes neither HTML nor events.
         s4 = write(d, "dry.state.yaml", BASE + textwrap.dedent("""\
             layout:
               - stage: S
@@ -202,7 +195,6 @@ def main():
         check("--check writes nothing",
               not (d / "dry.html").exists() and not (d / "dry.events.jsonl").exists())
 
-        # 7. maxlen is opt-in and fires when set.
         long_sub = "x" * 60
         s5 = write(d, "len.state.yaml", BASE.replace("pills: {a: b}", "pills: {a: b}\n  maxlen: 46")
                    + textwrap.dedent(f"""\
@@ -220,7 +212,7 @@ def main():
         # 12px MONOSPACE at 7.225px a glyph. 34 characters sets 245.7px into a 246px
         # box. Assert it is CAUGHT — the whole class of defect here is a check that
         # stays silent.
-        overflow_sub = "survey closes late at site four..."      # 34 chars, monospace
+        overflow_sub = "survey closes late at site four..."
         assert len(overflow_sub) < 46, "the fixture must pass the character budget"
         s6 = write(d, "px.state.yaml", BASE + textwrap.dedent(f"""\
             layout:
@@ -237,8 +229,6 @@ def main():
         check("pixel guard warns rather than breaking by default",
               r.returncode == 0 and (d / "px.html").exists())
 
-        # 9. AND IT STAYS QUIET ON TEXT THAT FITS. A guard that fires on everything
-        # is the failure mode that made the old check opt-in.
         s7 = write(d, "ok.state.yaml", BASE + textwrap.dedent("""\
             layout:
               - stage: S
@@ -273,7 +263,7 @@ def main():
 
         # 11. THE METRIC TABLE ITSELF. If the advance widths are ever regenerated
         # against a different face, this is what notices. Menlo at 12px measured
-        # 7.225px for every glyph in use when measured.
+        # 7.225px for every glyph in use on 2026-08-09.
         spec = importlib.util.spec_from_file_location("rg", RENDER)
         rg = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(rg)
@@ -283,6 +273,26 @@ def main():
         check("the real defect measures over a quarter-box budget",
               rg.text_px(overflow_sub, "sub") > 246 - rg.MARGIN_PX,
               f"got {rg.text_px(overflow_sub, 'sub'):.1f}px")
+
+        s9 = write(d, "v3.state.yaml", BASE + textwrap.dedent("""\
+            layout:
+              - stage: 1 — UPSTREAM
+                rows:
+                  - - id: u1
+                      status: done
+                      label: U1 · Anchor
+                      sub: root
+                      collapsed: true
+                      branch_label: U1 Sub-Branch (U2–U3)
+                      children:
+                        - - {id: u2, status: done, label: U2 · Child A, dependencies: [u1]}
+                          - {id: u3, status: gate, label: U3 · Child B, dependencies: [u2]}
+        """))
+        r = run(s9)
+        v3_html = (d / "v3.html").read_text(encoding="utf-8")
+        check("v3 renders foldable children and directed edges into GRAPH_DATA",
+              r.returncode == 0 and '"u3"' in v3_html and '"from": "u2", "to": "u3"' in v3_html
+              and '"is_frontier": true' in v3_html, r.stdout + r.stderr)
 
     print()
     if FAILURES:
