@@ -113,6 +113,7 @@ FILTERABLE_FOLDERS = [
 
 # Files that are touched by almost every session - skip them
 NOISE_FILES = {
+    "AGENTS.md",
     "CLAUDE.md",
     ".claude/settings.json",
     ".claude/settings.local.json",
