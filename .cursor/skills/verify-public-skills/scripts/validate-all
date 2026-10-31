@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Run skill-manager validate.sh on every skills/*/SKILL.md; write evidence.
+set -euo pipefail
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=$(cd "$HERE/../../../.." && pwd)
+cd "$ROOT"
+RUN_ID=${RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}
+OUT=${SHOT_OUT:-$ROOT/scratchpad/verify-public-skills/$RUN_ID}
+mkdir -p "$OUT"
+VALIDATE="$ROOT/skills/skill-manager/scripts/validate.sh"
+echo "OUT=$OUT"
+FAIL=0
+: >"$OUT/summary.txt"
+for skill in "$ROOT"/skills/*/SKILL.md; do
+  dir=$(dirname "$skill")
+  name=$(basename "$dir")
+  set +e
+  bash "$VALIDATE" "$dir" >"$OUT/${name}.txt" 2>&1
+  code=$?
+  set -e
+  echo "$code" >"$OUT/${name}.exit"
+  if grep -q '0 failed' "$OUT/${name}.txt"; then
+    echo "ok $name" | tee -a "$OUT/summary.txt"
+  else
+    echo "FAIL $name exit=$code" | tee -a "$OUT/summary.txt"
+    FAIL=1
+  fi
+done
+echo "$FAIL" >"$OUT/exit.txt"
+exit "$FAIL"
