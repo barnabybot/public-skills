@@ -19,7 +19,9 @@ for skill in "$ROOT"/skills/*/SKILL.md; do
   code=$?
   set -e
   echo "$code" >"$OUT/${name}.exit"
-  if grep -q '0 failed' "$OUT/${name}.txt"; then
+  # validate.sh exits 0 when the FAIL count is 0. WARNs stay on that path.
+  # Footer text "0 failed" is a substring of 10, 20, 100, and so on.
+  if [ "$code" -eq 0 ]; then
     echo "ok $name" | tee -a "$OUT/summary.txt"
   else
     echo "FAIL $name exit=$code" | tee -a "$OUT/summary.txt"
