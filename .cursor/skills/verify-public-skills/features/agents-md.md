@@ -9,6 +9,7 @@ Root agent instructions shipped with the collection.
 ## How to get to it (user POV)
 
 - Copy `AGENTS.md` to a project root and symlink `CLAUDE.md` to it.
+- Or merge it into `~/.claude/CLAUDE.md` or `~/.codex/AGENTS.md`.
 
 ## Driving it with preview-shots
 
