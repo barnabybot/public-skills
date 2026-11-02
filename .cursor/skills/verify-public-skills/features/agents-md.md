@@ -8,7 +8,7 @@ Root agent instructions shipped with the collection.
 
 ## How to get to it (user POV)
 
-- Copy/symlink into a project root.
+- Copy `AGENTS.md` to a project root and symlink `CLAUDE.md` to it.
 
 ## Driving it with preview-shots
 
@@ -17,4 +17,4 @@ Root agent instructions shipped with the collection.
 
 ## Gotchas
 
-- Content judgment is human; doctor only checks presence.
+- Content judgement is human. Launch checks the file exists (`test -f`). This feature checks it is non-empty (`test -s`).
