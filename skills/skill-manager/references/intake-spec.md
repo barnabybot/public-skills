@@ -35,9 +35,28 @@ Phase 1: four tabs, one submit, each option with a line on what it gives.
 | Host | Mechanism |
 |---|---|
 | Claude Code | One `AskUserQuestion` call carrying every open question. Header 12 characters or fewer. A recommended option goes first with "(Recommended)" on the label. |
-| Codex | `request_user_input`, the same panel. Requires `default_mode_request_user_input = true` under `[features]` in `~/.codex/config.toml`; re-check after Codex updates, which have dropped it before. A host without it falls back to the text form. |
+| Grok | One `AskUserQuestion` call, the same panel, where that tool is exposed. |
+| Codex | `request_user_input` exposes guidance for one to three questions and two to three options per question. These are guidance limits; runtime instructions and the exposed tool schema remain authoritative. Requires `default_mode_request_user_input = true` under `[features]` in `~/.codex/config.toml`. Split stages across sequential calls to fit the question-count guidance. If any question exceeds the option-count guidance, preserve the complete stage through a text mechanism only when runtime instructions allow it. For required native input, use a blocking path only when that path is active and exposed; otherwise use an allowed text mechanism or keep dependent work paused. |
+| Host without a native question tool | Use the text form. |
 | Text form | One message. Questions numbered, options lettered, each with its description, the recommended option marked. Reply as `1A 2C 3B`. |
 | Headless (cron) | No panel. The skill's `fallback:` field or its headless workflow names the defaults. |
+
+One panel is one intake stage. A host may render it in sequential native calls
+to fit per-call question-count guidance. Keep every question and option
+unchanged. If an individual question exceeds the host's option guidance, use
+the complete text form when runtime instructions allow; otherwise keep
+dependent work paused and report the missing answers. Runtime instructions and
+the exposed tool schema take precedence over this authoring contract. Required
+answers block dependent work until the user answers. Tool acceptance,
+preselection and an empty answer map do not count as answers. Do not substitute
+an asynchronous question call for required intake. Default-mode Codex requests
+can expire. Preserve the complete stage in chat and wait only when runtime
+instructions allow that transport; otherwise keep dependent work paused and
+report that intake is incomplete. For optional asynchronous questions, continue
+independent work while awaiting a reply. If ending the turn with questions
+pending, include their text and choices only when runtime instructions permit;
+otherwise state what remains unanswered. Use the complete text fallback when
+native delivery is uncertain and the host permits it.
 
 ## Authoring form
 

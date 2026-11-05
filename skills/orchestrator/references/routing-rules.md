@@ -56,7 +56,8 @@ Old tier letters (O, A to F, V, R) and the words `basic`, `moderate` and `comple
 Windows read: the long window (`usage.secondary`), the short window (`usage.primary`), and a model's own scoped window where the metadata names one in `scoped_window`. `scripts/fixtures/` shows the JSON shape the resolver expects.
 
 - **Exhausted**: used at or above `exhausted_used_percent` on any governing window with more than `exhausted_min_hours_to_reset` to that window's reset. The row's cross-provider backup is dispatched. The reason names the window, the figure and the reset time.
-- **Tight**: `pace.secondary.willLastToReset` is false. The row is dispatched as written and the reason carries the word tight.
+- **Tight**: `pace.secondary.willLastToReset` is false, or that flag is absent and used percent is far ahead of the fraction of the window already elapsed. The row is dispatched as written and the reason carries the word tight. A Codex `native` observation grades the same pace on every returned account window.
+- **Structured request**: `--request <file>` admits only providers named in `authorisation.providers` when that list is present. `"capacity": "required"` stops on an unread meter. `bounded_preference`, when present, admits one named task. `--route-out` stores the resolved pairs; `--resolved-route` reuses them while the bundle is fresh.
 - **Unread**: the meter errors, times out, or has no entry for that provider. The row is dispatched as written and the reason says capacity unread. A provider that is always unread is never an inferred route.
 - **Nothing left**: every candidate is exhausted or excluded. The resolver exits 3 and prints the candidates with their states. The helper stops before any cmux call.
 

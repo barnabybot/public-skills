@@ -1,0 +1,36 @@
+## The tariff holds the group
+
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.
+The tariff holds the low price group in place.

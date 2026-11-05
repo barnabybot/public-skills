@@ -110,6 +110,7 @@ aa:
 capacity:
   exhausted_used_percent: 95
   exhausted_min_hours_to_reset: 1
+  max_observation_age_seconds: 300
   read_timeout_seconds: 20
   timezone: UTC
 tiers:

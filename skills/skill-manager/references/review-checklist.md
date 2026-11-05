@@ -13,6 +13,7 @@ Before shipping any skill:
 - [ ] No collision with existing skill descriptions (grep every `description:` in the tree)
 - [ ] `parent:` field set for all family children
 - [ ] `fallback:` set for any skill whose scripts can fail to run
+- [ ] Agent-facing commands follow `references/cli-standard.md` (`python3 scripts/cli_lint.py <skill-dir>` is advisory)
 
 ## The automated bar
 
