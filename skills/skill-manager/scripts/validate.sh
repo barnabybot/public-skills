@@ -107,6 +107,29 @@ else
   done <<< "$INTAKE"
 fi
 
+LINT_PY="$(cd "$(dirname "$0")" && pwd)/cli_lint.py"
+if [ -f "$LINT_PY" ]; then
+  set +e
+  LINT_OUT=$(python3 "$LINT_PY" "$SKILL_DIR" 2>&1)
+  LINT_RC=$?
+  set +e
+  if [ "$LINT_RC" -eq 2 ]; then
+    echo "  WARN  cli lint could not run: $LINT_OUT"
+    WARN=$((WARN+1))
+  elif [ "$LINT_RC" -ne 0 ]; then
+    while IFS= read -r line; do
+      case "$line" in
+        entrypoints:*) ;;
+        "") ;;
+        *) echo "  WARN  cli: $line"; WARN=$((WARN+1)) ;;
+      esac
+    done <<< "$LINT_OUT"
+  else
+    echo "  PASS  CLI standard (advisory)"
+    PASS=$((PASS+1))
+  fi
+fi
+
 echo ""
 echo "Not auto-checked — run references/review-checklist.md:"
 echo "  - voice rules from your instruction file"

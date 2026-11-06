@@ -48,7 +48,12 @@ note "failed.md"   "workspace:8"  "failed"
 note "other.md"    "workspace:13" "in-progress"
 note "reused.md"   "workspace:8"  "in-progress" "" "Previous work"
 note "body-name.md" "workspace:8" "in-progress"
-sed -i '' '/^workspace_name:/d' "$NOTES/body-name.md"
+python3 - "$NOTES/body-name.md" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+lines = [line for line in path.read_text().splitlines(True) if not line.startswith("workspace_name:")]
+path.write_text("".join(lines))
+PY
 printf '\n```yaml\nworkspace_name: "Current [work].*"\n```\n' >> "$NOTES/body-name.md"
 
 export CMUX_SESSIONS_DIR="$NOTES"

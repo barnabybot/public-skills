@@ -1,6 +1,6 @@
 ---
 name: editorial-review
-version: 1.0.0
+version: 1.1.0
 description: >-
   Review prose and argument. Use for /editorial-review, article critique, essays, whitepapers, evidence or charts.
 ---
@@ -116,7 +116,16 @@ text) and the source-notes path where Sources is On file.
    tables: provenance against the source, epistemic inflation, performed voice,
    and argument self-commentary with its deletion and referent tests. A word
    swap made before the claim is checked gets thrown away when the claim
-   changes, so the lexical pass goes last. Then flag every banned word, banned
+   changes, so the lexical pass goes last. Run `scripts/voice_lint.py` on the
+   file. Set `--surface` to `essay` for an essay, `professional` for a formal
+   report or a newsletter, `note` for an internal note, and `analytical` for a
+   working analysis. It prints each hit as the file, the line, the rule id and
+   the line: banned vocabulary, banned phrases, unspaced em dashes, the comma
+   form, the is-not twin, announcing-pair subheads, and the short
+   British-spelling list (organise, analyse, behaviour). On `essay` it skips
+   the sectioning rule used for the other three surfaces: a file over 300 words
+   with no level-two heading. Exit 0 is clean, exit 1 is a finding, exit 2 is a
+   bad invocation. Then flag every banned word, banned
    phrase, structural tell and tonal signature from `ai-voice-detection.md`. Its
    Voice-Positive Axis applies to the Essay surface alone. This lens is
    rigorous, and it does not outrank the substance lenses: hygiene serves the
@@ -301,10 +310,10 @@ regenerate.
 Helping edit slop out while emitting slop in costs more editorial budget than
 the original review.
 
-Write-time, and not review-time. The grep pass and the lens application are
-backstops; the primary defence is a per-suggestion self-check before the
-suggestion is rendered. Do not rationalise a construction as "load-bearing" or
-"earned" - the rationalisation IS the tell.
+Write-time, and not review-time. The `scripts/voice_lint.py` pass and the lens
+application are backstops; the primary defence is a per-suggestion self-check
+before the suggestion is rendered. Do not rationalise a construction as
+"load-bearing" or "earned" - the rationalisation IS the tell.
 
 This rule applies recursively to any subagent this skill spawns. Pass the
 negation-contrast list explicitly in the subagent prompt, because a subagent

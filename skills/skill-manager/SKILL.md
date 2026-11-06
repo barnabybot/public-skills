@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-version: 1.0.0
+version: 1.1.0
 fallback: "If validate.sh cannot run, apply references/review-checklist.md by hand."
 attribution: "Structure and progressive-disclosure patterns adapted from Artem Zhutov's skill-management skill"
 description: >-
@@ -55,7 +55,8 @@ Create the purpose in one sentence and the trigger phrases.
 | The full pre-ship review checklist + when-to-create-vs-extend | `references/review-checklist.md` |
 | Folder/name rules, families, native vs adopted children, renaming | `references/naming-conventions.md` |
 | Where the harness looks for skills, symlinking, validating, auditing the whole tree | `references/discovery-workflow.md` |
-| The intake panel: one panel first, every option explained, host rendering | `references/intake-spec.md` |
+| The intake panel: one panel first, every option explained, host rendering, required answers | `references/intake-spec.md` |
+| Small CLIs an agent runs, and the advisory lint | `references/cli-standard.md` |
 
 ## The two non-negotiables
 
@@ -76,7 +77,10 @@ collision, worked example, `parent:` field) stay manual.
 
 ```bash
 scripts/validate.sh ~/.claude/skills/my-skill
+python3 scripts/cli_lint.py ~/.claude/skills/my-skill
 ```
+
+`cli_lint.py` is advisory. It reports thin `--help`, missing `--json`, a writer without `--dry-run`, and terse errors. Findings do not fail `validate.sh`.
 
 ## Audit the whole tree
 

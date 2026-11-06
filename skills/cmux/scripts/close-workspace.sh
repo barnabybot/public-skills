@@ -35,6 +35,7 @@ import time
 from uuid import UUID
 
 sys.path.insert(0, os.environ["CMUX_IDLE_LIB"])
+import group_header
 import idle_codex
 
 ref, expected_uuid, note_path = sys.argv[1:]
@@ -98,6 +99,7 @@ def retire():
     if workspace is None:
         print(f"Already absent: {expected_uuid}; no action taken")
         return
+    group_header.require_close(expected_uuid)
     surface = terminal()
     if not idle(surface):
         print(f"Already absent: {expected_uuid}; disappeared before screen read, no action taken")
@@ -109,6 +111,7 @@ def retire():
         return
     if live() != workspace or terminal() != surface or Path(note_path).read_text() != note_text:
         raise ValueError("workspace, terminal or note changed after the idle check")
+    group_header.require_close(expected_uuid)
     print(cmux("send-key", "--workspace", expected_uuid,
                "--surface", surface, "ctrl+d"), end="")
     for attempt in range(20):
@@ -117,6 +120,7 @@ def retire():
             return
         if attempt > 0:
             try:
+                group_header.require_close(expected_uuid)
                 print(cmux("close-workspace", "--workspace", expected_uuid), end="")
             except subprocess.CalledProcessError as error:
                 if "confirmation_required" not in (error.stderr + error.stdout):
@@ -158,6 +162,36 @@ if [[ "$#" -ne 1 ]]; then
   exit 2
 fi
 
+HEADER_HELPER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/group_header.py"
+USE_HEADER=0
+CLOSE_TARGET=""
+set +e
+VERDICT=$(python3 "$HEADER_HELPER" before-close --workspace "$ARG" --json 2>/dev/null)
+HEADER_RC=$?
+set -e
+if printf '%s' "$VERDICT" | python3 -c 'import json,sys; json.load(sys.stdin)' >/dev/null 2>&1; then
+  HEADER_STATE=$(printf '%s' "$VERDICT" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("state",""))')
+  if [[ "$HEADER_STATE" == "retained-header" ]]; then
+    echo "Retained: $VERDICT" >&2
+    exit 1
+  fi
+  if [[ "$HEADER_RC" -eq 0 && "$HEADER_STATE" == "ready" ]]; then
+    WS_UUID=$(printf '%s' "$VERDICT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["workspace"])')
+    WS_ID=$(printf '%s' "$VERDICT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["ref"])')
+    WS_NAME=$(printf '%s' "$VERDICT" | python3 -c 'import json,sys; print(json.load(sys.stdin)["title"])')
+    set +e
+    FINAL_VERDICT=$(python3 "$HEADER_HELPER" before-close --workspace "$WS_UUID" --json 2>/dev/null)
+    FINAL_RC=$?
+    set -e
+    if [[ "$FINAL_RC" -ne 0 || "$FINAL_VERDICT" != "$VERDICT" ]]; then
+      echo "Retained: workspace identity or group changed before closure" >&2
+      exit 1
+    fi
+    CLOSE_TARGET="$WS_UUID"
+    USE_HEADER=1
+  fi
+fi
+
 find_workspace() {
   awk -v arg="$ARG" '
   match($0, /workspace:[0-9]+[[:space:]]+/) {
@@ -175,6 +209,9 @@ find_workspace() {
   '
 }
 
+if [[ "$USE_HEADER" -eq 1 ]]; then
+  LIVE_WORKSPACE=""
+else
 LIVE_WORKSPACE=$(cmux list-workspaces 2>&1 | find_workspace)
 if [[ -z "$LIVE_WORKSPACE" && "$ARG" == workspace:* ]]; then
   while IFS= read -r window; do
@@ -194,6 +231,8 @@ else
 fi
 if [[ -n "$LIVE_WORKSPACE" ]]; then
   WS_NAME="${LIVE_WORKSPACE#*$'\t'}"
+fi
+CLOSE_TARGET="${CLOSE_TARGET:-$WS_ID}"
 fi
 
 SESSIONS_DIR="${CMUX_SESSIONS_DIR:-${AGENT_NOTES:-$HOME/agent-notes}/Sessions}"
@@ -233,10 +272,17 @@ if [[ -d "$SESSIONS_DIR" ]]; then
       SKIPPED=$((SKIPPED + 1))
       continue
     fi
-    sed -i '' "s/^status: ${STATUS}$/status: done/" "$f"
-    sed -i '' "/^status: done$/a\\
-ended: $TODAY
-" "$f"
+    python3 - "$f" "$STATUS" "$TODAY" <<'PY'
+import pathlib, sys
+path, status, today = sys.argv[1:]
+file = pathlib.Path(path)
+text = file.read_text()
+old = f"status: {status}\n"
+new = f"status: done\nended: {today}\n"
+if old not in text:
+    raise SystemExit(f"status line missing in {path}; pass the open status to replace")
+file.write_text(text.replace(old, new, 1))
+PY
     echo "Updated: $(basename "$f")"
     MATCHED=$((MATCHED + 1))
   done < <(grep -l --null "^workspace_id: \"$WS_ID\"" "$SESSIONS_DIR"/*.md 2>/dev/null || true)
@@ -248,4 +294,4 @@ elif [[ "$MATCHED" -eq 0 ]]; then
   echo "No open session note for $WS_ID with the current name; $SKIPPED note(s) left untouched (closing anyway)"
 fi
 
-cmux close-workspace --workspace "$WS_ID" 2>&1
+cmux close-workspace --workspace "$CLOSE_TARGET" 2>&1
