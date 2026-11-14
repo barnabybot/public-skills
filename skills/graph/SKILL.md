@@ -7,7 +7,7 @@ description: >-
   awaiting a decision, and agent transition logs. NOT for charts or data visualisation.
 fallback: >-
   If Python or PyYAML is unavailable, read the state YAML directly and report the graph as
-  text — nodes by stage with their status, then what is ready, gated, blocked and stale.
+  text. Group nodes by stage and status, then report ready, gated, blocked and stale work.
   Never hand-edit the rendered HTML; leave it stale and say so.
 allowed-tools:
   - Read
@@ -18,7 +18,7 @@ allowed-tools:
   - Bash
 ---
 
-# /graph: the work-graph renderer
+# /graph work-graph renderer
 
 One programme of work, one YAML state file and one interactive HTML graph. Agents edit
 the state; the page is derived from it. The render also maintains a transition log and a
@@ -35,7 +35,11 @@ python3 $R <programme>.state.yaml --actor codex   # attribute logged transitions
 python3 scripts/selftest.py                       # 27 assertions, run after any change
 ```
 
-**Look at the page.** `--open` renders and then opens the file in the cmux browser
+**T3 Code.** Render without `--open`. To show the graph in the conversation,
+pass the rendered HTML to `html_preview` then `html_render`. Use these display
+tools without starting a server or opening a cmux pane.
+
+**Look at the page in cmux.** `--open` renders and then opens the file in the cmux browser
 pane, waits for the load to complete and prints the page title back. Use it whenever
 a human is going to read the result. It is never fatal. A run with no cmux on PATH
 prints one line and still renders, so cron and pre-commit are unaffected. It

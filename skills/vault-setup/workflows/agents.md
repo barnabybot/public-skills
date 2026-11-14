@@ -41,7 +41,7 @@ log and `agent:` fields. Shared folders retain the casing shown below.
 If Secrets is Yes and Files is Markdown only, ask the user to revise one of
 those answers before writing: an encrypted credentials file requires Mixed.
 
-Fixed by the Agents pattern, so no question: session notes file flat at `Sessions/` root with `agent:` frontmatter identifying the source, so a query tool can group on it; audits sit per agent under `Audits/<agent>/` with cross-agent synthesis at `Audits/` root; `Ops/` holds skill evidence; search registration stays off unless the Intake panel said Now, because agents read these files by direct access. `VAULT_NAME`, `VAULT_PURPOSE`, `SEARCH_COLLECTION` and `CREATED` come from the shared contract.
+Fixed by the Agents pattern, so no question: session notes file flat at `Sessions/` root with `agent:` identifying the runtime and `host:` identifying `cmux`, `t3-code` or `cli`, so a query tool can group on it; audits sit per agent under `Audits/<agent>/` with cross-agent synthesis at `Audits/` root; `Ops/` holds skill evidence; search registration stays off unless the Intake panel said Now, because agents read these files by direct access. `VAULT_NAME`, `VAULT_PURPOSE`, `SEARCH_COLLECTION` and `CREATED` come from the shared contract.
 
 ## Output structure
 
@@ -116,7 +116,8 @@ Run the shared scaffolding contract in [`../SKILL.md`](../SKILL.md). This workfl
   `SEARCH_COLLECTION` supplies the collection name in the search description;
   it is not a template token in these two files.
 - **Verify** (step 8): confirm `vault_type: agents`, the exact tree for the
-  selected options and each agent's four subfolders. The root allowlist and
+  selected options and each agent's four subfolders. Confirm the session template
+  separates `agent:` from `host:` and scopes workspace fields to cmux. The root allowlist and
   filing table must describe only the folders created. If `CLAUDE.md` exists,
   confirm it is a symlink to `AGENTS.md`. Run `grep -rn '{{' "$VAULT"` and
   resolve every match. Exit code 1 with no output means no unfilled tokens.

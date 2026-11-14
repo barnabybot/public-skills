@@ -139,19 +139,15 @@ type-specific tree and template; the procedure is identical.
 3. **Create the folder tree.** `mkdir -p` the workflow's type-specific tree at
    `$VAULT`. `$VAULT` is `${VAULTS_ROOT:-$HOME/vaults}/$VAULT_NAME` for every
    type except a wiki beside its skill, where the wiki workflow sets it.
-4. **Write AGENTS.md.** Read `templates/<type>/AGENTS.md.tmpl`. Substitute its
-   standard tokens (`{{VAULT_NAME}}`, `{{VAULT_PURPOSE}}`,
-   `{{SEARCH_COLLECTION}}`, `{{CREATED}}`) where present, plus the workflow's
-   type-specific tokens, by search-and-replace with no template engine. Write
-   the result to `$VAULT/AGENTS.md`.
+4. **Write AGENTS.md.** Read `templates/<type>/AGENTS.md.tmpl`. Resolve every
+   token using the shared inputs and the selected workflow's derived values.
+   Use search-and-replace with no template engine. Write `$VAULT/AGENTS.md`.
 5. **One instruction file.** Keep `AGENTS.md` as the canonical instruction
    file. For Claude Code, create a relative symlink at the vault root with
    `ln -s AGENTS.md "$VAULT/CLAUDE.md"`. Other hosts can use the same alias
    where needed. Both names must resolve to the same file.
-6. **Write log.md** from `templates/<type>/log.md.tmpl`, substituting
-   `{{VAULT_NAME}}`, `{{CREATED}}`, `{{SEARCH_COLLECTION}}` and
-   `{{SEARCH_REGISTERED}}` where present, plus the workflow's type-specific
-   tokens.
+6. **Write log.md** from `templates/<type>/log.md.tmpl`. Resolve every token
+   using the shared inputs and the selected workflow's derived values.
 7. **Register the search collection** where `REGISTER_SEARCH = yes`. The shape
    depends on your tool. For [QMD](https://github.com/qmd-sh/qmd):
 
@@ -166,7 +162,8 @@ type-specific tree and template; the procedure is identical.
 8. **Verify:** `AGENTS.md` is present, `vault_type: <type>` is declared inside
    it, and - where registered - the search collection lists. Any tool that
    discovers vaults by walking for `AGENTS.md` cannot see a vault whose
-   instruction file has another name or another location.
+   instruction file has another name or another location. Confirm every output
+   template token has been resolved.
 9. **Set the sync file-type toggles on every device** where Files was Mixed in
    the panel: the workflows for this vault will write non-Markdown state. See
    below. This step is skipped only for a vault that will hold Markdown and
@@ -211,7 +208,7 @@ or pre-populate `Templates/`. New vaults start empty.
 |---|---|
 | First filing audit | Walk the tree and check every note's frontmatter against the vault's `AGENTS.md` |
 | Register search later | Add the collection with your search tool, then update and embed |
-| Check the instruction file | Open `$VAULT/AGENTS.md` and edit it - it is a starting point, not a finished rulebook |
+| Check the instruction file | Open `$VAULT/AGENTS.md` and adapt it to the vault |
 
 ## Related
 

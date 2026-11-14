@@ -6,6 +6,7 @@ description: >-
   Reviews completed work and proposes evidenced improvements. Use for /retrospective,
   lessons learned, repeated agent mistakes, or a review of recent sessions.
 fallback: >-
+  If neither native delegation nor cmux is available, review here and state that limit.
   If historical records or recall are unavailable, report the missing evidence.
   A current-session review can use the visible conversation with that limit stated.
 ---
@@ -27,9 +28,9 @@ settled by the request and state the supplied scope.
 - settled by: "recent sessions" or "last N sessions" (Recent sessions); a named skill or incident (One skill or incident); "this session" (Current session)
 
 **Venue** - Where should the review run?
-- Fresh context - use orchestrator to open a review workspace with source pointers
+- Fresh context - use orchestrator to start a review worker through the current host with source pointers
 - Here - review the supplied evidence in this conversation and state any context limits
-- settled by: an already dispatched review (Fresh context, reuse it); "here" or "inline" (Here); orchestrator unavailable (Here)
+- settled by: an already dispatched review (Fresh context, reuse it); "here" or "inline" (Here); neither native delegation nor cmux available (Here)
 
 **Action** - What should happen to the findings?
 - Propose only - show the evidenced fixes and proposed edits
@@ -52,7 +53,8 @@ or incident for a focused review, and any source or report path the user named.
 | Recent sessions | `workflows/recent-sessions.md` |
 
 For Fresh context, use the installed orchestrator with the settled scope and
-existing authorisation. A receiving reviewer reuses that workspace. A handoff
+existing authorisation. Follow its `references/hosts.md` for T3 Code, cmux or CLI
+transport. A receiving reviewer reuses the dispatched context. A handoff
 continues only after the receiver has the brief and source pointers.
 
 ## Dependencies and outputs
@@ -60,7 +62,7 @@ continues only after the receiver has the brief and source pointers.
 - Historical discovery uses the installed `recall` skill. Pass its discovery
   workflow the settled repository, topic and date window. It returns records;
   retrospective owns eligibility, incident grouping and proposed changes.
-- `orchestrator` is optional for a fresh review workspace. `skill-manager`
+- `orchestrator` is optional for a fresh review worker. `skill-manager`
   validates a proposed skill change when available.
 - Use `${AGENT_NOTES:-$HOME/agent-notes}` for session records and evidence.
   Keep evidence under `Ops/retrospective/YYYY-MM-DD <run>/` beneath that root.

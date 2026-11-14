@@ -39,7 +39,11 @@ Agent folders are runtime data. Do not hand-edit unless triaging; the next tick 
 
 ## Sessions
 
-Session notes file flat at `Sessions/` root, one note per session, `YYYY-MM-DD <slug>.md`, with the first eight characters of the session id appended when the name is taken that day. The `agent:` field identifies the source (`claude-code`, `codex`, `cmux`, and whatever else you run); a query tool can group on it. `Sessions/Handoffs/` holds pickup prompts and `Sessions/Archive/` older notes and retired working material.
+Session notes file flat at `Sessions/` root, one note per session, `YYYY-MM-DD <slug>.md`, with the first eight characters of the session id appended when the name is taken that day. The `agent:` field identifies the runtime (`claude-code`, `codex`, or another agent runtime). The `host:` field identifies `cmux`, `t3-code` or `cli`. A query tool can group on either field. `Sessions/Handoffs/` holds pickup prompts and `Sessions/Archive/` older notes and retired working material.
+
+Use `workspace_name:` and `workspace_id:` only inside cmux. In T3 Code, record
+task IDs and thread links. CLI sessions record native child identifiers where
+available. Add `ended:` when the session closes.
 
 Standard session frontmatter:
 
@@ -49,12 +53,10 @@ categories:
   - "[[Sessions]]"
 type: "[[Sessions]]"
 agent: claude-code
+host: cli
 model: <model id>
 date: YYYY-MM-DD
 status: in-progress
-ended: YYYY-MM-DD HH:MM
-workspace_name: "<name>"
-workspace_id: "<uuid>"
 goal: |
   <one-paragraph goal>
 definition_of_done:
@@ -90,16 +92,17 @@ Master credentials never sit inline anywhere in this vault. Agents read entries 
 
 ## Filing rules
 
-- **YYYY-MM-DD dates everywhere** — filenames, frontmatter, directory names
+- **Use YYYY-MM-DD dates** for filenames, frontmatter and directory names
 - **Lowercase property keys**, plural for lists, snake_case for multi-word keys
-- **No wikilinks to other vaults** — reference other-vault files by relative description, because paths change
+- **Reference other vaults by relative description.** Paths can change
 - **Auto-generated index files** are never hand-edited. Edit the canonical source and rerun the generator.
 
 ## Property standards
 
 | Property | Type | Usage |
 |----------|------|-------|
-| `agent` | text | which agent or host wrote this file |
+| `agent` | text | agent runtime that wrote this file |
+| `host` | text | `cmux`, `t3-code` or `cli` |
 | `status` | text | the closed session vocabulary above; free text on other note types |
 | `created` | date | YYYY-MM-DD |
 | `date` | date | the date the content relates to |

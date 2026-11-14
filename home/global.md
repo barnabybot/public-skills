@@ -28,6 +28,14 @@ Let code carry its meaning. Keep comments for a necessary reason or external
 constraint that code cannot express. Retain licences, shebangs, tool directives
 and machine sentinels. Make the smallest change that meets the request.
 
+## Execution discipline
+
+- State assumptions and surface trade-offs before coding when a choice materially
+  changes the result.
+- Prefer the simplest design. Add abstractions only when the task needs them.
+- Make surgical edits restricted to the request.
+- Define a concrete verification check for each step before acting.
+
 ## Files
 
 Put accepted deliverables at the requested destination. Keep iterative renders,
@@ -57,10 +65,10 @@ Close with `ended:` and `## Outcome`. Use one of these status values:
 - `blocked`
 - `failed`
 
-Plan a handoff before 30% remaining context or about 300k tokens, whichever
-comes first. The orchestrator skill uses an earlier limit of 30% context used
-(70% remaining). Apply the earliest active limit. Finish the current step and save a dated brief under `$AGENT_NOTES/Sessions/Handoffs/`. Include
-the goal, decisions, changed files, evidence and next step. Use `/orchestrator`
+At 30% context usage or about 300k tokens, whichever comes first, finish the
+current step and hand off before compaction. Subagents and workflow agents are
+exempt. Save a dated brief under `$AGENT_NOTES/Sessions/Handoffs/`. Include the
+goal, decisions, changed files, evidence and next step. Use `/orchestrator`
 when installed. Respect the host's rules for creating a successor. If context
 usage is unavailable, say so and plan continuation between phases.
 
