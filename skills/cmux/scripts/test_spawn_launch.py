@@ -86,6 +86,32 @@ esac
         self.assertEqual(keys, [])
         self.assertEqual(self.reads, [])
 
+    def test_codex_and_grok_launch_without_trust_input(self):
+        expected = {
+            'codex': ['codex', '--yolo', '--model', 'fixture-model',
+                      '-c', 'model_reasoning_effort=high'],
+            'grok': ['grok', '--always-approve', '--model', 'fixture-model',
+                     '--reasoning-effort', 'high'],
+        }
+        for agent, command_prefix in expected.items():
+            for prompt in (False, True):
+                with self.subTest(agent=agent, prompt=prompt):
+                    command, keys = self.launch(agent, 'Do you trust this folder?', prompt)
+                    self.assertEqual(command[:6], command_prefix)
+                    self.assertEqual(len(command), 7 if prompt else 6)
+                    self.assertEqual(keys, [])
+                    self.assertEqual(self.reads, [])
+
+    def test_unsupported_agent_is_refused_before_workspace_creation(self):
+        result = subprocess.run(
+            [str(HELPER), 'launch-fixture', '--agent', 'unsupported-runtime',
+             '--model', 'fixture', '--effort', 'high', '--no-session'],
+            env=self.env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('expected codex, claude or grok', result.stderr)
+        for name in ('command', 'keys', 'reads'):
+            self.assertFalse((self.directory / name).exists())
+
     def test_claude_selected_no(self):
         command, keys = self.launch('claude', 'Do you trust this folder?\n> 1. No, exit\n  2. Yes, I trust this folder', False)
         self.assertEqual(command, ['claude', '--dangerously-skip-permissions', '--model',

@@ -26,7 +26,7 @@ Context is a consumable. Plan succession before it runs out.
 - **A new work phase always gets a fresh workspace.** Never reactivate a
   worker past its threshold to open new scope, however much subject knowledge it
   holds. It will spend what remains writing a handoff, and the work starts in a
-  successor anyway - one hop later. Spawn fresh from a brief that carries the
+  successor anyway, one hop later. Spawn fresh from a brief that carries the
   knowledge instead.
 - **A worker held for decisions is still burning threshold.** Parking a
   past-threshold worker at `review` as a live decision surface
@@ -46,5 +46,5 @@ Context is a consumable. Plan succession before it runs out.
   session, and closed two seats with `cmux close-workspace` while leaving their notes
   stuck at `in-progress`. Every rule it broke was already written here. Open the
   handoff with the instruction verbatim: **"You are the orchestrator. Load the
-  `orchestrator` skill before you touch the fleet - this brief carries the state, the
+  `orchestrator` skill before you touch the fleet, this brief carries the state, the
   skill carries the rules."**

@@ -38,9 +38,6 @@ Include this section in the brief. Append yourself to the inherited predecessor 
 ```markdown
 ### Orchestrator succession
 
-The identity, group and closure commands below apply only in cmux. In T3 Code,
-record predecessor thread links, task IDs and exact note paths. Verify takeover
-through native results and cancel only unneeded owned tasks.
 After reading this brief and loading the orchestrator skill, complete
 workflows/handoff.md#orchestrator-succession before fleet work.
 

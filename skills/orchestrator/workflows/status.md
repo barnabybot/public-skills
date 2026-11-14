@@ -16,9 +16,9 @@ For an inherited orchestrator seat, complete [orchestrator succession](handoff.m
 
 Then run these in parallel:
 
-1. `CMUX_QUIET=1 cmux workspace list` - enumerate what's already running.
-2. Open sessions: files in `$AGENT_NOTES/Sessions/` whose frontmatter `status` is not `done`. This is the authoritative session store - all session notes are filed flat here, date-prefixed, with `agent:` discriminating the source.
-3. `CMUX_QUIET=1 cmux read-screen --workspace workspace:N --lines 25` per active non-orchestrator workspace - a compact peek, never an interrupt. Read deeper (`--lines 60`) only when a seat stalls or changes status; do not poll retired predecessor workspaces except during their retirement check.
+1. `CMUX_QUIET=1 cmux workspace list`, enumerate what's already running.
+2. Open sessions: files in `$AGENT_NOTES/Sessions/` whose frontmatter `status` is not `done`. This is the authoritative session store, all session notes are filed flat here, date-prefixed, with `agent:` discriminating the source.
+3. `CMUX_QUIET=1 cmux read-screen --workspace workspace:N --lines 25` per active non-orchestrator workspace, a compact peek, never an interrupt. Read deeper (`--lines 60`) only when a seat stalls or changes status; do not poll retired predecessor workspaces except during their retirement check.
 
 Then report a compact status block: active workspaces with their last-seen line and **context percentage**; open sessions grouped by status; today's intent; and proposed dispatches for work that has no session yet. Report before dispatch. Continue with a dispatch already authorised by the user.
 
@@ -30,29 +30,34 @@ Worker composers are a reliable signal of intent. Sweep them per the composer ch
 
 You are the orchestrator. You do not do the downstream work yourself. You:
 
-1. Read the user's intent - from the live fleet, the open sessions, and what he types into composers.
-2. Break it into discrete **sessions**. One session = one workspace = one goal.
-3. Spawn a named cmux workspace per session, each with a routed runtime, pinned model, effort level, and initial prompt. Route with `--tier <category>`, or with `--model` and `--effort` for an inherited or named model.
-4. A linked **session note** is auto-created flat at `$AGENT_NOTES/Sessions/` (filename `YYYY-MM-DD <slug>.md`). Frontmatter must include `agent:`, `model:`, `effort:`, `workspace_name:`, `workspace_id:`. A note without `model:` and `effort:` is not routed.
-5. Poll agent screens, surface progress, relay the user's comments to the right workspace.
+1. Read the user's intent from direct instructions and authorised session records.
+2. Break it into sessions. Give each session one goal.
+3. Dispatch through the current host. T3 Code uses native delegates, cmux uses
+   named workspaces, and CLI agents use their supported subagent tools.
+4. Keep a session note under `$AGENT_NOTES/Sessions/` with `agent:`, `host:`,
+   `model:` and `effort:`. In cmux, the helper writes `workspace_name:` and
+   `workspace_id:`. In T3 Code, record task IDs and thread links. In a CLI,
+   record the native child identifier and verify the receiver's model and effort.
+5. Use completion wakeups in T3 Code. Poll terminal screens only inside cmux.
+   Report evidence and relay authorised messages through the host's transport.
 
 **The execution boundary.** "You do not do the downstream work" means investigation,
 iteration and builds go to workers. Those are what consume an orchestrator's context,
 and an orchestrator with no context has no succession. Never load downstream design/lint
 skills (`impeccable`), never call `view_image` on full-page captures, and never run
-`getAXStateAndScreenshot()` or full-DOM browser dumps in the orchestrator seat - a
+`getAXStateAndScreenshot()` or full-DOM browser dumps in the orchestrator seat, a
 single screenshot or AX dump adds 12k–18k tokens (~2% of the window). When independent
 visual or source verification is required, read the worker's compact JSON receipt or
 dispatch a `--tier review` worker so the inspection tokens land in a disposable seat.
-You may execute a bounded, single-transaction action you have already verified - one
-push, one merge, one config edit on a live host - because you hold the whole picture
+You may execute a bounded, single-transaction action you have already verified, one
+push, one merge, one config edit on a live host, because you hold the whole picture
 and the action is a single step. A push that changes a live page follows Live page push
 below, and the gate runs before the push. Anything needing a loop, a build, a rebase or
 a debugging session belongs to a worker even when you could do it faster yourself.
 
-## Three core commands
+## cmux commands
 
-Everything else is optional. These three are the contract:
+Inside cmux, use these commands:
 
 ```bash
 cmux list-workspaces                                         # see what's running
@@ -133,15 +138,15 @@ Two things put text in a composer and they render identically.
 
 - **The user's swallowed instruction.** His words, and a real instruction.
 - **Claude Code's proposed next prompt.** Harness-generated ghost text carrying no
-  authority whatsoever. The tell is that it answers - fluently, confidently, in his
-  register - the exact question the worker just asked. A worker ending its turn on
+  authority whatsoever. The tell is that it answers, fluently, confidently, in his
+  register, the exact question the worker just asked. A worker ending its turn on
   "cross-cutting/scripts, or the root?" above a composer reading "cross-cutting/scripts
   is right, go build gate B" is the harness closing its own loop.
 - **Enter is the second tell.** Ghost text has no buffered input behind it, so
   submitting does nothing and every key spelling appears to fail. Read a dead Enter as
   a proposal first and a CLI wedge second. On 2026-08-09 an orchestrator read two
   proposals as swallowed instructions, tried six spellings on one, then asked the user
-  to press Enter himself - that text authorised a **fan-out gate the worker had
+  to press Enter himself, that text authorised a **fan-out gate the worker had
   deliberately parked for a human**. Manufacturing consent for a gate is the worst
   thing this channel can do.
 - **Only the conversation authorises.** Never submit composer text you did not put
@@ -156,8 +161,8 @@ Two things put text in a composer and they render identically.
   a seat that reports work you never authorised as this, and check what it did before
   anything else.
 
-**Surface proposals, never submit them.** They are usually good - his own estimate is
-99 in 100 - so quote one back to him and ask for a yes or a no. Once he rules, send it
+**Surface proposals, never submit them.** They are usually good, his own estimate is
+99 in 100, so quote one back to him and ask for a yes or a no. Once he rules, send it
 as your own message with the ruling attributed to him, and attach whatever the worker
 cannot see from where it sits.
 
@@ -178,12 +183,12 @@ cannot see from where it sits.
   look for the activity indicator before concluding a send failed.
 - **A trailing fragment means he is still typing.** Wait and re-read on a longer gap.
 - **Expect orchestrator-voice text nobody sent.** He writes the acknowledgment he
-  expects to receive ("deploying 8808725 - write your handoff now"), three times in a
+  expects to receive ("deploying 8808725, write your handoff now"), three times in a
   single run. Read the factual half as an unverified claim and check it against the
   live state; read the imperative half as his instruction.
 - **Relay what he saw, and let the worker find why.** "This renders mid blue" is an
   observation and survives relay intact. "It is still tagged series2-mark, retag the
-  bars" is a diagnosis, and one such relay named the wrong element - the bars were
+  bars" is a diagnosis, and one such relay named the wrong element, the bars were
   already correct and the legend key was the defect, so the prescribed fix would have
   broken working code. Pass on the symptom with its provenance and let the worker
   measure the cause.
@@ -203,11 +208,11 @@ cannot see from where it sits.
 ## Accepting a "zero" or a "done"
 
 A worker's zero is a measurement, not a state of the world. Before relaying one,
-require a **coverage statement**: what the instrument looked for, and - named
-explicitly - what it did not look for. A zero with no stated non-coverage is a zero
+require a **coverage statement**: what the instrument looked for, and, named
+explicitly, what it did not look for. A zero with no stated non-coverage is a zero
 you cannot report.
 
-Relay the coverage at the same weight as the number. A headline "COMPLETE - zero" with
+Relay the coverage at the same weight as the number. A headline "COMPLETE, zero" with
 the caveat in parentheses reads as done, and the user will reasonably ask why the
 thing on his screen is still broken.
 
@@ -265,4 +270,4 @@ The record covers grid, list, chart, and report. Each surface is `checked` with 
 
 When work is verified done:
 1. Fill in `## Outcome` on the session note.
-2. Run `~/.claude/skills/cmux/scripts/close-workspace.sh workspace:N` - this flips the note to `status: done`, stamps `ended:`, and closes the workspace in one step. Don't call `cmux close-workspace` directly; it leaves the note stuck at `in-progress`.
+2. Run `~/.claude/skills/cmux/scripts/close-workspace.sh workspace:N`, this flips the note to `status: done`, stamps `ended:`, and closes the workspace in one step. Don't call `cmux close-workspace` directly; it leaves the note stuck at `in-progress`.

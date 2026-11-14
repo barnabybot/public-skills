@@ -8,7 +8,7 @@ In T3 Code, follow [native dispatch](../references/hosts.md#dispatch-in-t3-code)
 
 ## Spawning a new session
 
-Use the helper script - it creates the workspace AND the linked session note in one shot, and it routes the seat. Name the category: `--tier <category>` resolves agent, model and effort from the marked table in this skill's `SKILL.md`, reads the capacity meter for the candidate providers where one is configured, takes the row's cross-provider backup when the first preference is exhausted, and writes the route log onto the note. Pass `--model` with `--effort` for a successor, a model the user names, or a required-tool route. Confirm the receiving runtime has the required image generation or Computer Use tool; any capacity fallback must preserve it. See `references/routing-rules.md#required-tool-capabilities`. A call with neither is refused before any cmux call.
+Use the helper script. It creates the workspace AND the linked session note in one shot, and it routes the seat. Name the category: `--tier <category>` resolves agent, model and effort from the marked table in this skill's `SKILL.md`, reads the capacity meter for the candidate providers where one is configured, takes the row's cross-provider backup when the first preference is exhausted, and writes the route log onto the note. Pass `--model` with `--effort` for a successor, a model the user names, or a required-tool route. Confirm the receiving runtime has the required image generation or Computer Use tool; any capacity fallback must preserve it. See `references/routing-rules.md#required-tool-capabilities`. A call with neither is refused before any cmux call.
 
 ```bash
 ~/.claude/skills/cmux/scripts/spawn-workspace.sh \
@@ -67,7 +67,7 @@ Confirm four things on the status line, then patch the session note:
 
 1. **Name** is the one you asked for.
 2. **Model** matches the table. The status line shows a display name; `references/routing-metadata.yaml` maps it to the pinned ID.
-3. **Effort** matches the table. If it booted hotter, send `Effort: <table level> - stay there for this seat.` and Enter before the first tool turn.
+3. **Effort** matches the table. If it booted hotter, send `Effort: <table level>, stay there for this seat.` and Enter before the first tool turn.
 4. **Cwd** is the worktree. A notes-root path where the brief named a repository means respawn with `--cwd` and `--worktree`. Do not steer a wrongly rooted seat.
 
 ### A seat that needs auto-approval
@@ -76,7 +76,7 @@ Every runtime the helper launches gets its skip-permissions flag: `claude
 --dangerously-skip-permissions`, `codex --yolo`, `grok --always-approve`.
 Without it the seat stalls on every tool call and the whole pattern fails.
 Where you add a runtime, add its flag to the helper's `case` block and check
-the first spawn's status line before walking away - a CLI's first launch in a
+the first spawn's status line before walking away. A CLI's first launch in a
 fresh directory often behaves differently from every later one.
 
 A provider whose allowance cannot be read is never an inferred route. It runs

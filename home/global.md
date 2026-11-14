@@ -58,8 +58,8 @@ Close with `ended:` and `## Outcome`. Use one of these status values:
 - `failed`
 
 Plan a handoff before 30% remaining context or about 300k tokens, whichever
-comes first. A host or skill may impose an earlier limit. Finish the current
-step and save a dated brief under `$AGENT_NOTES/Sessions/Handoffs/`. Include
+comes first. The orchestrator skill uses an earlier limit of 30% context used
+(70% remaining). Apply the earliest active limit. Finish the current step and save a dated brief under `$AGENT_NOTES/Sessions/Handoffs/`. Include
 the goal, decisions, changed files, evidence and next step. Use `/orchestrator`
 when installed. Respect the host's rules for creating a successor. If context
 usage is unavailable, say so and plan continuation between phases.

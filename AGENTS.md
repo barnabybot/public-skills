@@ -79,6 +79,18 @@ complete. Source checks, rendered review and publication approval are separate
 gates. Report what passed with evidence. For each unverified check, state its
 cause and the next check. Record repeated failures and add a regression check.
 
+The cmux and editorial checks also run directly. Hyphenated test filenames need
+explicit invocations because unittest discovery skips them.
+
+```sh
+bash skills/cmux/scripts/test-spawn-workspace.sh
+bash skills/cmux/scripts/test-close-workspace.sh
+python3 -m unittest discover -s skills/cmux/scripts -p 'test*.py'
+python3 skills/cmux/scripts/test-group-header.py
+python3 skills/cmux/scripts/test-close-idle-codex.py
+python3 -m unittest discover -s skills/editorial-review/scripts/tests
+```
+
 ## Branch hygiene
 
 Work in an isolated branch or worktree. Treat the default branch as protected.

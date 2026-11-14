@@ -283,6 +283,18 @@ python3 skills/graph/scripts/selftest.py
 for d in skills/*/; do skills/skill-manager/scripts/validate.sh "$d"; done
 ```
 
+The cmux and editorial checks also run directly. Hyphenated test filenames need
+explicit invocations because unittest discovery skips them.
+
+```sh
+bash skills/cmux/scripts/test-spawn-workspace.sh
+bash skills/cmux/scripts/test-close-workspace.sh
+python3 -m unittest discover -s skills/cmux/scripts -p 'test*.py'
+python3 skills/cmux/scripts/test-group-header.py
+python3 skills/cmux/scripts/test-close-idle-codex.py
+python3 -m unittest discover -s skills/editorial-review/scripts/tests
+```
+
 A WARN from the validator is advice and a FAIL blocks. Most skills here warn
 that `SKILL.md` is longer than 100 lines, which the validator allows for
 skills that route to several workflows.

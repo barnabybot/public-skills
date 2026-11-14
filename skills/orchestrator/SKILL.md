@@ -202,6 +202,7 @@ continues or dispatches a writer. Explicit orchestrator handoff allows successio
 
 ```bash
 python3 scripts/check.py --no-live --no-log        # after editing the table
+python3 scripts/test_author_build_intent.py       # after changing author intent
 python3 scripts/test_resolve.py                    # after changing routing code
 python3 scripts/test_aa_refresh.py                 # after changing the AA refresh
 python3 scripts/test_retire_predecessors.py        # after changing predecessor retirement
