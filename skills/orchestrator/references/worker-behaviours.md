@@ -1,5 +1,7 @@
 # Worker behaviour
 
+In T3 Code, follow completion wakeups and `next`. Use a new `delegate_task` for each delegated review or re-check. Terminal stall checks apply only in cmux.
+
 Use the model and effort from the table in `SKILL.md`. Task boundaries and
 escalation are in `references/routing-rules.md`.
 

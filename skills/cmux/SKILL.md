@@ -2,7 +2,7 @@
 name: cmux
 version: 1.2.0
 description: >-
-  Manage cmux workspaces and browser panes. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
+  Control workspaces and browser panes in the optional cmux terminal application. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
 fallback: If cmux is unavailable, write the prompt or handoff file under $AGENT_NOTES/Sessions/Handoffs/ and tell the user the workspace could not be opened.
 ---
 
@@ -13,7 +13,7 @@ terminal.
 
 > For the multi-agent **orchestrator** pattern - one agent spawns and
 > coordinates many through session notes - use the `orchestrator` skill. This
-> skill covers the raw mechanics.
+> standalone host driver covers cmux mechanics and calls orchestrator for routing policy.
 
 **Requires** [cmux](https://www.cmux.dev) on the `PATH`, and the **orchestrator**
 skill installed beside this one, because `spawn-workspace.sh` routes through its
@@ -105,7 +105,7 @@ generation ships. The table pins ids, and a successor of a live lineage passes
 the predecessor's `--model` and `--effort` explicitly so an upgrade never lands
 mid-lineage.
 
-**Routing lives in the orchestrator skill, and not here.** The seat that
+**Routing lives in the orchestrator skill.** The seat that
 dispatches keeps the dispatch policy, so the table, the category rule and the
 resolver sit together in one package. This helper reads them; it does not own
 them. Install both skills, or `--tier` has nothing to resolve against.

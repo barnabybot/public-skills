@@ -67,7 +67,7 @@ def load_canon(path: Path) -> dict:
         row["metadata_name"] = row["name"]
         row["name"] = name
         if row.get("of") == "required":
-            if cells[3:] != ["Inherit reviewed category", "—", "Exclude builder", "—"]:
+            if [cell.replace("\u2014", "-") for cell in cells[3:]] != ["Inherit reviewed category", "-", "Exclude builder", "-"]:
                 raise ValueError("review must inherit its tier and exclude the builder")
             continue
         for slot, model, level in (("first", first, effort), ("backup", backup, backup_effort)):

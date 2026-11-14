@@ -7,7 +7,7 @@ presentations, and who run AI agents in a terminal to produce it. You use
 Claude Code or Codex already, or you are about to. You want several agents
 working on one goal, each starting from the right context.
 
-The repository holds eight skills and one [`AGENTS.md`](AGENTS.md), taken from a
+The repository holds eight skills, a [global contract](home/global.md) and a [Home Repo map](AGENTS.md), taken from a
 working setup and rewritten so they run on somebody else's machine.
 
 Download individual skills or the complete collection as ZIP files at
@@ -38,11 +38,10 @@ past sessions from the transcripts your tools already write.
 
 ## Multi-agent work
 
-One coordinator agent divides a goal into jobs. It starts each job in its own
-[cmux](https://cmux.com) workspace, with a model and effort level selected for
-that kind of work. It reads the workers' screens and relays your comments to
-them. Before an agent's context runs out, it hands the work to a new workspace
-through a written brief.
+One coordinator divides a goal into jobs and selects each worker's model and
+effort. `orchestrator` supports T3 Code, cmux and CLI subagents. Its
+[host guide](skills/orchestrator/references/hosts.md) maps native tools, worktree
+isolation and handoff. The optional `cmux` skill controls cmux workspaces.
 
 Here a Claude orchestrator coordinates Codex and Grok workers on a demo
 project, each in its own pane, and reports a gap one worker left:
@@ -54,8 +53,8 @@ project, each in its own pane, and reports a gap one worker left:
 | [`vault-setup`](skills/vault-setup/) | Creates each vault type with its folder tree, templates and instruction file |
 | [`recall`](skills/recall/) | Finds past work in session notes where available, with native transcripts for missing detail or a setup without notes |
 | [`retrospective`](skills/retrospective/) | Reviews a session or a bounded recent sample, verifies repeated problems and proposes small fixes. Uses recall for historical evidence |
-| [`orchestrator`](skills/orchestrator/) | Coordinates workers, routes each job to a model and effort level, and hands a session on before its context runs out. Owns the routing table, the category rule and the resolver |
-| [`cmux`](skills/cmux/) | Starts and closes workspaces and writes their session notes. It calls the orchestrator to route |
+| [`orchestrator`](skills/orchestrator/) | Coordinates T3 Code, cmux and CLI workers, resolves model and effort routing, and manages session handoffs. Requires PyYAML and a configured routing table. The cmux companion is optional |
+| [`cmux`](skills/cmux/) | Controls workspaces and browser panes in the optional cmux terminal application. Calls orchestrator for routing policy |
 | [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches and node inspection. Marks a node stale when its inputs change after its output was built |
 | [`editorial-review`](skills/editorial-review/) | Checks prose and argument before it goes to a reader, including the tells that mark machine-written text |
 | [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a whole-tree audit |
@@ -67,33 +66,30 @@ because its input changed after it was built
 
 ![graph render of a sample website relaunch](skills/graph/assets/preview.png)
 
-[`AGENTS.md`](AGENTS.md) is the instruction file that governs all of it: how an
-agent should think before it codes, how small a change should be, when it must
-stop and show you one example before doing something fifty times, and how to
-write in a voice that does not read as generated.
+[home/global.md](home/global.md) supplies global steering.
+[AGENTS.md](AGENTS.md) maps the Home Repo, shared skills and destinations.
+Each project or vault has its own `AGENTS.md` for local instructions.
 
 ## Where these run
 
-An agent is a model plus a harness. These skills are written for the harness:
-an agent CLI such as Claude Code or Codex reads a `SKILL.md` and follows it. The harness can run in
+An agent is a model plus an agent runtime. These skills are written for the runtime:
+an agent CLI such as Claude Code or Codex reads a `SKILL.md` and follows it. The runtime can run in
 several places, and the skills load the same way in each.
 
 | Where | Examples | Notes |
 |---|---|---|
-| A terminal | macOS Terminal, Windows Terminal | Every skill except orchestrator dispatch and `cmux` |
+| A terminal | macOS Terminal, Windows Terminal | Shared skills and supported CLI subagents; cmux control requires cmux |
 | A terminal workspace | cmux | Every skill. CLIs from several providers run side by side, and one agent can start, read and close the others |
-| An editor | VS Code, Cursor | Run Claude Code or Codex in the editor's terminal or extension, on your own subscription. The editor's built-in agent bills through the editor's plan and chooses from its model list |
-| A provider app | Claude desktop, Codex app | The same harness in its own window, reading skills from the same folder |
+| An editor | T3 Code, VS Code, Cursor | Run Claude Code or Codex in the editor's terminal or extension, on your own subscription. The editor's built-in agent bills through the editor's plan and chooses from its model list |
+| A provider app | Claude desktop, Codex app | The same runtime in its own window, reading skills from the same folder |
 
-I use cmux. It is light, it puts several providers' agents in one window, and
-agents can control it from a script. That last point is what lets one agent
-coordinate the others. Only `orchestrator` and `cmux` depend on it. The
-orchestrator's clipboard and park handoffs, its routing checks and the weekly
-AA refresh run without it.
+Choose a host that exposes the tools your work needs. T3 Code uses native
+orchestration tools. cmux uses terminal helpers. CLI subagents use the current
+runtime's supported tools. Install the cmux companion only for cmux dispatch.
 
 ## Getting started
 
-You install three applications and sign in once. The agent does the rest.
+Install an agent runtime and choose an editor for its Markdown output.
 
 1. **Choose how you pay for the model.** A subscription is the simplest start:
    Claude, ChatGPT, Gemini and Grok each come with their own agent CLI. You can
@@ -101,9 +97,8 @@ You install three applications and sign in once. The agent does the rest.
    model through Ollama, which costs nothing and is less capable. This choice
    decides which models you can use and how much work you get each week.
 2. **Install the applications.**
-   - [cmux](https://cmux.com), where your agents run. It is free, and macOS
-     only for now. On Windows, use Windows Terminal; everything except running
-     several agents at once still works.
+   - A terminal or T3 Code. [cmux](https://cmux.com) is optional for users who
+     want terminal workspaces controlled through the cmux companion skill.
    - The agent CLI for your provider, such as
      [Claude Code](https://claude.com/claude-code),
      [Codex](https://github.com/openai/codex), Gemini CLI or Grok CLI. The
@@ -112,11 +107,11 @@ You install three applications and sign in once. The agent does the rest.
      Codex and Grok.
    - [Obsidian](https://obsidian.md), where you read what your agents write.
      Any Markdown editor works.
-3. **Open cmux, start the agent and sign in.**
+3. **Open your chosen host, start the agent and sign in.**
 4. **Paste this prompt:**
 
    ```
-   Read the README and AGENTS.md at https://github.com/barnabybot/public-skills.
+   Read README.md, AGENTS.md and home/global.md in public-skills.
    Tell me what each skill does and what you would install, then wait for my go.
    After I say go:
    1. Clone the repo to ~/public-skills and link every skill into your skills
@@ -124,9 +119,9 @@ You install three applications and sign in once. The agent does the rest.
    2. Install PyYAML.
    3. Use vault-setup to create my agents vault, then set AGENT_NOTES to that
       vault's root in ~/.zshenv.
-   4. Show me how AGENTS.md would merge into my global instruction file
-      (~/.claude/CLAUDE.md or ~/.codex/AGENTS.md). My existing rules win where
-      they conflict. Change nothing until I approve.
+   4. Show me how home/global.md would merge with my global instructions.
+      Keep AGENTS.md as the Home Repo map. My existing rules win where they
+      conflict. Change no instruction links until I approve.
    ```
 
 5. **Build your vaults with the agent.** The agents vault holds session notes
@@ -151,9 +146,10 @@ yourself before you say go.
   sessions and proposes zero to three fixes. It runs when invoked.
 - **Two skills need nothing.** `vault-setup` and `editorial-review` run
   anywhere.
-- **`orchestrator` needs the `cmux` skill, and `cmux` needs `orchestrator`.**
-  The orchestrator owns the routing table and the resolver; the cmux helper
-  calls it to route a spawn. Install the pair.
+- **`orchestrator` needs PyYAML and a configured routing table.**
+  It coordinates T3 Code, cmux and CLI agents. The optional `cmux` companion
+  is needed only for cmux workspace dispatch. The standalone cmux host driver
+  calls orchestrator for routing policy, so cmux users install both.
 - **`orchestrator` and `graph` need PyYAML**
   (`python3 -m pip install --user PyYAML`). The orchestrator scripts and the
   graph renderer stop with that install line when it is missing. Apart from
@@ -180,7 +176,7 @@ export AGENT_NOTES="$HOME/vaults/agents"  # unset, it falls back to ~/agent-note
 
 | Path | Holds |
 |---|---|
-| `$AGENT_NOTES/Sessions/` | One note per session, `YYYY-MM-DD <slug>.md`, with `agent:`, `model:`, `effort:` and `status:` in the frontmatter |
+| `$AGENT_NOTES/Sessions/` | One note per session, `YYYY-MM-DD <slug>.md`, with `agent:`, `host:`, `model:`, `effort:` and `status:` in the frontmatter |
 | `$AGENT_NOTES/Sessions/Handoffs/` | Handoff briefs, one per handoff |
 
 The folders are created on first use. An agents vault made by `vault-setup`
@@ -189,8 +185,8 @@ root is the right value.
 
 ## Install
 
-A skill is a folder with a `SKILL.md` in it. Put the folder where your harness
-looks for skills, and the harness reads the `description:` line to decide when
+A skill is a folder with a `SKILL.md` in it. Put the folder where your runtime
+looks for skills, and the runtime reads the `description:` line to decide when
 it applies.
 
 **Claude Code** reads `~/.claude/skills/`:
@@ -222,24 +218,39 @@ The skills ask their intake questions through Codex's `request_user_input`,
 which needs `default_mode_request_user_input = true` under `[features]` in
 `~/.codex/config.toml`.
 
-**Another harness.** A `SKILL.md` is Markdown with YAML frontmatter, so most of
+**Another runtime.** A `SKILL.md` is Markdown with YAML frontmatter, so most of
 these read as plain instructions. Paste the file into your system prompt, or
 point your tool at the folder. `orchestrator` and `cmux` are the two that need
 real scripts on disk.
 
-**The instruction file.** It works at two levels. As your global file, it
-applies to every session: merge it into `~/.claude/CLAUDE.md` for Claude Code or
-`~/.codex/AGENTS.md` for Codex, and keep your own rules where the two conflict.
-As a project file, copy it to the root of a project, and symlink `CLAUDE.md` to
-it so both tools read one canon:
+## Adopt the Home Repo split
 
-```bash
-cp ~/public-skills/AGENTS.md ./AGENTS.md
-ln -s AGENTS.md CLAUDE.md
+Keep global rules in [home/global.md](home/global.md). Keep your repository,
+project and vault map in root [AGENTS.md](AGENTS.md). Review existing global
+instructions and merge your rules before replacing a link. Create the tool
+folders first, then use absolute paths for these links:
+
+```sh
+ln -s <your-home-repo>/home/global.md ~/.claude/CLAUDE.md
+ln -s <your-home-repo>/home/global.md ~/.codex/AGENTS.md
+ln -s <your-home-repo>/home/global.md ~/.gemini/GEMINI.md
 ```
 
-Then edit it. The file paths in it are conventions, and the rules above them are
-the part worth keeping.
+Optional version-controlled `home/harness/` files may sit beside `home/global.md`.
+Examples include `claude-settings.json` and `codex-config.toml`. Keep secrets
+and private machine settings outside the repository.
+
+Shared skills stay in `skills/<name>/`, linked into the global tool folders
+shown above. Repo-local skills have one canonical source at
+`.agents/skills/<name>/SKILL.md`. Use relative links for Claude and Cursor:
+
+```sh
+mkdir -p .claude/skills .cursor/skills
+ln -s ../../.agents/skills/<name> .claude/skills/<name>
+ln -s ../../.agents/skills/<name> .cursor/skills/<name>
+```
+
+Use the child instruction template in root `AGENTS.md` for projects and vaults.
 
 ## Check it works
 

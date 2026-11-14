@@ -227,6 +227,13 @@ class VisibleTable(unittest.TestCase):
         self.assertEqual(rc, 0, err)
         self.assertEqual((r["ROUTE_MODEL"], r["ROUTE_EFFORT"]), (A_LARGE, "high"))
 
+    def test_legacy_review_marker_is_tolerated(self):
+        self.change('| Inherit reviewed category | - | Exclude builder | - |',
+                    '| Inherit reviewed category | \u2014 | Exclude builder | \u2014 |')
+        rc, _, err = run('--skill', str(self.skill), '--tier', 'review',
+                         '--of', 'systems', '--builder', 'provider_a')
+        self.assertEqual(rc, 0, err)
+
     def test_trailing_whitespace_is_tolerated(self):
         self.change(self.HK, self.HK + "  ")
         rc, r, err = run("--skill", str(self.skill), "--tier", "housekeeping")

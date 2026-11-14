@@ -1,6 +1,6 @@
 # Routing rules
 
-The model table in `SKILL.md` is the only preference table. `scripts/resolve.py` reads it and the provider metadata, checks capacity, and returns the route. The cmux helper launches that route.
+The model table in `SKILL.md` is the only preference table. `scripts/resolve.py` reads it and the provider metadata, checks capacity, and returns the route. The cmux helper launches that route inside cmux. In T3 Code, apply the same category, tool, authority and capacity policy through the [host procedure](hosts.md#dispatch-in-t3-code). CLI discovery and cmux launch checks alone do not verify T3 availability.
 
 ## Required tool capabilities
 

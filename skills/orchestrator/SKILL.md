@@ -2,18 +2,20 @@
 name: orchestrator
 version: 1.4.0
 description: >-
-  Coordinate cmux agents, hand off sessions and maintain model routing. Use for
+  Coordinate T3 Code, cmux and CLI agents, hand off sessions and maintain model routing. Use for
   /orchestrator, /orchestrate, /handoff, handover, pickup prompts, parking notes,
   dispatching workers, fleet status, relaying comments or reviewing model routing.
-fallback: If cmux is unavailable, write the brief under $AGENT_NOTES/Sessions/Handoffs/ and report the path. If capacity cannot be read, report it as unread.
+fallback: If the current host has no orchestration tools, write the brief under $AGENT_NOTES/Sessions/Handoffs/ and report the path. If capacity cannot be read, report it as unread.
 ---
 
 # Orchestrator
 
-One skill owns coordination, handoff and model routing. `cmux` supplies the
-workspace commands. Resolve workflow and script paths from this skill directory.
+One skill owns coordination, handoff and model routing across T3 Code, cmux
+and CLI subagents. Select the host with [hosts.md](references/hosts.md).
+Resolve workflow and script paths from this skill directory.
 
-**Requires** the `cmux` skill for anything that spawns. `scripts/resolve.py`
+**Requires** a configured routing table. The `cmux` skill is an optional
+companion for dispatch into cmux workspaces. `scripts/resolve.py`
 needs **PyYAML** (`python3 -m pip install --user PyYAML`); it is the one non-stdlib dependency in
 this repository and it fails with that install line rather than a traceback.
 
@@ -76,7 +78,7 @@ provider settings are in `references/routing-metadata.yaml`.
 | classification | Classification | Read each note and decide its properties, categories or links | A-Mid | medium | B-Mid | low |
 | housekeeping | Housekeeping | Apply listed changes with no judgement: rename, move, given edits | A-Small | medium | B-Mid | medium |
 | orchestrator | Orchestrator | Dispatch, relay, hand off | A-Large | high | B-Large | high |
-| review | Review | Check finished work | Inherit reviewed category | — | Exclude builder | — |
+| review | Review | Check finished work | Inherit reviewed category | - | Exclude builder | - |
 <!-- routing-table:end -->
 
 Three rules apply on top of the table. Presented work (finance, strategy,
@@ -122,7 +124,7 @@ The rule generalises. The table does not. Four things are yours:
 
 ## Startup retirement
 
-Before fleet work in a fresh orchestrator seat:
+Inside cmux, before fleet work in a fresh orchestrator seat:
 
 1. Identify the caller with `cmux identify --json --id-format both`.
 2. Run `python3 ../cmux/scripts/group_header.py ensure --workspace <caller-UUID>`. Keep a reserved blank group header permanently, including when the group would otherwise be empty. Stop if repair fails.
@@ -134,7 +136,8 @@ Read capacity before the table's preference. `--request` carries authorisation, 
 
 ## Dispatch contract
 
-Choose the category, then call the cmux helper:
+Choose the category. In T3 Code, follow [native dispatch](references/hosts.md#dispatch-in-t3-code).
+In a CLI, use its supported subagent tools. Inside cmux, call the helper:
 
 ```bash
 <path-to>/skills/cmux/scripts/spawn-workspace.sh "<name>" \
@@ -168,8 +171,9 @@ model the user names explicitly also uses `--model` and `--effort`. See
 - Check evidence before reporting completion. A worker's zero is a measurement
   and needs a coverage statement: what the instrument looked for, and what it
   did not.
-- Close workers with `cmux/scripts/close-workspace.sh`, so their notes close
-  too.
+- Inside cmux, close workers with `cmux/scripts/close-workspace.sh` so their
+  notes close too. In T3 Code, cancel unneeded owned tasks with `task_cancel`
+  and update notes directly.
 - A live-page push runs `scripts/live_push_gate.py --note <session-note>` before
   the push. The note records `Preview:` for the Thin-Slice: an existing
   filesystem path, a `file://` URL, or an `http` or `https` loopback URL
@@ -183,6 +187,16 @@ This skill owns the routing table, the category rule, the resolver and their
 checks. Routing is dispatch policy, and the seat that dispatches keeps the
 policy. Splitting the table from the rule that reads it gives one table two
 owners, which is how a table and its documentation drift apart.
+
+## Host operations
+
+Use [native dispatch](references/hosts.md#dispatch-in-t3-code) in T3 Code.
+Apply terminal inventory, group repair, stall checks and workspace closure only
+inside cmux. CLI subagents use their host's supported tools.
+
+Classify the latest direct author line with `python3 scripts/author_build_intent.py classify`
+before spawning an orchestrator successor. Build or stop-spawning language
+continues or dispatches a writer. Explicit orchestrator handoff allows succession.
 
 ## Verification
 

@@ -1,6 +1,6 @@
 # Handoff
 
-Transfer the current session through a durable brief. A handoff or handover opens a new cmux workspace. Use clipboard only when the user says copy or clipboard; use park only when explicitly requested. Delivery to a named running workspace uses the live-peer procedure below.
+Transfer the current session through a durable brief. In cmux, a handoff or handover opens a new cmux workspace. In T3 Code, follow [native handoff and recycle](../references/hosts.md#handoff-and-recycle-in-t3-code). A new top-level thread requires the user to ask for one. Use clipboard only when the user says copy or clipboard; use park only when explicitly requested. Delivery to a named running workspace uses the live-peer procedure below.
 
 ## Prepare
 
@@ -25,6 +25,10 @@ Transfer the current session through a durable brief. A handoff or handover open
 
 ## Orchestrator succession
 
+The identity, group and closure commands below apply only in cmux. In T3 Code,
+record predecessor thread links, task IDs and exact note paths. Verify takeover
+through native results and cancel only unneeded owned tasks.
+
 ### Record the predecessor chain
 
 Before spawning your successor, identify your caller with `cmux identify --json --id-format both`. Confirm its live workspace name and window. Use the caller identity even when another workspace has focus.
@@ -33,6 +37,10 @@ Include this section in the brief. Append yourself to the inherited predecessor 
 
 ```markdown
 ### Orchestrator succession
+
+The identity, group and closure commands below apply only in cmux. In T3 Code,
+record predecessor thread links, task IDs and exact note paths. Verify takeover
+through native results and cancel only unneeded owned tasks.
 After reading this brief and loading the orchestrator skill, complete
 workflows/handoff.md#orchestrator-succession before fleet work.
 
@@ -40,6 +48,18 @@ workflows/handoff.md#orchestrator-succession before fleet work.
 |---|---|---|---|---|---|---|
 | <predecessor> | <stable UUID> | <window UUID> | workspace:N | <exact path> | <exact path> | pending |
 ```
+
+### Author build intent
+
+Classify the latest direct author line before Start the successor. Read that line from the decision ledger or the session note's `## Comments`. Run this from the skill directory:
+
+```bash
+python3 scripts/author_build_intent.py classify --text "LINE" --json
+```
+
+`python3 scripts/author_build_intent.py classify CASE.json --json` reads the same line from a JSON object. `author_line` is required. Optional `active_writer` (bool) and `context_percent` (int) are accepted. `context_percent` does not change the verdict.
+
+If `refuse_orchestrator_spawn` is true, do not spawn an orchestrator successor. `dispatch_writer` dispatches a writer. `continue_writer` continues the active writer. `keep_seat` holds this seat. Ask only when the action is `unclear` and succession was the proposed next step. `succession_ok` leaves `refuse_orchestrator_spawn` false and still starts the successor below.
 
 ### Start the successor
 
@@ -50,6 +70,9 @@ workflows/handoff.md#orchestrator-succession before fleet work.
 Keep session records and handoff files. Record closure as session retirement. The underlying goal continues in the successor's note.
 
 ## Deliver
+
+In T3 Code, use [native delivery](../references/hosts.md#handoff-and-recycle-in-t3-code).
+The workspace delivery table below applies inside cmux.
 
 | Request | Action |
 |---|---|
