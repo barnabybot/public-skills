@@ -38,6 +38,10 @@ can tell a measurement from a habit.
   instrument looked for. A zero with no stated non-coverage is not reportable.
 - **Accept the artefact.** Where a worker wrote a file, read the file. Do not
   ask it to paste the contents into chat.
+- **Remote branch hygiene**, in every dispatch brief: when a pull request merges
+  or closes, delete that remote branch. Also delete dead worker remotes that
+  have no open pull request. Never force-push. Never delete the default branch
+  or a branch that is still an open pull request head.
 
 ## Yours to fill in
 

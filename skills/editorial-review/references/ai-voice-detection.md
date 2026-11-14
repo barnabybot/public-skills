@@ -31,6 +31,16 @@ This is the family of constructions to police hardest. Trained models reach for 
 
 **Negation-contrast grep:** `grep -nE '[[:alpha:]], not [[:alpha:]]|is not .{1,40}\. (It|That|They) (is|are)' file.md` — catches the `X, not Y` comma form and the spread-across-two-sentences `X is not A. It is B` twin. It misses the semicolon twin and phantom contrast, so it is a backstop to the per-sentence self-check, never a replacement. Run it on any long artifact before presenting it (an assistant re-introduced this structure across several drafts in one session despite the canon in front of it, so the write-time self-check is the primary defence and this grep is the safety net). Treat every hit as guilty until rewritten affirmatively.
 
+**Lexical backstop.** From the repository root:
+
+```bash
+python3 skills/editorial-review/scripts/voice_lint.py PATH \
+    [--surface analytical|professional|note|essay] \
+    [--json]
+```
+
+The script checks banned vocabulary, banned phrases, unspaced em dashes, the comma form in the table above, the two-sentence is-not twin, announcing-pair subheads, and a short British-spelling list (organise, analyse, behaviour). It prints the file, the line number, the rule id, and the line. Exit 0 means the file is clean. Exit 1 means it found problems. Exit 2 means a bad invocation. `--surface essay` skips the sectioning rule used for analytical, professional, and note prose: a file over 300 words with no level-two heading. Map the intake surface onto that flag: Essay to `essay`, Formal or Newsletter to `professional`, Internal to `note`, and a working analysis to `analytical`.
+
 **Phantom contrast — always cut.** The negation half names a claim nobody made. *"...not a forward adoption curve"* invents "forward adoption curve" as a strawman, only to knock it down. Pure rhetorical filler. The affirmative half always stands alone.
 
 **The reviewer's rationalisation trap.** If the writer (or you, on second read) describes the construction as "earned," "load-bearing," or "the central reframe," the rationalisation is the tell. Rewrite anyway. The user reads the shape as slop regardless of whether the contrast carries information.

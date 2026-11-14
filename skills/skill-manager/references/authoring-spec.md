@@ -132,3 +132,5 @@ dimension in `workflows/skill-audit.js` scores it across the tree.
 Add a `scripts/` helper when the operation is deterministic, would be
 regenerated on every invocation, or needs explicit error handling. Scripts save
 tokens, reduce variance, and are testable outside agent sessions.
+
+A command an agent runs follows `references/cli-standard.md`: subcommands, `--help`, `--json`, `--dry-run` on writers, and an error that says what to do next. `python3 scripts/cli_lint.py <skill-dir>` reports the gaps. The report is advisory.

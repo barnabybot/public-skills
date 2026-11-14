@@ -25,6 +25,9 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from codex_capacity import assess_native, pace_vs_reset
+from route_bundle import verify_route_bundle, write_route_bundle
+
 try:
     import yaml
 except ImportError:  # PyYAML is not in the standard library.
@@ -99,6 +102,42 @@ def parse_instant(text: str) -> datetime | None:
         return None
 
 
+def load_request(path: str | None) -> dict | None:
+    """Read a structured dispatch request. None means the caller passed no file."""
+    if not path:
+        return None
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"routing request is missing or unreadable: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError("routing request must be a JSON object")
+    tools = data.get("required_tools", [])
+    if not isinstance(tools, list) or any(not isinstance(item, str) or not item for item in tools):
+        raise ValueError("required_tools must be a list of tool names")
+    authority = data.get("authorisation", {})
+    if authority:
+        if not isinstance(authority, dict):
+            raise ValueError("authorisation must be an object")
+        providers = authority.get("providers", [])
+        if not isinstance(providers, list) or any(not isinstance(item, str) or not item for item in providers):
+            raise ValueError("authorisation.providers must be a list of provider names")
+        source = authority.get("source", "")
+        if not isinstance(source, str) or not source.strip():
+            raise ValueError("authorisation.source needs nonblank text. Name the brief that authorises the providers.")
+    bound = data.get("bounded_preference", {})
+    if bound:
+        if not isinstance(bound, dict):
+            raise ValueError("bounded_preference must be an object")
+        if bound.get("tasks") != 1 or not isinstance(bound.get("task"), str) or not bound["task"].strip():
+            raise ValueError("bounded_preference admits one named task. Set tasks to 1 and name the task.")
+        if not isinstance(bound.get("source"), str) or not bound["source"].strip():
+            raise ValueError("bounded_preference.source needs nonblank text")
+    if "capacity" in data and data["capacity"] not in ("required", "optional"):
+        raise ValueError("capacity must be required or optional")
+    return data
+
+
 def local_stamp(instant: datetime, tzname: str) -> str:
     try:
         from zoneinfo import ZoneInfo
@@ -152,12 +191,16 @@ class Capacity:
         self.cache[provider] = entry if isinstance(entry, dict) else None
         return self.cache[provider]
 
-    def assess(self, provider: str, scoped_window: str | None = None) -> dict:
+    def assess(self, provider: str, scoped_window: str | None = None, model_id: str | None = None,
+               effort: str | None = None, request: dict | None = None) -> dict:
         """Return {state, detail} with state in held|tight|exhausted|unread."""
         entry = self.read(provider)
         if not entry:
             why = "no CodexBar provider" if not (self.canon["providers"].get(provider) or {}).get("codexbar") else "capacity unread"
             return {"state": "unread", "detail": f"{provider} {why}"}
+        native = entry.get("native")
+        if isinstance(native, dict) and native.get("kind") == "codex" and model_id and request is not None:
+            return self._assess_native(provider, native, model_id, effort or "", request)
         usage = entry.get("usage") or {}
         windows = [("weekly", usage.get("secondary")), ("5-hour", usage.get("primary"))]
         if scoped_window:
@@ -169,6 +212,9 @@ class Capacity:
         tz = self.cfg.get("timezone", "Asia/Hong_Kong")
         now = now_utc()
         worst = None
+        pace_block = (entry.get("pace") or {}).get("secondary") or {}
+        pace_known = isinstance(pace_block.get("willLastToReset"), bool)
+        computed_tight = False
         for name, win in windows:
             if not isinstance(win, dict) or win.get("usedPercent") is None:
                 continue
@@ -179,14 +225,39 @@ class Capacity:
             detail = f"{provider} {name} {used}% used, resets {stamp}"
             if used >= threshold and (hours is None or hours > min_hours):
                 return {"state": "exhausted", "detail": detail}
+            minutes = win.get("windowMinutes")
+            if (not pace_known and isinstance(minutes, (int, float)) and not isinstance(minutes, bool)
+                    and minutes > 0 and resets is not None):
+                seconds_left = (resets - now).total_seconds()
+                if seconds_left > 0 and pace_vs_reset(used, float(minutes), seconds_left) == "ahead":
+                    computed_tight = True
+                    detail = detail + "; ahead of schedule, pace runs out before reset"
             if worst is None or used > worst[0]:
                 worst = (used, detail)
         pace = ((entry.get("pace") or {}).get("secondary") or {})
-        if pace.get("willLastToReset") is False:
+        if pace.get("willLastToReset") is False or computed_tight:
             return {"state": "tight", "detail": (worst[1] if worst else f"{provider} weekly") + "; tight, pace runs out before reset"}
         if worst is None:
             return {"state": "unread", "detail": f"{provider} capacity unread"}
         return {"state": "held", "detail": worst[1]}
+
+    def _assess_native(self, provider: str, observation: dict, model_id: str, effort: str, request: dict) -> dict:
+        cfg = dict(self.cfg)
+        cfg.setdefault("max_observation_age_seconds", 300)
+        cfg.setdefault("exhausted_used_percent", 95)
+        required = set(request.get("required_tools") or [])
+        evidence = {
+            "fit": request.get("fit") or "practice",
+            "debit_reason": "bounded native observation",
+        }
+        result = assess_native(observation, model_id, effort, required, evidence, request, cfg, now_utc())
+        detail = "; ".join(result.get("reasons") or []) or f"{provider} native observation"
+        state = result.get("state")
+        if state == "eligible":
+            return {"state": "tight" if result.get("tight") else "held", "detail": detail}
+        if state == "excluded":
+            return {"state": "exhausted", "detail": detail}
+        return {"state": "unread", "detail": detail}
 
 
 def emit(pairs: dict, stream=sys.stdout) -> None:
@@ -279,6 +350,10 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
     candidates = [("first", first), ("backup", row["backup"])]
     default_model = model_entry(canon, first["model"])
     cap = Capacity(canon, disabled=args.no_capacity)
+    request = getattr(args, "loaded_request", None)
+    allowed = []
+    if isinstance(request, dict):
+        allowed = list((request.get("authorisation") or {}).get("providers") or [])
     tried: list[str] = []        # human lines for the exit-3 message
     exhausted: list[str] = []    # capacity details behind an override
     for slot, cand in candidates:
@@ -289,10 +364,19 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
         if builder and provider == builder:
             tried.append(f"{label_c}: excluded, builder's provider")
             continue
+        if allowed and provider not in allowed:
+            tried.append(f"{label_c}: excluded, request does not authorise {provider}")
+            continue
         if pinfo.get("inferred", True) is False:
             tried.append(f"{label_c}: only when named, allowance unreadable")
             continue
-        state = cap.assess(provider, model.get("scoped_window"))
+        state = cap.assess(
+            provider, model.get("scoped_window"), model.get("id"), cand["effort"],
+            request if isinstance(request, dict) else None,
+        )
+        if isinstance(request, dict) and request.get("capacity") == "required" and state["state"] == "unread":
+            tried.append(f"{label_c}: capacity required and unread, {state['detail']}")
+            continue
         if state["state"] == "exhausted":
             tried.append(f"{label_c}: exhausted, {state['detail']}")
             exhausted.append(state["detail"])
@@ -315,6 +399,7 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
         pairs = route_pairs(canon, label, row["name"], model, cand["effort"],
                             default_model, first["effort"], status, reason)
         pairs["ROUTE_LEGACY_NOTE"] = legacy_note
+        maybe_write_bundle(args, pairs)
         emit(pairs)
         return 0
     ask = "; ".join(tried)
@@ -333,10 +418,28 @@ def resolve_model(canon: dict, args: argparse.Namespace) -> int:
             return 2
         model = {"key": None, "id": args.model, "provider": provider, "display": args.model}
     effort = args.effort or ""
-    cap = Capacity(canon, disabled=args.no_capacity)
-    state = cap.assess(model["provider"], model.get("scoped_window"))
     label = args.tier or "explicit"
     base = args.reason or "named in request"
+    cap = Capacity(canon, disabled=args.no_capacity)
+    request = getattr(args, "loaded_request", None)
+    if isinstance(request, dict):
+        allowed = list((request.get("authorisation") or {}).get("providers") or [])
+        if allowed and model["provider"] not in allowed:
+            ask = f"{model['display']} · {effort or 'effort unset'}: excluded, request does not authorise {model['provider']}"
+            emit({"ROUTE_STATUS": "ask", "ROUTE_TIER": label, "ROUTE_TIER_NAME": "explicit model",
+                  "ROUTE_ASK": ask, "ROUTE_DEFAULT": f"{model['id']} · {effort or 'effort unset'}"})
+            sys.stderr.write(f"{base}: {ask}\n")
+            return 3
+    state = cap.assess(
+        model["provider"], model.get("scoped_window"), model.get("id"), effort,
+        request if isinstance(request, dict) else None,
+    )
+    if isinstance(request, dict) and request.get("capacity") == "required" and state["state"] == "unread":
+        ask = f"{model['display']} · {effort or 'effort unset'}: capacity required and unread, {state['detail']}"
+        emit({"ROUTE_STATUS": "ask", "ROUTE_TIER": label, "ROUTE_TIER_NAME": "explicit model",
+              "ROUTE_ASK": ask, "ROUTE_DEFAULT": f"{model['id']} · {effort or 'effort unset'}"})
+        sys.stderr.write(f"{base}: {ask}\n")
+        return 3
     if state["state"] == "exhausted":
         emit({"ROUTE_STATUS": "ask", "ROUTE_TIER": label, "ROUTE_TIER_NAME": "explicit model",
               "ROUTE_ASK": f"{model['display']} · {effort or 'effort unset'}: exhausted, {state['detail']}",
@@ -350,8 +453,17 @@ def resolve_model(canon: dict, args: argparse.Namespace) -> int:
     pairs = route_pairs(canon, label, "explicit model", model, effort or "unset",
                         model, effort or "unset", "explicit", reason)
     pairs["ROUTE_LEGACY_NOTE"] = ""
+    maybe_write_bundle(args, pairs)
     emit(pairs)
     return 0
+
+
+def maybe_write_bundle(args: argparse.Namespace, pairs: dict) -> None:
+    if not getattr(args, "bundle_out", None):
+        return
+    if not getattr(args, "runtime_cwd", ""):
+        args.runtime_cwd = str(Path.cwd())
+    write_route_bundle(Path(args.bundle_out), args, now_utc().isoformat(), pairs, now_utc())
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -363,15 +475,39 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--effort")
     ap.add_argument("--agent")
     ap.add_argument("--reason")
+    ap.add_argument("--runtime-cwd", default="", help="Directory the spawned seat will use")
+    ap.add_argument("--request", help="JSON task authority, tools and bounded preference")
+    ap.add_argument("--bundle-out", help="Write a verified route bundle for a fast second launch")
+    ap.add_argument("--verify-bundle", help="Reuse a fresh route bundle instead of resolving again")
     ap.add_argument("--no-capacity", action="store_true")
     ap.add_argument("--list-tiers", action="store_true")
     ap.add_argument("--skill", default=str(DEFAULT_SKILL))
     args = ap.parse_args(argv)
+    if not args.runtime_cwd:
+        args.runtime_cwd = str(Path.cwd())
     try:
         canon = load_canon(Path(args.skill))
     except (OSError, ValueError, KeyError, yaml.YAMLError) as exc:
         sys.stderr.write(f"invalid routing table: {exc}\n")
         return 2
+    if args.bundle_out and (args.no_capacity or args.verify_bundle):
+        sys.stderr.write("--bundle-out cannot be combined with --no-capacity or --verify-bundle\n")
+        return 2
+    if args.verify_bundle and args.no_capacity:
+        sys.stderr.write("--verify-bundle cannot be combined with --no-capacity\n")
+        return 2
+    try:
+        args.loaded_request = load_request(args.request)
+    except ValueError as exc:
+        sys.stderr.write(f"invalid routing request: {exc}\n")
+        return 2
+    if args.verify_bundle:
+        rc, pairs, err = verify_route_bundle(Path(args.verify_bundle), canon, args, now_utc())
+        if pairs:
+            emit(pairs)
+        if rc != 0:
+            sys.stderr.write(f"route bundle verification failed: {err}\n")
+        return rc
     if args.list_tiers:
         print(list_tiers(canon))
         return 0

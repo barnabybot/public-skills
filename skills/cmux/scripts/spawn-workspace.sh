@@ -2,7 +2,7 @@
 # Spawn a named cmux workspace with Claude Code, Codex or Grok (no focus steal).
 #
 # Usage:
-#   spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]
+#   spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--request <JSON>] [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--loop [pct]] [--route-out <path>] [--resolved-route <path>] [--dry-run]
 #
 # By default a session note is created in $AGENT_NOTES/Sessions/
 # ($AGENT_NOTES defaults to ~/agent-notes). Pass --no-session to skip.
@@ -29,6 +29,15 @@
 # --effort        Effort level passed to the child CLI: claude --effort, codex
 #                 -c model_reasoning_effort=, grok --reasoning-effort. Also
 #                 prepended to the prompt as its first line, `Effort: <level>`.
+# --request       JSON task authority. When present, the resolver admits only
+#                 authorised providers and can exit 3 before any workspace exists.
+#                 A one-task bounded_preference is required when that object is set.
+# --route-out     Write a verified route bundle after resolution, for a fast
+#                 second launch that must not read capacity again.
+# --resolved-route Reuse a fresh bundle from --route-out. Pass the same --request
+#                 and --cwd. Do not combine with --route-out.
+# --loop [pct]    After launch, record an auto-handoff threshold (default 30)
+#                 under ~/.claude/loops/ws-<ref>.json.
 # --dry-run       Resolve the route, print the route line and the launch command,
 #                 exit 0. Nothing is spawned, no worktree or note is written.
 # --cwd           Working directory for the launched agent. Defaults to
@@ -54,7 +63,7 @@
 
 set -e
 
-USAGE='Usage: spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--dry-run]'
+USAGE='Usage: spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--request <JSON>] [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--loop [pct]] [--route-out <path>] [--resolved-route <path>] [--dry-run]'
 
 # The routing canon and its resolver, found from this script's real path so a
 # copy reads its own canon. ROUTING_RESOLVER overrides for tests.
@@ -64,6 +73,9 @@ SCRIPT_REAL="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURC
 # Found relative to this script's real path, so a copy reads its own sibling.
 RESOLVER="${ROUTING_RESOLVER:-$(cd "$(dirname "$SCRIPT_REAL")/../../orchestrator/scripts" 2>/dev/null && pwd)/resolve.py}"
 PYTHON="${SPAWN_PYTHON:-python3}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_REAL")" && pwd)"
+STAMP_HELPER="$SCRIPT_DIR/stamp_surface.py"
+HEADER_HELPER="$SCRIPT_DIR/group_header.py"
 
 # Where session notes and handoff briefs live. One root, set it to your own.
 AGENT_NOTES="${AGENT_NOTES:-$HOME/agent-notes}"
@@ -97,6 +109,10 @@ EFFORT=""
 OF=""
 BUILDER=""
 REASON=""
+REQUEST=""
+ROUTE_OUT_BUNDLE=""
+RESOLVED_ROUTE_BUNDLE=""
+LOOP_PCT=""
 DRY_RUN=0
 WORKDIR="$AGENT_NOTES"
 
@@ -130,6 +146,9 @@ while [[ $# -gt 0 ]]; do
     --of) OF="$2"; shift 2 ;;
     --builder) BUILDER="$2"; shift 2 ;;
     --reason) REASON="$2"; shift 2 ;;
+    --request) REQUEST="$2"; shift 2 ;;
+    --route-out) ROUTE_OUT_BUNDLE="$2"; shift 2 ;;
+    --resolved-route) RESOLVED_ROUTE_BUNDLE="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
     --effort) EFFORT="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
@@ -145,7 +164,10 @@ while [[ $# -gt 0 ]]; do
     --prompt) PROMPT="$2"; shift 2 ;;
     --prompt-file)
       if [[ ! -f "$2" ]]; then echo "prompt-file not found: $2" >&2; exit 1; fi
-      PROMPT="$(cat "$2")"
+      PROMPT_FILE="$2"
+      # Keep a trailing newline. A bare command substitution would strip it.
+      PROMPT="$(cat "$2"; printf x)"
+      PROMPT="${PROMPT%x}"
       shift 2
       ;;
     --goal) GOAL="$2"; shift 2 ;;
@@ -153,6 +175,13 @@ while [[ $# -gt 0 ]]; do
     --no-session) WRITE_SESSION=0; shift ;;
     --new-window) OPEN_NEW_WINDOW=1; shift ;;
     --same-window) OPEN_NEW_WINDOW=0; shift ;;
+    --loop)
+      if [[ -n "${2:-}" && "$2" =~ ^[0-9]+$ ]]; then
+        LOOP_PCT="$2"; shift 2
+      else
+        LOOP_PCT="30"; shift
+      fi
+      ;;
     *) echo "Unknown arg: $1"; exit 1 ;;
   esac
 done
@@ -180,6 +209,14 @@ if [[ ! -f "$RESOLVER" ]]; then
   echo "routing resolver not found: $RESOLVER" >&2
   exit 1
 fi
+if [[ -n "$REQUEST" && ! -f "$REQUEST" ]]; then
+  echo "routing request not found: $REQUEST" >&2
+  exit 2
+fi
+if [[ -n "$ROUTE_OUT_BUNDLE" && -n "$RESOLVED_ROUTE_BUNDLE" ]]; then
+  echo "Pass either --route-out or --resolved-route, not both." >&2
+  exit 2
+fi
 ROUTE_ARGS=()
 if [[ -n "$MODEL" ]]; then
   ROUTE_ARGS=(--model "$MODEL")
@@ -192,6 +229,10 @@ else
   [[ -n "$BUILDER" ]] && ROUTE_ARGS+=(--builder "$BUILDER")
 fi
 [[ -n "$REASON" ]] && ROUTE_ARGS+=(--reason "$REASON")
+ROUTE_ARGS+=(--runtime-cwd "$WORKDIR")
+[[ -n "$REQUEST" ]] && ROUTE_ARGS+=(--request "$REQUEST")
+[[ -n "$ROUTE_OUT_BUNDLE" ]] && ROUTE_ARGS+=(--bundle-out "$ROUTE_OUT_BUNDLE")
+[[ -n "$RESOLVED_ROUTE_BUNDLE" ]] && ROUTE_ARGS+=(--verify-bundle "$RESOLVED_ROUTE_BUNDLE")
 set +e
 ROUTE_OUT="$("$PYTHON" "$RESOLVER" "${ROUTE_ARGS[@]}")"
 ROUTE_RC=$?
@@ -213,7 +254,7 @@ AGENT="$ROUTE_AGENT"
 MODEL="$ROUTE_MODEL"
 EFFORT="$ROUTE_EFFORT"
 [[ "$EFFORT" == "unset" ]] && EFFORT=""
-[[ -n "$ROUTE_LEGACY_NOTE" ]] && echo "deprecated: $ROUTE_LEGACY_NOTE" >&2
+[[ -n "${ROUTE_LEGACY_NOTE:-}" ]] && echo "deprecated: $ROUTE_LEGACY_NOTE" >&2
 
 # The launch command. $MODEL is single-quoted: 1M-context ids look like
 # `claude-opus-5-5[1m]`, and the brackets are glob metacharacters. Unquoted, zsh
@@ -238,6 +279,10 @@ case "$AGENT" in
     SESSION_AGENT="grok"
     ;;
 esac
+PRE_EXEC_CMD=""
+if [[ -f "$STAMP_HELPER" ]]; then
+  PRE_EXEC_CMD="\"$PYTHON\" \"$STAMP_HELPER\" \"$SESSION_AGENT\" \"${ROUTE_MODEL_ID:-$MODEL}\" \"${EFFORT:-unset}\" \"$WORKDIR\" \"$AGENT\" && "
+fi
 
 # The brief and the seat agree on effort by construction: the resolved level
 # becomes the prompt's first line unless the caller already wrote one.
@@ -330,6 +375,8 @@ except (ValueError, KeyError, TypeError, AttributeError) as exc:
 ' "$CALLER_WORKSPACE" "$CALLER_WINDOW")
       SPAWN_ARGS+=(--window "$CALLER_WINDOW")
       if [[ -n "$CALLER_GROUP" ]]; then
+        HEADER_VERDICT=$("$PYTHON" "$HEADER_HELPER" ensure --workspace "$CALLER_WORKSPACE" --window "$CALLER_WINDOW" --json)
+        printf '%s' "$HEADER_VERDICT" | "$PYTHON" -c 'import json,sys; v=json.load(sys.stdin); sys.exit(0 if (v.get("group") or "").lower() == sys.argv[1].lower() else "Caller group changed before spawn")' "$CALLER_GROUP"
         SPAWN_ARGS+=(--group "$CALLER_GROUP" --group-placement afterCurrent --group-reference "$CALLER_WORKSPACE")
       fi
     fi
@@ -361,9 +408,9 @@ if [[ -n "$PROMPT" ]]; then
   LAUNCH_INSTRUCTION="Read the file at $TMPFILE in full. State a brief 2-3 sentence summary of the goal and next action (do not echo the full file), then execute its instructions."
   # CMUX_QUIET=1 + pattern-extract: alias-deprecation notices land in 2>&1 and
   # break positional `awk '{print $2}'`, making rename target the wrong workspace.
-  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER \"$LAUNCH_INSTRUCTION\"" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
+  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && ${PRE_EXEC_CMD}exec $RUNNER \"$LAUNCH_INSTRUCTION\"" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
 else
-  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && exec $RUNNER" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
+  NEW_OUTPUT=$(CMUX_QUIET=1 cmux new-workspace "${SPAWN_ARGS[@]}" --cwd "$WORKDIR" --command "cd \"$WORKDIR\" && ${PRE_EXEC_CMD}exec $RUNNER" 2>&1) || { echo "$NEW_OUTPUT" >&2; exit 1; }
 fi
 
 NEW_UUID=$(printf '%s\n' "$NEW_OUTPUT" | grep -oE 'workspace:[0-9]+' | tail -1)
@@ -470,7 +517,14 @@ if [[ -n "$NEW_WINDOW" ]]; then
     cmux move-workspace-to-window --workspace "$NEW_UUID" --window "$NEW_WINDOW" 2>&1 || true
   fi
   if [[ -n "$NEW_WINDOW_DEFAULT_WORKSPACE" && "$NEW_WINDOW_DEFAULT_WORKSPACE" != "$NEW_UUID" ]]; then
-    cmux close-workspace --workspace "$NEW_WINDOW_DEFAULT_WORKSPACE" >/dev/null 2>&1 || true
+    if DEFAULT_VERDICT=$("$PYTHON" "$HEADER_HELPER" before-close --workspace "$NEW_WINDOW_DEFAULT_WORKSPACE" --window "$NEW_WINDOW" --json); then
+      DEFAULT_UUID=$(printf '%s' "$DEFAULT_VERDICT" | "$PYTHON" -c 'import json,sys; print(json.load(sys.stdin)["workspace"])')
+      if "$PYTHON" "$HEADER_HELPER" before-close --workspace "$DEFAULT_UUID" --window "$NEW_WINDOW" --json >/dev/null; then
+        cmux close-workspace --workspace "$DEFAULT_UUID" >/dev/null 2>&1 || true
+      fi
+    else
+      echo "Retained default workspace: $DEFAULT_VERDICT" >&2
+    fi
   fi
 fi
 
@@ -492,6 +546,13 @@ for _ in $(seq 1 16); do
   fi
   sleep 0.5
 done
+
+if [[ -n "$LOOP_PCT" ]]; then
+  LOOPS_DIR="$HOME/.claude/loops"
+  mkdir -p "$LOOPS_DIR"
+  echo "{\"threshold\": $LOOP_PCT}" > "$LOOPS_DIR/ws-${NEW_UUID}.json"
+  echo "Loop registered at ${LOOP_PCT}% for workspace $NAME"
+fi
 
 if [[ -n "$CURRENT" ]]; then
   cmux select-workspace --workspace "$CURRENT" 2>&1

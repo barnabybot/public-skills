@@ -1,6 +1,6 @@
 ---
 name: cmux
-version: 1.1.0
+version: 1.2.0
 description: >-
   Manage cmux workspaces and browser panes. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
 fallback: If cmux is unavailable, write the prompt or handoff file under $AGENT_NOTES/Sessions/Handoffs/ and tell the user the workspace could not be opened.
@@ -37,7 +37,9 @@ scripts care only that the folder exists and that they may write to it.
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <category>`), sets effort on the launched CLI, and writes the session note with model, effort and the route log. The canonical helper. |
+| `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <category>`), accepts `--request` so an unauthorised or unread provider exits 3 before a workspace exists, stamps the surface for a later cross-model handoff, and writes the session note with model, effort and the route log. `--route-out` / `--resolved-route` reuse one fresh resolution. The canonical helper. |
+| `scripts/group_header.py` | Keep a permanent blank group header. `ensure` creates or repairs the plain-shell anchor. `before-close` returns `retained-header` for that anchor so close and idle-exit leave it in place. |
+| `scripts/stamp_surface.py` | Write the launched agent, model, effort and directory for the new surface. Spawn runs it before the agent. The orchestrator reads the stamp on a cross-model handoff. |
 | `scripts/test-spawn-workspace.sh` | Dry-run fixture test for the helper's routing. Nothing is spawned. Run it after any edit to `spawn-workspace.sh`, or to the orchestrator's table, metadata or resolver. |
 | `scripts/test-spawn-group.sh` | Fixture check for group inheritance, handoff prompts, focus preservation and creation errors. Runs without live workspaces. |
 | `scripts/close-workspace.sh` | Close a workspace AND flip its session note to `status: done` with an `ended:` stamp. Flips only a note still open. cmux reuses workspace numbers, so closed notes on the same id are reported and left alone. `--exit-idle-codex` retires a finished idle Codex terminal by normal `ctrl+d`. Use this instead of raw `cmux close-workspace`. |
@@ -151,24 +153,21 @@ scripts/close-workspace.sh workspace:N
 # (Raw `cmux close-workspace --workspace workspace:N` leaves the note stuck in-progress.)
 ```
 
-## Open local HTML in the cmux browser
+## Browser sessions
 
-When the user asks for the **cmux browser**, use cmux's native browser pane.
-Keep the file in the caller's current workspace and focus the new split:
+Use cmux's native browser for websites, local HTML and rendered reports. Keep the terminal on the left. Put browser pages in separate tabs of one right-hand pane at about half the workspace width. Reuse that pane for later pages. Follow `references/browser-pane.md` for the first split, later tabs and the load check.
+
+Use another browser only when the user asks for it, or when a required capability is missing from the cmux browser. Device emulation for a mobile check is one example.
 
 ```bash
-cmux browser status
-cmux browser open 'file:///absolute/path/report%20name.html' --focus true
-# Read surface:S from the output, then verify the loaded page:
+cmux focus-pane --pane pane:T --workspace workspace:N --window window:W
+cmux new-pane --type browser --direction right --workspace workspace:N --window window:W --url 'file:///absolute/path/report%20name.html' --focus true
 cmux browser --surface surface:S wait --load-state complete --timeout-ms 10000
 cmux browser --surface surface:S get title
 cmux browser --surface surface:S get url
 ```
 
-Encode spaces as `%20`. A successful open reports `OK surface=surface:S
-pane=pane:M placement=split`; confirm the title and the `file://` URL before
-reporting completion. Do not substitute Chrome or another browser surface when
-the user names cmux.
+Encode spaces as `%20`. Confirm the title and the URL before reporting completion. Do not substitute Chrome when the user names the cmux browser.
 
 ## Open Markdown in a cmux viewer
 

@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-version: 1.3.1
+version: 1.4.0
 description: >-
   Coordinate cmux agents, hand off sessions and maintain model routing. Use for
   /orchestrator, /orchestrate, /handoff, handover, pickup prompts, parking notes,
@@ -120,6 +120,18 @@ The rule generalises. The table does not. Four things are yours:
    starts taking the backup on exhaustion. `references/routing-rules.md`
    describes the states it distinguishes.
 
+## Startup retirement
+
+Before fleet work in a fresh orchestrator seat:
+
+1. Identify the caller with `cmux identify --json --id-format both`.
+2. Run `python3 ../cmux/scripts/group_header.py ensure --workspace <caller-UUID>`. Keep a reserved blank group header permanently, including when the group would otherwise be empty. Stop if repair fails.
+3. Retire finished predecessors with `scripts/retire_predecessors.py`. A Codex seat that returns `confirmation_required` uses the cmux idle-exit procedure. Do not close a workspace `group_header.py before-close` marks `retained-header`.
+
+## Capacity before preference
+
+Read capacity before the table's preference. `--request` carries authorisation, required tools and an optional one-task `bounded_preference`. A provider absent from `authorisation.providers` is excluded. `"capacity": "required"` refuses an unread meter. A Codex-shaped `native` block on the meter uses pace versus reset across every returned account window. `--route-out` writes a bundle; `--resolved-route` reuses it for a fast cross-model handoff without a second capacity read. Confirm the predecessor surface with `scripts/runtime_adapters.py` when `stamp_surface.py` wrote one.
+
 ## Dispatch contract
 
 Choose the category, then call the cmux helper:
@@ -183,8 +195,9 @@ python3 scripts/test_continuation_check.py         # after changing continuation
 python3 scripts/test_stall_check.py                # after changing stall detection
 python3 scripts/test_live_push_gate.py             # after changing the live-push gate
 python3 scripts/test_accept_surfaces.py            # after changing acceptance checks
+python3 scripts/test_route_request.py              # after changing request gates or route bundles
+python3 scripts/test_codex_capacity.py             # after changing Codex pace versus reset
+python3 scripts/test_runtime_adapters.py           # after changing the surface stamp reader
 ```
 
-All eight run against fixtures, so none creates a workspace or contacts a
-provider. `workflows/routing-refresh.md` proposes table changes weekly from
-Artificial Analysis.
+The fixture checks create no workspace and contact no provider. `workflows/routing-refresh.md` proposes table changes weekly from Artificial Analysis.

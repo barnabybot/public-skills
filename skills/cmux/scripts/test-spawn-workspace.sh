@@ -50,6 +50,11 @@ check "an unknown category is refused"               2 "unknown tier"           
 check "the effort reaches the session-note preview"  0 "dry-run: note agent=claude-code model=claude-opus-5-5 effort=xhigh" -- t-p --tier systems --prompt "hello" --dry-run
 check "--help exits before anything is spawned"      0 "Spawn a named cmux workspace"                           -- --help
 check "a flag in the name position is refused"       2 "begins with a dash"                                     -- --tier systems
+check "a missing request file is refused"           2 "routing request not found"                              -- t-miss --tier systems --request /tmp/no-such-public-skills-request.json --dry-run
+REQ=$(mktemp)
+printf '%s\n' '{"authorisation":{"source":"fixture brief","providers":["missing"]}}' > "$REQ"
+check "a request that authorises no provider exits 3" 3 "does not authorise"                                  -- t-req --tier systems --request "$REQ" --dry-run
+rm -f "$REQ"
 
 echo
 echo "passed $pass, failed $fail"

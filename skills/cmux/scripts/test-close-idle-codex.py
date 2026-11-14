@@ -74,9 +74,16 @@ elif command == "list-workspaces":
     if s.get("duplicate"):
         entries += entries
     if as_json:
-        out = json.dumps({"window_id": s["window"], "workspaces": entries})
+        out = json.dumps({"window_id": args[args.index("--window") + 1], "workspaces": entries})
     else:
         out = "\n".join("  " + e["ref"] + "  " + e["title"] for e in entries)
+elif command == "workspace-group":
+    if s.get("group_failure"):
+        rc, out = 1, "Group inventory failed"
+    else:
+        groups = [{"id": s["other"], "anchor_workspace_id": s["uuid"],
+                   "member_workspace_ids": [s["uuid"]]}] if s.get("anchor") else []
+        out = json.dumps({"window_id": s["window"], "groups": groups})
 elif command == "list-panes":
     panes = [{"id": s["pane"], "surface_ids": [s["surface"]]}]
     if s.get("empty_global_dock"):
@@ -91,6 +98,8 @@ elif command == "list-pane-surfaces":
     out = json.dumps({"workspace_id": s["uuid"], "pane_id": s["pane"], "surfaces": surfaces})
 elif command == "read-screen":
     s["reads"] += 1
+    if s.get("anchor_after_read"):
+        s["anchor"] = True
     out = s.get("second_screen", s["screen"]) if s["reads"] > 1 else s["screen"]
     if s.get("disappear_on_read"):
         s["present"] = False
@@ -111,6 +120,8 @@ elif command == "send-key":
         rc, out = 1, "Offline fixture key failed"
     else:
         s["exited"] = True
+        if s.get("anchor_after_exit"):
+            s["anchor"] = True
         if s.get("auto_disappear"):
             s["present"] = False
         out = "OK surface:9 workspace:8"
@@ -203,6 +214,23 @@ class IdleCodexTest(unittest.TestCase):
                     "note_after": self.note.read_text(),
                     "handoff_preserved": self.handoff.read_bytes() == self.before_handoff,
                 }) + "\n")
+
+    def test_anchor_never_receives_ctrl_d(self):
+        self.retained(anchor=True)
+
+    def test_anchor_promotion_during_idle_proof_is_retained(self):
+        self.retained(anchor_after_read=True)
+
+    def test_failed_group_inventory_is_retained(self):
+        self.retained(group_failure=True)
+
+    def test_anchor_promotion_after_exit_stops_fallback_close(self):
+        self.configure(anchor_after_exit=True)
+        state = self.run_helper()
+        self.assertNotEqual(self.result.returncode, 0)
+        self.assertTrue(state["present"])
+        self.assertEqual(state["closes"], 0)
+        self.assertEqual(self.note.read_bytes(), self.before_note)
 
     def test_verified_idle_codex_retires_and_preserves_records(self):
         state = self.run_helper()
