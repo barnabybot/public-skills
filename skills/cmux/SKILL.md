@@ -2,7 +2,7 @@
 name: cmux
 version: 1.2.0
 description: >-
-  Manage cmux workspaces and browser panes. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
+  Control workspaces and browser panes in the optional cmux terminal application. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
 fallback: If cmux is unavailable, write the prompt or handoff file under $AGENT_NOTES/Sessions/Handoffs/ and tell the user the workspace could not be opened.
 ---
 
@@ -13,12 +13,25 @@ terminal.
 
 > For the multi-agent **orchestrator** pattern - one agent spawns and
 > coordinates many through session notes - use the `orchestrator` skill. This
-> skill covers the raw mechanics.
+> standalone host driver covers cmux mechanics and calls orchestrator for routing policy.
 
 **Requires** [cmux](https://www.cmux.dev) on the `PATH`, and the **orchestrator**
 skill installed beside this one, because `spawn-workspace.sh` routes through its
 resolver. Everything else below is cmux CLI plus the two helper scripts in this
 directory.
+
+## Verification
+
+Run the shell guards and discovered Python suite. Run hyphenated test files
+directly because unittest discovery skips them.
+
+```sh
+bash scripts/test-spawn-workspace.sh
+bash scripts/test-close-workspace.sh
+python3 -m unittest discover -s scripts -p 'test*.py'
+python3 scripts/test-group-header.py
+python3 scripts/test-close-idle-codex.py
+```
 
 ## Configuration
 
@@ -40,6 +53,7 @@ scripts care only that the folder exists and that they may write to it.
 | `scripts/spawn-workspace.sh` | Spawn a named workspace with no focus steal. Routes the seat through the **orchestrator** skill's resolver (`--tier <category>`), accepts `--request` so an unauthorised or unread provider exits 3 before a workspace exists, stamps the surface for a later cross-model handoff, and writes the session note with model, effort and the route log. `--route-out` / `--resolved-route` reuse one fresh resolution. The canonical helper. |
 | `scripts/group_header.py` | Keep a permanent blank group header. `ensure` creates or repairs the plain-shell anchor. `before-close` returns `retained-header` for that anchor so close and idle-exit leave it in place. |
 | `scripts/stamp_surface.py` | Write the launched agent, model, effort and directory for the new surface. Spawn runs it before the agent. The orchestrator reads the stamp on a cross-model handoff. |
+| `scripts/test_spawn_launch.py` | Launch fixtures for Claude, Codex and Grok, unsupported-runtime refusal, and absence of trust screen reads or key presses. |
 | `scripts/test-spawn-workspace.sh` | Dry-run fixture test for the helper's routing. Nothing is spawned. Run it after any edit to `spawn-workspace.sh`, or to the orchestrator's table, metadata or resolver. |
 | `scripts/test-spawn-group.sh` | Fixture check for group inheritance, handoff prompts, focus preservation and creation errors. Runs without live workspaces. |
 | `scripts/close-workspace.sh` | Close a workspace AND flip its session note to `status: done` with an `ended:` stamp. Flips only a note still open. cmux reuses workspace numbers, so closed notes on the same id are reported and left alone. `--exit-idle-codex` retires a finished idle Codex terminal by normal `ctrl+d`. Use this instead of raw `cmux close-workspace`. |
@@ -105,7 +119,7 @@ generation ships. The table pins ids, and a successor of a live lineage passes
 the predecessor's `--model` and `--effort` explicitly so an upgrade never lands
 mid-lineage.
 
-**Routing lives in the orchestrator skill, and not here.** The seat that
+**Routing lives in the orchestrator skill.** The seat that
 dispatches keeps the dispatch policy, so the table, the category rule and the
 resolver sit together in one package. This helper reads them; it does not own
 them. Install both skills, or `--tier` has nothing to resolve against.

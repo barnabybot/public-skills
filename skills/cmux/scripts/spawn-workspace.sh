@@ -472,6 +472,7 @@ categories:
 topics: []
 type: "[[Sessions]]"
 agent: ${SESSION_AGENT}
+host: cmux
 model: ${ROUTE_MODEL_ID}
 effort: ${EFFORT:-unset}
 date: ${DATE}
@@ -527,25 +528,6 @@ if [[ -n "$NEW_WINDOW" ]]; then
     fi
   fi
 fi
-
-# Auto-dismiss Claude Code's "trust this folder" prompt on first launch in a new
-# directory. Inline poll (background subshells get killed when the parent exits
-# under the Claude Code Bash tool). Polls up to ~8s; answers when the prompt is
-# detected. Since Claude Code 2.1.270 the default selection is "No, exit", so a
-# bare Enter quits the agent and cmux closes the workspace within seconds.
-# Send Down to reach "Yes, I trust", then Enter. On older
-# builds Down lands on the second option too, which is still "Yes" in both layouts.
-# Fast-exits as soon as the prompt is handled. No-op if it never appears.
-for _ in $(seq 1 16); do
-  SCREEN=$(cmux read-screen --workspace "$NEW_UUID" 2>&1 || true)
-  if echo "$SCREEN" | grep -q "trust this folder"; then
-    cmux send-key --workspace "$NEW_UUID" Down >/dev/null 2>&1 || true
-    sleep 0.3
-    cmux send-key --workspace "$NEW_UUID" Enter >/dev/null 2>&1 || true
-    break
-  fi
-  sleep 0.5
-done
 
 if [[ -n "$LOOP_PCT" ]]; then
   LOOPS_DIR="$HOME/.claude/loops"

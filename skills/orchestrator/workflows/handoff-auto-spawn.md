@@ -1,8 +1,10 @@
 # Auto-spawn Workflow (cmux)
 
+This shell workflow runs inside cmux. In T3 Code, use [native handoff and recycle](../references/hosts.md#handoff-and-recycle-in-t3-code), including the explicit new-thread gate. Keep the durable brief and readiness evidence.
+
 A handoff or handover opens a fresh cmux workspace. First prepare the brief using `workflows/handoff.md`.
 
-**Requires** the `cmux` skill's `spawn-workspace.sh`. If that script is unavailable, fall back per the skill's `fallback:` rule — write the prompt under `Handoffs/` and report the path.
+**Requires** the `cmux` skill's `spawn-workspace.sh`. If that script is unavailable, follow the skill's `fallback:` rule. Write the prompt under `Handoffs/` and report the path.
 
 ## Steps
 
@@ -10,9 +12,9 @@ A handoff or handover opens a fresh cmux workspace. First prepare the brief usin
 
 2. **Update Progress** using the five fields in Prepare step 3 of `workflows/handoff.md`. Use those fields to fill the brief below.
 
-3. **Capture user's direction** — if they specified the focus for the next session, that's Next-step #1.
+3. **Capture user's direction.** If they specified the focus for the next session, that's Next-step #1.
 
-4. **Save the handoff prompt to `Handoffs/`** — not to clipboard:
+4. **Save the handoff prompt to `Handoffs/`.** Run these commands:
    ```bash
    PROMPT_FILE="$AGENT_NOTES/Sessions/Handoffs/YYYY-MM-DD <slug>.md"
    mkdir -p "$(dirname "$PROMPT_FILE")"
@@ -89,7 +91,7 @@ Use a kebab-case slug derived from the work topic, not from the file path. Examp
 
 ## Same-window default
 
-The cmux convention is same-window — the spawned workspace appears below the orchestrator in the sidebar, not in a new macOS window. Pass `--new-window` only if the user explicitly asks for one.
+The spawned workspace appears below the orchestrator in the same window. Pass `--new-window` only if the user explicitly asks for one.
 
 ## Hard rules for auto-spawn
 
@@ -97,9 +99,9 @@ The cmux convention is same-window — the spawned workspace appears below the o
 - **Capacity is read on every spawn.** The helper does it. A route that leaves the table (both providers exhausted, a reset credit, a recycle onto an exhausted provider) is a question.
 - **An unreadable provider only when named.** Its allowance cannot be read, so it is never an inferred route.
 - Use the delivery selected in `workflows/handoff.md`: a bare handoff opens a workspace; copy and clipboard require an explicit request.
-- **Don't summarise the work into the prompt body** — pass the full handoff brief verbatim. The new agent should be able to start cold.
+- **Pass the full handoff brief verbatim.** The new agent should be able to start cold.
 - Carry existing authorisation into the prompt. Identify any decision that still needs the user.
-- **Don't reuse an existing workspace name** — append a date or suffix if there's a collision; the helper will error otherwise.
+- **Use a unique workspace name.** Append a date or suffix if there is a collision.
 
 ## Group placement
 

@@ -1,5 +1,20 @@
 # Review recent sessions
 
+## Select the host
+
+For Fresh context in T3 Code, follow the orchestrator's
+[native dispatch](../../orchestrator/references/hosts.md#dispatch-in-t3-code).
+Include the source thread ID for `t3_thread_read`, or transcript paths, in the
+self-contained `delegate_task` brief with the routed provider, model and effort.
+Use `isolation: "worktree"` when approved changes edit repository files. Follow
+completion wakeups and `next`. Create a top-level thread only when the user asks
+for one. Inside cmux, use orchestrator's workspace dispatch. Keep session notes
+under `$AGENT_NOTES/Sessions/` and record the current `host:`.
+
+When neither native delegation nor cmux is available, review the supplied
+evidence here and state the context and access limits. A receiving reviewer
+continues in its dispatched context. The settled approval scope still applies.
+
 Default: one repository, up to ten unique substantive sessions and zero to
 three proposed fixes. Run manually after ten new eligible sessions or a major
 restructure. The review is read-only until changes are authorised.

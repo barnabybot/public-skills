@@ -56,6 +56,12 @@ printf '%s\n' '{"authorisation":{"source":"fixture brief","providers":["missing"
 check "a request that authorises no provider exits 3" 3 "does not authorise"                                  -- t-req --tier systems --request "$REQ" --dry-run
 rm -f "$REQ"
 
+if ! grep -Eq 'cmux (read-screen|send-key)' "$HELPER"; then
+  pass=$((pass+1)); echo "PASS  spawn leaves folder trust to the runtime"
+else
+  fail=$((fail+1)); echo "FAIL  spawn reads a TUI or sends trust keys"
+fi
+
 echo
 echo "passed $pass, failed $fail"
 [[ "$fail" -eq 0 ]]

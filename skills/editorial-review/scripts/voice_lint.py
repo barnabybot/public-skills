@@ -150,7 +150,7 @@ def lint_text(label: str, text: str, surface: str | None) -> list[Finding]:
     findings: list[Finding] = []
     lines = text.split("\n")
     for idx, line in enumerate(lines, start=1):
-        if BANNED_VOCAB.search(line):
+        if BANNED_VOCAB.search(line.replace("`home/harness/`", "")):
             findings.append(Finding(label, idx, "banned-vocab", line))
         if BANNED_PHRASE.search(normalise_quotes(line)):
             findings.append(Finding(label, idx, "banned-phrase", line))

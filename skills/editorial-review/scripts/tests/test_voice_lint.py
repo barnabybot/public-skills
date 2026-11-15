@@ -33,6 +33,13 @@ def rules(payload: dict) -> list[str]:
 
 
 class VoiceLintTests(unittest.TestCase):
+    def test_settings_path_is_literal_but_prose_still_checked(self) -> None:
+        self.assertEqual(voice_lint.lint_text('doc.md', 'Use `home/harness/` for settings.', None), [])
+        findings = voice_lint.lint_text('doc.md', 'Use `home/harness/` to leverage settings.', None)
+        self.assertEqual([item.rule for item in findings], ['banned-vocab'])
+        findings = voice_lint.lint_text('doc.md', 'Use a harness for settings.', None)
+        self.assertEqual([item.rule for item in findings], ['banned-vocab'])
+
     def test_clean_text_passes(self) -> None:
         path = FIXTURES / "clean.md"
         code, out, err = run([str(path), "--json"])

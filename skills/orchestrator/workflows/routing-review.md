@@ -11,6 +11,10 @@ python3 scripts/routelog.py --since YYYY-MM-DD
 
 `check.py` validates every table row, model reference, effort and cross-provider backup. Live checks confirm installed model IDs where the CLI exposes them; Claude IDs receive a shape check and need a spawn to confirm. Capacity failures are reported as unread. Check and log commands append evidence under `$AGENT_NOTES/Ops/orchestrator/`; use `--no-log` for validation runs.
 
+## T3 Code route evidence
+
+The structural checks above remain host-independent. Installed CLI and cmux spawn checks establish cmux evidence only. T3 Code dispatch uses [capability discovery](../references/hosts.md#dispatch-in-t3-code), with exact provider instance, model and supported effort options. Capability discovery does not certify quota or child tool access. Keep the single preference table and approval requirement in both hosts.
+
 ## Propose a revision
 
 Use this workflow when asked to refresh preferences or assess a new model. Keep temporary capacity overrides separate from preference changes.
