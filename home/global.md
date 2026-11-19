@@ -6,7 +6,8 @@ project or vault. That file maps the Home Repo. This file supplies global rules.
 ## Skills and approval
 
 Read a matching skill's `SKILL.md` before acting. Present its intake questions
-first. Treat answers already supplied in the request as settled.
+first. Use the host's native question menu when the runtime permits. Treat
+answers already supplied in the request as settled.
 
 Apply the Thin-Slice Gate before pushing to a public repository, publishing,
 sending external messages or batch-generating several artefacts. Produce one

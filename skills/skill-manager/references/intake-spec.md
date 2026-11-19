@@ -32,31 +32,42 @@ Phase 1: four tabs, one submit, each option with a line on what it gives.
 
 ## Rendering
 
+Use the native question menu whenever the exposed tool and active runtime
+permit the questions. Call it before presenting the choices in chat. Determine
+availability from the exposed tools and their results. In Codex, Default mode
+supports the menu when `request_user_input` is exposed and permitted.
+
 | Host | Mechanism |
 |---|---|
 | Claude Code | One `AskUserQuestion` call carrying every open question. Header 12 characters or fewer. A recommended option goes first with "(Recommended)" on the label. |
 | Grok | One `AskUserQuestion` call, the same panel, where that tool is exposed. |
-| Codex | `request_user_input` exposes guidance for one to three questions and two to three options per question. These are guidance limits; runtime instructions and the exposed tool schema remain authoritative. Requires `default_mode_request_user_input = true` under `[features]` in `~/.codex/config.toml`. Split stages across sequential calls to fit the question-count guidance. If any question exceeds the option-count guidance, preserve the complete stage through a text mechanism only when runtime instructions allow it. For required native input, use a blocking path only when that path is active and exposed; otherwise use an allowed text mechanism or keep dependent work paused. |
+| Codex | Use `request_user_input`. It gives guidance for one to three questions and two to three options per question. Batch compatible questions in one call. Split larger stages across sequential calls. Preserve all options where the exposed schema permits them. Default-mode CLI support uses `default_mode_request_user_input = true` under `[features]` in `~/.codex/config.toml`; the current tool exposure and runtime decide what this session permits. |
 | Host without a native question tool | Use the text form. |
 | Text form | One message. Questions numbered, options lettered, each with its description, the recommended option marked. Reply as `1A 2C 3B`. |
 | Headless (cron) | No panel. The skill's `fallback:` field or its headless workflow names the defaults. |
 
-One panel is one intake stage. A host may render it in sequential native calls
-to fit per-call question-count guidance. Keep every question and option
-unchanged. If an individual question exceeds the host's option guidance, use
-the complete text form when runtime instructions allow; otherwise keep
-dependent work paused and report the missing answers. Runtime instructions and
-the exposed tool schema take precedence over this authoring contract. Required
-answers block dependent work until the user answers. Tool acceptance,
+One panel is one intake stage, even when the host needs sequential native
+calls. Keep every question and option unchanged. Runtime instructions and the
+exposed tool schema take precedence over this authoring contract, including
+restrictions on required questions in Default mode.
+
+Use the text fallback only when the user requests text, the native tool is
+absent, the runtime prohibits its use for these questions, the schema cannot
+represent a complete question, or a call fails or expires. State the observed
+reason before the fallback. General uncertainty about delivery calls for a
+native attempt where permitted. Use text only when the runtime permits that
+transport; otherwise report the unanswered questions and pause dependent work.
+
+Required answers block dependent work until the user answers. Tool acceptance,
 preselection and an empty answer map do not count as answers. Do not substitute
-an asynchronous question call for required intake. Default-mode Codex requests
-can expire. Preserve the complete stage in chat and wait only when runtime
-instructions allow that transport; otherwise keep dependent work paused and
-report that intake is incomplete. For optional asynchronous questions, continue
-independent work while awaiting a reply. If ending the turn with questions
-pending, include their text and choices only when runtime instructions permit;
-otherwise state what remains unanswered. Use the complete text fallback when
-native delivery is uncertain and the host permits it.
+an asynchronous question call for required intake. For optional asynchronous
+questions, continue independent work while awaiting a reply. If ending the
+turn with questions pending, include their text and choices only when runtime
+instructions permit; otherwise state what remains unanswered.
+
+For example, three compatible unanswered questions fit one
+`request_user_input` call. An exposed, permitted tool should show that menu
+immediately. Follow with the skill's text fields in one message.
 
 ## Authoring form
 
