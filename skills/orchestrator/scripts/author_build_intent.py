@@ -54,7 +54,8 @@ def phrase_help() -> str:
         f"  {phrase} ({ident})" for ident, phrase in SUCCESSION_PHRASES
     )
     return (
-        "Match is a case-insensitive substring. The first matching group wins, "
+        "Matches are case-insensitive. The phrase build out requires word boundaries. "
+        "Other phrases match substrings. The first matching group wins, "
         "then the first phrase in that group. Build language beats keep-seat "
         "and explicit succession on the same line.\n"
         "build language -> dispatch_writer, or continue_writer when active_writer is true:\n"
@@ -77,7 +78,10 @@ def phrase_help() -> str:
 
 def match_build(line: str) -> str | None:
     for ident, phrase in BUILD_PHRASES:
-        if phrase in line:
+        pattern = re.escape(phrase)
+        if ident == "build-out":
+            pattern = rf"\b{pattern}\b"
+        if re.search(pattern, line):
             return ident
     index = line.find(ACTUALLY_BUILT)
     if index >= 0 and re.search(r"\bbuild\b", line[index + len(ACTUALLY_BUILT) :]):

@@ -34,6 +34,7 @@ CASES = (
         "want-handoff-orchestrator",
     ),
     ("unrelated-status.json", "unclear", False, "none"),
+    ("build-output.json", "unclear", False, "none"),
 )
 
 
@@ -83,6 +84,24 @@ class AuthorBuildIntentTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(payload["action"], "dispatch_writer")
         self.assertTrue(payload["refuse_orchestrator_spawn"])
+
+    def test_build_out_requires_word_boundaries(self):
+        for line in ("build output", "please build output now", "rebuild out"):
+            with self.subTest(line=line):
+                proc, payload = run_json("classify", "--text", line)
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertEqual(
+                    payload,
+                    {"action": "unclear", "refuse_orchestrator_spawn": False, "matched": "none"},
+                )
+        for line in ("ok, i have steered the worker - can you build out", "BUILD OUT!"):
+            with self.subTest(line=line):
+                proc, payload = run_json("classify", "--text", line)
+                self.assertEqual(proc.returncode, 0, proc.stderr)
+                self.assertEqual(
+                    payload,
+                    {"action": "dispatch_writer", "refuse_orchestrator_spawn": True, "matched": "build-out"},
+                )
 
     def test_context_percent_does_not_override_build_language(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -151,6 +170,7 @@ class AuthorBuildIntentTests(unittest.TestCase):
         proc = run("--help")
         self.assertEqual(proc.returncode, 0, proc.stderr)
         help_text = proc.stdout.casefold()
+        self.assertIn("word boundaries", help_text)
         for phrase in (
             "get building",
             "build out",
