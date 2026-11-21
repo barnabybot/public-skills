@@ -4,7 +4,7 @@ Follow the prompt below verbatim during Pillar 2 of `/hygiene` (or when running
 a focused `comments` pass). Substitute `<my codebase | this section of the
 code>` with the approved repository or module scope before starting.
 
-## Core Prompt (Verbatim)
+## Prompt (Verbatim)
 
 Take a look at every code comment in `<my codebase | this section of the code>`.
 

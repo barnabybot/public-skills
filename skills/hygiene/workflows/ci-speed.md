@@ -3,7 +3,7 @@
 Follow the playbook below verbatim during Pillar 3 of `/hygiene` (or when
 running a focused `ci` pass) for any repository with automated CI workflows.
 
-## Core Playbook (Verbatim)
+## Playbook (Verbatim)
 
 Make this repo's CI as fast as possible without letting it lie. Target: a PR gets its result in under 1 minute at the median and under 2 at p95.
 
