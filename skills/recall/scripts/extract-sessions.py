@@ -27,9 +27,7 @@ import argparse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-# Native Claude Code transcript location on disk (genuine environment path).
 CLAUDE_PROJECTS = os.path.expanduser("~/.claude/projects")
-
 
 def _detect_default_source():
     """Auto-detect Claude project directory from CWD."""
@@ -38,7 +36,6 @@ def _detect_default_source():
     candidate = os.path.join(CLAUDE_PROJECTS, encoded)
     if os.path.isdir(candidate):
         return candidate
-    # Fallback: first project dir that exists
     if os.path.isdir(CLAUDE_PROJECTS):
         dirs = [d for d in os.listdir(CLAUDE_PROJECTS) if os.path.isdir(os.path.join(CLAUDE_PROJECTS, d))]
         if dirs:
@@ -62,14 +59,12 @@ DEFAULT_SOURCE = _detect_default_source()
 DEFAULT_OUTPUT = _detect_default_output()
 DEFAULT_DAYS = 21
 
-# Patterns to strip from user messages
 STRIP_PATTERNS = [
     r'<system-reminder>.*?</system-reminder>',
     r'<local-command-caveat>.*?</local-command-caveat>',
     r'<local-command-stdout>.*?</local-command-stdout>',
     r'<command-name>.*?</command-name>\s*<command-message>.*?</command-message>\s*(?:<command-args>.*?</command-args>)?',
 ]
-
 
 def clean_content(text: str) -> str:
     """Strip system tags, keep only human-written content."""
@@ -80,32 +75,24 @@ def clean_content(text: str) -> str:
     text = text.strip()
     return text
 
-
 def derive_title(messages: list[dict]) -> str:
     """Derive a short title from the first meaningful user message."""
     for msg in messages:
         content = msg['content']
-        # Skip very short messages
         if len(content) < 10:
             continue
-        # Skip messages that are mostly handoff/context blocks
         if content.startswith('## Continue:') or content.startswith('**IMPORTANT'):
-            # Extract the title from handoff blocks
             m = re.match(r'## Continue:\s*(.+?)(?:\n|$)', content)
             if m:
                 return m.group(1).strip()[:80]
             continue
-        # Take first line, clean it up
         first_line = content.split('\n')[0].strip()
-        # Remove markdown headers
         first_line = re.sub(r'^#+\s*', '', first_line)
-        # Truncate to 80 chars
         if len(first_line) > 80:
             first_line = first_line[:77] + '...'
         if len(first_line) >= 5:
             return first_line
     return "Untitled session"
-
 
 def extract_session(filepath: str) -> dict | None:
     """Extract user messages from a single JSONL session file."""
@@ -135,7 +122,6 @@ def extract_session(filepath: str) -> dict | None:
             if not cleaned or len(cleaned) < 5:
                 continue
 
-            # Skip pure slash commands with no substance
             if re.match(r'^/\w+\s*$', cleaned):
                 continue
 
@@ -157,7 +143,6 @@ def extract_session(filepath: str) -> dict | None:
         'filepath': filepath,
     }
 
-
 def format_timestamp(ts_str: str) -> str:
     """Parse ISO timestamp to readable format."""
     try:
@@ -165,7 +150,6 @@ def format_timestamp(ts_str: str) -> str:
         return dt.strftime('%H:%M')
     except:
         return ''
-
 
 def write_session_md(session: dict, output_dir: str) -> str:
     """Write a session's user messages as structured markdown."""
@@ -210,7 +194,6 @@ def write_session_md(session: dict, output_dir: str) -> str:
 
     return filepath
 
-
 def main():
     parser = argparse.ArgumentParser(description='Extract user messages from Claude Code sessions')
     parser.add_argument('--days', type=int, default=DEFAULT_DAYS, help=f'How many days back to extract (default: {DEFAULT_DAYS})')
@@ -222,7 +205,6 @@ def main():
     pattern = os.path.join(args.source, "*.jsonl")
     all_files = glob.glob(pattern)
 
-    # Filter by file modification time
     recent_files = []
     for f in all_files:
         mtime = datetime.fromtimestamp(os.path.getmtime(f), tz=timezone.utc)
@@ -243,7 +225,6 @@ def main():
             skipped += 1
             continue
 
-        # Check if first timestamp is within our window
         if session['first_ts']:
             try:
                 dt = datetime.fromisoformat(session['first_ts'].replace('Z', '+00:00'))
@@ -260,7 +241,6 @@ def main():
     print(f"Extracted: {extracted} sessions, {total_messages} messages")
     print(f"Skipped: {skipped} sessions (no user messages or sub-agents)")
     print(f"Output: {args.output}")
-
 
 if __name__ == '__main__':
     main()

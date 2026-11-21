@@ -31,7 +31,6 @@ A_SMALL = "claude-haiku-4-5-20251001"
 B_LARGE = "REPLACE-WITH-YOUR-PROVIDER-B-LARGE-MODEL-ID"
 B_MID = "REPLACE-WITH-YOUR-PROVIDER-B-MID-MODEL-ID"
 
-
 def run(*args: str, fixture_dir: Path | None = None) -> tuple[int, dict, str]:
     env = dict(os.environ, ROUTING_NOW=NOW)
     env.pop("ROUTING_FIXTURE_DIR", None)
@@ -45,7 +44,6 @@ def run(*args: str, fixture_dir: Path | None = None) -> tuple[int, dict, str]:
             key, raw = line.split("=", 1)
             pairs[key] = "".join(shlex.split(raw)) if raw else ""
     return proc.returncode, pairs, proc.stderr
-
 
 class ShippedDefaults(unittest.TestCase):
     """Both providers ship codexbar: null, so no row is ever capacity-checked."""
@@ -103,7 +101,6 @@ class ShippedDefaults(unittest.TestCase):
         self.assertEqual(r["ROUTE_TIER"], "review of writing")
         self.assertEqual(r["ROUTE_MODEL"], B_LARGE)
 
-
 class CapacityBehaviour(unittest.TestCase):
     """The shipped metadata sets codexbar: null, so no row is ever checked.
 
@@ -121,7 +118,6 @@ class CapacityBehaviour(unittest.TestCase):
         meta = (HERE.parent / "references/routing-metadata.yaml").read_text()
         meta = meta.replace("    codexbar: null\n    subscription: \"(your plan)\"",
                             "    codexbar: PROVIDER\n    subscription: \"(your plan)\"")
-        # name each provider's meter entry after the provider itself
         meta = meta.replace("  provider_a:\n    agent: claude\n    codexbar: PROVIDER",
                             "  provider_a:\n    agent: claude\n    codexbar: provider_a")
         meta = meta.replace("  provider_b:\n    agent: codex\n    codexbar: PROVIDER",
@@ -156,7 +152,6 @@ class CapacityBehaviour(unittest.TestCase):
         self.assertEqual(r["ROUTE_MODEL"], A_SMALL)
         self.assertIn("unread", r["ROUTE_REASON"])
 
-
 class ExplicitModel(unittest.TestCase):
     def test_explicit_model_and_effort_bypass_the_table(self):
         rc, r, err = run("--model", A_LARGE, "--effort", "medium",
@@ -169,7 +164,6 @@ class ExplicitModel(unittest.TestCase):
         rc, r, err = run("--model", A_LARGE)
         self.assertEqual(rc, 0, err)
         self.assertEqual(r["ROUTE_EFFORT"], "unset")
-
 
 class ReviewTier(unittest.TestCase):
     def test_review_inherits_the_category_and_excludes_the_builder(self):
@@ -186,7 +180,6 @@ class ReviewTier(unittest.TestCase):
         rc, _, err = run("--tier", "review")
         self.assertNotEqual(rc, 0)
 
-
 class BadInput(unittest.TestCase):
     def test_unknown_tier_is_refused(self):
         rc, _, err = run("--tier", "Z")
@@ -196,7 +189,6 @@ class BadInput(unittest.TestCase):
     def test_bare_call_is_refused(self):
         rc, _, err = run()
         self.assertNotEqual(rc, 0)
-
 
 class VisibleTable(unittest.TestCase):
     """The table in SKILL.md is the source of truth, and it is validated."""
@@ -286,7 +278,6 @@ class VisibleTable(unittest.TestCase):
         self.assertEqual(report["status"], "warn")
         self.assertTrue(any(row["check"] == "tier name" and "Renamed" in row["detail"]
                             for row in report["rows"]))
-
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)

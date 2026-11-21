@@ -1,19 +1,4 @@
 #!/bin/bash
-# Close a cmux workspace and flip its session-note status to "done".
-# Usage: close-workspace.sh <workspace-ref-or-name>
-#
-# Looks up the live workspace's number and name, finds matching session notes,
-# sets `status: done` and stamps `ended:`.
-# Then runs `cmux close-workspace`.
-#
-# cmux reuses workspace numbers, so a `workspace_id` match alone also hits every
-# note from a long-closed seat that held the same slot (13 notes for
-# workspace:8, 22 for workspace:13 on 2026-08-29). Only a note that is still
-# open and has the current live name is flipped; other matches are reported
-# and left alone.
-#
-# CMUX_SESSIONS_DIR overrides the notes directory (used by the test script).
-
 set -e
 
 ARG="${1:?Usage: close-workspace.sh <workspace:N | workspace-name>}"
@@ -240,10 +225,6 @@ TODAY=$(date +%Y-%m-%d)
 MATCHED=0
 SKIPPED=0
 
-# `grep -l --null` gives the NUL separator this loop reads. On macOS `-Z` is
-# --decompress, so the earlier `grep -lZ` returned newline-separated paths,
-# `read -d ''` found no NUL, and the loop ran zero times on every close while
-# the helper reported "No session note found".
 if [[ -d "$SESSIONS_DIR" ]]; then
   while IFS= read -r -d '' f; do
     if grep -q '^ended:' "$f"; then

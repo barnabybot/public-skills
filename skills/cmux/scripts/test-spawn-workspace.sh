@@ -1,10 +1,4 @@
 #!/bin/bash
-# Fixture test for spawn-workspace.sh. Runs the helper with --dry-run against the
-# orchestrator skill's routing table, so nothing is spawned and no note written.
-# Run it after any edit to spawn-workspace.sh, or to the orchestrator's table,
-# metadata or resolver.
-#
-# Run: skills/cmux/scripts/test-spawn-workspace.sh
 set -u
 HERE="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
 HELPER="$HERE/spawn-workspace.sh"
@@ -23,7 +17,7 @@ if ! python3 -c 'import yaml' 2>/dev/null; then
 fi
 
 pass=0; fail=0
-check() {  # check <label> <expected-rc> <grep-pattern> -- <helper args...>
+check() {
   local label="$1" want_rc="$2" pattern="$3"; shift 3; [[ "$1" == "--" ]] && shift
   local out rc
   out="$("$HELPER" "$@" 2>&1)"; rc=$?
@@ -34,7 +28,6 @@ check() {  # check <label> <expected-rc> <grep-pattern> -- <helper args...>
   fi
 }
 
-# The shipped placeholder table: A-* are real Claude IDs, B-* are deliberately invalid.
 check "bare call is refused with the category list"  2 "Pass --tier"                                            -- t-bare --dry-run
 check "housekeeping launches the small A model"     0 "exec claude --dangerously-skip-permissions --model 'claude-haiku-4-5-20251001' --effort 'medium'" -- t-a --tier housekeeping --dry-run
 check "coding launches the mid A model"             0 "exec claude --dangerously-skip-permissions --model 'claude-sonnet-5-5' --effort 'high'"  -- t-c --tier coding --dry-run

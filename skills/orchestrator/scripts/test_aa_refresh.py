@@ -16,14 +16,12 @@ from aa_refresh import hull, knee, label, rank, records, successors
 
 HERE = Path(__file__).resolve().parent
 
-
 def rec(slug, release, effort, ii, cost, fin, tb, deprecated_to=None, reasoning=True):
     return {"id": "00000000-0000-0000-0000-%012d" % (abs(hash(slug)) % 10**12), "slug": slug,
             "release": {"slug": release, "deprecatedTo": deprecated_to},
             "effort": {"slug": effort} if effort else None, "isReasoning": reasoning,
             "intelligenceIndex": ii, "capabilities": {"financeAndAccounting": fin},
             "terminalBench40": tb, "intelligenceIndexCostPerTask": {"cost": {"total": cost}}}
-
 
 RECS = [
     rec("big-high", "big", "high", 50, 2.0, 55, 0.50),
@@ -45,23 +43,22 @@ META = {
                           "coding": {"measure": ["terminalBench40"], "class": "build"}}},
 }
 
-
 class AaRefreshTests(unittest.TestCase):
     def test_records_decode_flight_payload(self):
         self.assertEqual(set(records(HTML)), {r["slug"] for r in RECS})
 
     def test_knee_stops_when_a_point_costs_too_much(self):
         pts = hull([{"score": 40, "cost": 0.2}, {"score": 55, "cost": 2.0}, {"score": 60, "cost": 6.0}])
-        self.assertEqual(knee(pts, 0.1)["score"], 40)  # 15 points for $1.80 is $0.12 a point
-        self.assertEqual(knee(pts, 0.5)["score"], 55)  # the last 5 points cost $0.80 each
+        self.assertEqual(knee(pts, 0.1)["score"], 40)
+        self.assertEqual(knee(pts, 0.5)["score"], 55)
 
     def test_rank_applies_exclusion_backup_provider_and_scale(self):
         ranked = rank({r["slug"]: r for r in RECS}, META)
         fin = ranked["finance"]
         self.assertEqual((fin["first"]["model"], fin["first"]["effort"]), ("big", "high"))
-        self.assertEqual(fin["backup"]["model"], "cheap")  # other is excluded from presented work
-        self.assertNotIn("none", {c["effort"] for c in fin["hull"]})  # non-reasoning record dropped
-        self.assertEqual(ranked["coding"]["first"]["score"], 55.0)  # 0-1 benchmark scaled to points
+        self.assertEqual(fin["backup"]["model"], "cheap")
+        self.assertNotIn("none", {c["effort"] for c in fin["hull"]})
+        self.assertEqual(ranked["coding"]["first"]["score"], 55.0)
 
     def test_successor_reported(self):
         notes = successors({r["slug"]: r for r in RECS}, META)
@@ -85,8 +82,6 @@ class AaRefreshTests(unittest.TestCase):
         self.assertIsNone(fin["backup"])
 
     def test_shipped_metadata_runs_end_to_end(self):
-        # The shipped placeholder fleet against a page with none of its releases:
-        # every pick is "none", nothing crashes, and --quiet stays silent on a rerun.
         with tempfile.TemporaryDirectory() as tmp:
             page = Path(tmp) / "page.html"
             page.write_text(HTML)
@@ -97,7 +92,6 @@ class AaRefreshTests(unittest.TestCase):
             self.assertEqual(len(list(Path(tmp).glob("*-aa-snapshot.json"))), 1)
             again = subprocess.run(cmd + ["--quiet", "--no-write"], capture_output=True, text=True)
             self.assertEqual((again.returncode, again.stdout), (0, ""))
-
 
 if __name__ == "__main__":
     unittest.main()

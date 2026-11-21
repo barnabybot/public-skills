@@ -1,17 +1,4 @@
 #!/usr/bin/env bash
-# validate.sh — automatable subset of skill-manager's review checklist.
-#
-# One quality bar for skills. It checks only what a script can check reliably.
-# Human-judgement items — voice, description quality, naming collisions, a
-# worked example, parent: field for family children — stay in the review
-# checklist in ../references/review-checklist.md.
-#
-# Bash, not Python, on purpose: this runs on minimal hosts where only
-# coreutils are guaranteed.
-#
-# Usage: validate.sh <path-to-skill-dir>
-# Exit 0 = no FAILs, 1 = one or more FAILs. WARNs are advisory, never fail.
-
 set -uo pipefail
 
 SKILL_DIR="${1:-}"
@@ -23,18 +10,18 @@ fi
 SKILL_MD="$SKILL_DIR/SKILL.md"
 PASS=0; FAIL=0; WARN=0
 
-check() {  # hard requirement
+check() {
   local label="$1" cond="$2"
   if eval "$cond"; then echo "  PASS  $label"; PASS=$((PASS+1))
   else echo "  FAIL  $label"; FAIL=$((FAIL+1)); fi
 }
-warn() {  # soft requirement — advisory, never fails the run
+warn() {
   local label="$1" cond="$2"
   if eval "$cond"; then echo "  PASS  $label"; PASS=$((PASS+1))
   else echo "  WARN  $label"; WARN=$((WARN+1)); fi
 }
 
-desc_len() {  # char length of the FRONTMATTER description (inline or block scalar)
+desc_len() {
   awk '
     NR==1 && /^---/ {fm=1; next}
     fm && /^---/ {exit}
@@ -66,10 +53,6 @@ check "References (if any) live in references/" "! find '$SKILL_DIR' -maxdepth 1
 LINES="$(wc -l < "$SKILL_MD" 2>/dev/null | tr -d ' ')"; LINES="${LINES:-0}"
 warn "SKILL.md <=100 lines (is $LINES; parent routers may justifiably exceed)" "[ '$LINES' -le 100 ]"
 
-# Intake panel shape (references/intake-spec.md): at most four questions, two
-# to four options each, every option written `label — description` (a spaced
-# hyphen also counts as the separator). A question
-# carrying `slot of:` sits outside the cap of four.
 INTAKE="$(awk '
   NR==1 && /^---/ {fm=1; next}
   fm && /^---/ {fm=0; next}

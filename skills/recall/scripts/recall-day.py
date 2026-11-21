@@ -34,7 +34,6 @@ CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 CODEX_SESSIONS = Path.home() / ".codex" / "sessions"
 CODEX_ARCHIVED = Path.home() / ".codex" / "archived_sessions"
 
-# Reuse from extract-sessions.py
 STRIP_PATTERNS = [
     re.compile(r'<system-reminder>.*?</system-reminder>', re.DOTALL),
     re.compile(r'<local-command-caveat>.*?</local-command-caveat>', re.DOTALL),
@@ -49,7 +48,6 @@ DAY_NAMES = {
     'friday': 4, 'saturday': 5, 'sunday': 6,
 }
 
-
 def clean_content(text: str) -> str:
     """Strip system tags, keep only human-written content."""
     if not isinstance(text, str):
@@ -57,7 +55,6 @@ def clean_content(text: str) -> str:
     for pat in STRIP_PATTERNS:
         text = pat.sub('', text)
     return text.strip()
-
 
 def extract_text(content) -> str:
     """Extract text from message content (string or list of content blocks)."""
@@ -72,7 +69,6 @@ def extract_text(content) -> str:
                 parts.append(block)
         return '\n'.join(parts)
     return ""
-
 
 def parse_date_expr(expr: str) -> tuple[datetime, datetime]:
     """Parse a date expression into (start, end) date range (UTC, day boundaries).
@@ -90,38 +86,32 @@ def parse_date_expr(expr: str) -> tuple[datetime, datetime]:
         start = today_start - timedelta(days=1)
         return start, today_start
 
-    # YYYY-MM-DD
     m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', expr)
     if m:
         d = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), tzinfo=timezone.utc)
         return d, d + timedelta(days=1)
 
-    # "N days ago"
     m = re.match(r'^(\d+)\s+days?\s+ago$', expr)
     if m:
         n = int(m.group(1))
         start = today_start - timedelta(days=n)
         return start, start + timedelta(days=1)
 
-    # "last N days"
     m = re.match(r'^last\s+(\d+)\s+days?$', expr)
     if m:
         n = int(m.group(1))
         start = today_start - timedelta(days=n)
         return start, today_start + timedelta(days=1)
 
-    # "this week" (Monday-based)
     if expr == 'this week':
         monday = today_start - timedelta(days=today_start.weekday())
         return monday, today_start + timedelta(days=1)
 
-    # "last week"
     if expr == 'last week':
         this_monday = today_start - timedelta(days=today_start.weekday())
         last_monday = this_monday - timedelta(days=7)
         return last_monday, this_monday
 
-    # "last monday" .. "last sunday"
     m = re.match(r'^last\s+(\w+)$', expr)
     if m and m.group(1) in DAY_NAMES:
         target_dow = DAY_NAMES[m.group(1)]
@@ -137,7 +127,6 @@ def parse_date_expr(expr: str) -> tuple[datetime, datetime]:
     print("           'this week', 'last week', 'last monday'...'last sunday'", file=sys.stderr)
     sys.exit(1)
 
-
 def get_project_dirs(project_path: str | None, all_projects: bool) -> list[Path]:
     """Get list of project directories to scan."""
     if project_path:
@@ -145,7 +134,6 @@ def get_project_dirs(project_path: str | None, all_projects: bool) -> list[Path]
         p = CLAUDE_PROJECTS / encoded
         if p.exists():
             return [p]
-        # Try as-is
         p = Path(project_path)
         if p.exists():
             return [p]
@@ -153,20 +141,17 @@ def get_project_dirs(project_path: str | None, all_projects: bool) -> list[Path]
         sys.exit(1)
 
     if not CLAUDE_PROJECTS.is_dir():
-        return []  # No Claude Code transcripts yet, e.g. a Codex-only machine.
+        return []
 
     if all_projects:
         return [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir()]
 
-    # Default: detect project dir from CWD
     cwd = os.getcwd()
     encoded = cwd.replace("/", "-")
     default = CLAUDE_PROJECTS / encoded
     if default.exists():
         return [default]
-    # Fallback: all projects
     return [d for d in CLAUDE_PROJECTS.iterdir() if d.is_dir()]
-
 
 def scan_session_metadata(filepath: Path, date_start: datetime, date_end: datetime) -> dict | None:
     """Fast scan: read first ~30 lines for metadata, count user messages."""
@@ -184,7 +169,6 @@ def scan_session_metadata(filepath: Path, date_start: datetime, date_end: dateti
                 except json.JSONDecodeError:
                     continue
 
-                # Get session ID from data if available
                 if obj.get('sessionId'):
                     session_id = obj['sessionId']
 
@@ -195,18 +179,15 @@ def scan_session_metadata(filepath: Path, date_start: datetime, date_end: dateti
                     except (ValueError, TypeError):
                         pass
 
-                # Count user messages and capture first
                 if obj.get('type') == 'user' and obj.get('message', {}).get('role') == 'user':
                     user_msg_count += 1
                     if first_user_msg is None:
                         raw = extract_text(obj['message'].get('content', ''))
                         cleaned = clean_content(raw)
                         if cleaned and len(cleaned) >= 5:
-                            # Skip pure slash commands
                             if not re.match(r'^/\w+\s*$', cleaned):
                                 first_user_msg = cleaned
 
-                # Early exit: if we have start_time and it's outside range, skip
                 if start_time and i < 5:
                     if start_time >= date_end or start_time < date_start - timedelta(days=1):
                         return None
@@ -217,11 +198,9 @@ def scan_session_metadata(filepath: Path, date_start: datetime, date_end: dateti
     if not start_time:
         return None
 
-    # Final date check
     if start_time < date_start or start_time >= date_end:
         return None
 
-    # Derive title from first message
     title = "Untitled"
     if first_user_msg:
         first_line = first_user_msg.split('\n')[0].strip()
@@ -245,7 +224,6 @@ def scan_session_metadata(filepath: Path, date_start: datetime, date_end: dateti
         'source': 'claude',
     }
 
-
 def get_codex_files() -> list[Path]:
     """All Codex rollout JSONL files (active sessions tree + archived, flat)."""
     files = []
@@ -255,9 +233,7 @@ def get_codex_files() -> list[Path]:
         files.extend(CODEX_ARCHIVED.glob("*.jsonl"))
     return files
 
-
 CODEX_UUID_RE = re.compile(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
-
 
 def scan_codex_metadata(filepath: Path, date_start: datetime, date_end: datetime) -> dict | None:
     """Scan a Codex rollout: session_meta header + event_msg/user_message turns."""
@@ -327,7 +303,6 @@ def scan_codex_metadata(filepath: Path, date_start: datetime, date_end: datetime
         'source': 'codex',
     }
 
-
 def format_size(size_bytes: int) -> str:
     """Format file size human-readable."""
     if size_bytes < 1024:
@@ -337,17 +312,14 @@ def format_size(size_bytes: int) -> str:
     else:
         return f"{size_bytes / (1024 * 1024):.1f}MB"
 
-
 def cmd_list(args):
     """List sessions for a date range."""
     date_start, date_end = parse_date_expr(args.date_expr)
     project_dirs = get_project_dirs(args.project, args.all_projects)
 
-    # Codex transcripts are included unless suppressed or a Claude-specific
-    # --project filter is in play.
     include_codex = not args.no_codex and not args.project
 
-    candidates = []  # (filepath, source)
+    candidates = []
     for proj_dir in project_dirs:
         for filepath in proj_dir.glob("*.jsonl"):
             candidates.append((filepath, 'claude'))
@@ -359,7 +331,6 @@ def cmd_list(args):
     noise_count = 0
 
     for filepath, source in candidates:
-        # Coarse filter: mtime must be within range (with 1 day buffer)
         try:
             mtime = datetime.fromtimestamp(filepath.stat().st_mtime, tz=timezone.utc)
             if mtime < date_start - timedelta(days=1):
@@ -374,8 +345,6 @@ def cmd_list(args):
         if meta is None:
             continue
 
-        # Codex Msgs counts real human turns, not Claude's inflated message
-        # count, so it gets a floor of 1 rather than the Claude-tuned min-msgs.
         threshold = 1 if source == 'codex' else args.min_msgs
         if meta['user_msg_count'] < threshold:
             noise_count += 1
@@ -385,7 +354,6 @@ def cmd_list(args):
 
     sessions.sort(key=lambda s: s['start_time'])
 
-    # Format date range for header
     if date_end - date_start <= timedelta(days=1):
         header_date = date_start.strftime('%Y-%m-%d (%A)')
     else:
@@ -399,7 +367,6 @@ def cmd_list(args):
             print(f"({noise_count} filtered as noise, try --min-msgs 1)")
         return
 
-    # Print table
     print(f" {'#':>2}  {'Src':3}  {'Time':5}  {'Msgs':>4}  {'Size':>6}  First Message")
     print(f" {'--':>2}  {'---':3}  {'-----':5}  {'----':>4}  {'------':>6}  -------------")
 
@@ -415,12 +382,10 @@ def cmd_list(args):
         print(f" ({noise_count} filtered as noise)", end="")
     print()
 
-    # Print session IDs for expand
     print(f"\nSession IDs (for expand):")
     for i, s in enumerate(sessions, 1):
         src = 'CX' if s.get('source') == 'codex' else 'CC'
         print(f"  {i:2}. {s['session_id'][:8]}  ({src})")
-
 
 def _ts_label(ts_str: str) -> str:
     if not ts_str:
@@ -429,7 +394,6 @@ def _ts_label(ts_str: str) -> str:
         return datetime.fromisoformat(ts_str.replace('Z', '+00:00')).strftime('%H:%M')
     except (ValueError, TypeError):
         return ''
-
 
 def expand_claude(target_file: Path, max_msgs: int) -> None:
     msg_count = 0
@@ -480,7 +444,6 @@ def expand_claude(target_file: Path, max_msgs: int) -> None:
 
     print(f"\n{msg_count} user messages total")
 
-
 def expand_codex(target_file: Path, max_msgs: int) -> None:
     msg_count = 0
     with open(target_file) as f:
@@ -525,7 +488,6 @@ def expand_codex(target_file: Path, max_msgs: int) -> None:
 
     print(f"\n{msg_count} user messages total")
 
-
 def cmd_expand(args):
     """Expand a session by ID - show conversation summary (Claude or Codex)."""
     target_id = args.session_id.lower()
@@ -561,7 +523,6 @@ def cmd_expand(args):
     else:
         expand_claude(target_file, args.max_msgs)
 
-
 def main():
     parser = argparse.ArgumentParser(
         description='Recall sessions by date from Claude Code and Codex JSONL transcripts',
@@ -570,7 +531,6 @@ def main():
     )
     sub = parser.add_subparsers(dest='command', required=True)
 
-    # list
     p_list = sub.add_parser('list', help='List sessions for a date')
     p_list.add_argument('date_expr', nargs='+', help='Date expression (e.g. yesterday, today, 2026-02-25)')
     p_list.add_argument('--project', help='Project path to scan (Claude Code only; skips Codex)')
@@ -578,7 +538,6 @@ def main():
     p_list.add_argument('--min-msgs', type=int, default=3, help='Min user messages, Claude rows only (default: 3)')
     p_list.add_argument('--no-codex', action='store_true', help='Exclude Codex CLI transcripts')
 
-    # expand
     p_expand = sub.add_parser('expand', help='Expand a session by ID')
     p_expand.add_argument('session_id', help='Session ID (prefix match)')
     p_expand.add_argument('--project', help='Project path to scan (Claude Code only; skips Codex)')
@@ -589,12 +548,10 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'list':
-        # Join multi-word date expressions
         args.date_expr = ' '.join(args.date_expr)
         cmd_list(args)
     elif args.command == 'expand':
         cmd_expand(args)
-
 
 if __name__ == '__main__':
     main()

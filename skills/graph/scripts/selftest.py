@@ -13,17 +13,14 @@ HERE = pathlib.Path(__file__).parent
 RENDER = HERE / "render-graph.py"
 FAILURES = []
 
-
 def run(state, *extra):
     return subprocess.run([sys.executable, str(RENDER), str(state), *extra],
                           capture_output=True, text=True)
-
 
 def check(name, cond, detail=""):
     print(f"  {'PASS' if cond else 'FAIL'}  {name}" + (f"  — {detail}" if detail and not cond else ""))
     if not cond:
         FAILURES.append(name)
-
 
 BASE = """meta:
   title: T
@@ -33,12 +30,10 @@ BASE = """meta:
 sections: []
 """
 
-
 def write(d, name, body):
     p = d / name
     p.write_text(body, encoding="utf-8")
     return p
-
 
 def main():
     with tempfile.TemporaryDirectory() as td:
@@ -72,7 +67,6 @@ def main():
         html = (d / "der.html").read_text(encoding="utf-8")
         check("derive substitutes and formats", "USD1.2m" in html, r.stderr)
 
-        # 3. A failing check refuses to write anything.
         s2 = write(d, "bad.state.yaml", textwrap.dedent("""\
             derive:
               sources: {M: m.json}
@@ -88,11 +82,6 @@ def main():
               r.returncode != 0 and not (d / "bad.html").exists(), r.stdout + r.stderr)
         check("failing check names the expression", "CHECK FAILED" in (r.stdout + r.stderr))
 
-        # 4. Stale, by content fingerprint rather than mtime.
-        # Match the SVG node group, never the bare class name: `.s-stale` is defined
-        # in the stylesheet on EVERY page, so `"s-stale" in html` passes whatever the
-        # node's status is. The first version of this test asserted exactly that and
-        # reported a pass in both directions.
         (d / "out.txt").write_text("out")
         (d / "in.txt").write_text("in")
         s3 = write(d, "stale.state.yaml", BASE + textwrap.dedent("""\
@@ -117,8 +106,6 @@ def main():
         check("changed input flips done to stale", '<g class="s-stale">' in html, r.stdout)
         check("stale is reported on stdout", "STALE" in r.stdout, r.stdout)
 
-        # Touching the file without changing its bytes must NOT flip it — that is the
-        # whole point of hashing rather than stamping. A git checkout does exactly this.
         (d / "in.txt").write_text("in, edited")
         r = run(s3)
         check("a rewrite with identical bytes stays stale",
@@ -137,7 +124,6 @@ def main():
         (d / "out.txt").write_text("out, rebuilt")
         run(s3)
 
-        # 4b. on_fail: warn reports without stopping; --permissive downgrades a break.
         s3w = write(d, "warn.state.yaml", textwrap.dedent("""\
             derive:
               sources: {M: m.json}
@@ -159,7 +145,6 @@ def main():
         check("--permissive downgrades a breaking check",
               r.returncode == 0 and (d / "bad.html").exists(), r.stdout + r.stderr)
 
-        # 4c. --check exits 5 when the render would change, 0 when it is current.
         s3c = write(d, "exit.state.yaml", BASE + textwrap.dedent("""\
             layout:
               - stage: S
@@ -207,11 +192,6 @@ def main():
         check("maxlen refuses an overflowing node",
               r.returncode != 0 and "overflows" in (r.stdout + r.stderr))
 
-        # 8. THE PIXEL GUARD. This is the case that shipped broken: a sub-line that
-        # passes any sane character budget and still overflows, because `.nsub` is
-        # 12px MONOSPACE at 7.225px a glyph. 34 characters sets 245.7px into a 246px
-        # box. Assert it is CAUGHT — the whole class of defect here is a check that
-        # stays silent.
         overflow_sub = "survey closes late at site four..."
         assert len(overflow_sub) < 46, "the fixture must pass the character budget"
         s6 = write(d, "px.state.yaml", BASE + textwrap.dedent(f"""\
@@ -242,7 +222,6 @@ def main():
         check("pixel guard stays quiet on text that fits",
               r.returncode == 0 and "would overflow" not in (r.stdout + r.stderr))
 
-        # 10. width_check: break gives it teeth for a programme that has earned them.
         s8 = write(d, "brk.state.yaml",
                    BASE.replace("pills: {a: b}", "pills: {a: b}\n  width_check: break")
                    + textwrap.dedent(f"""\
@@ -261,9 +240,6 @@ def main():
         check("--permissive downgrades width_check: break",
               r.returncode == 0 and (d / "brk.html").exists())
 
-        # 11. THE METRIC TABLE ITSELF. If the advance widths are ever regenerated
-        # against a different face, this is what notices. Menlo at 12px measured
-        # 7.225px for every glyph in use on 2026-08-09.
         spec = importlib.util.spec_from_file_location("rg", RENDER)
         rg = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(rg)
@@ -300,7 +276,6 @@ def main():
         return 1
     print("all checks passed")
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

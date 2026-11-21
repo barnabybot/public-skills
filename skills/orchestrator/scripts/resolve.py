@@ -30,7 +30,7 @@ from route_bundle import verify_route_bundle, write_route_bundle
 
 try:
     import yaml
-except ImportError:  # PyYAML is not in the standard library.
+except ImportError:
     sys.exit(
         "resolve.py needs PyYAML to read references/routing-metadata.yaml.\n"
         "Install it with:  python3 -m pip install --user PyYAML\n"
@@ -38,7 +38,6 @@ except ImportError:  # PyYAML is not in the standard library.
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_SKILL = HERE.parent / "SKILL.md"
-
 
 def load_canon(path: Path) -> dict:
     """Read preferences from the visible table and join provider metadata."""
@@ -85,13 +84,11 @@ def load_canon(path: Path) -> dict:
         raise ValueError(f"routing table missing tiers: {', '.join(sorted(missing))}")
     return canon
 
-
 def now_utc() -> datetime:
     override = os.environ.get("ROUTING_NOW")
     if override:
         return datetime.fromisoformat(override.replace("Z", "+00:00"))
     return datetime.now(timezone.utc)
-
 
 def parse_instant(text: str) -> datetime | None:
     if not text:
@@ -100,7 +97,6 @@ def parse_instant(text: str) -> datetime | None:
         return datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError:
         return None
-
 
 def load_request(path: str | None) -> dict | None:
     """Read a structured dispatch request. None means the caller passed no file."""
@@ -137,18 +133,16 @@ def load_request(path: str | None) -> dict | None:
         raise ValueError("capacity must be required or optional")
     return data
 
-
 def local_stamp(instant: datetime, tzname: str) -> str:
     try:
         from zoneinfo import ZoneInfo
 
         local = instant.astimezone(ZoneInfo(tzname))
         label = "HKT" if tzname == "Asia/Hong_Kong" else local.tzname() or tzname
-    except Exception:  # zoneinfo missing or unknown zone: fixed +8 for HKT
+    except Exception:
         local = instant.astimezone(timezone(timedelta(hours=8)))
         label = "HKT"
     return local.strftime(f"%a %d %b %H:%M {label}")
-
 
 class Capacity:
     """One scoped CodexBar read per provider, cached, with fixture support."""
@@ -259,24 +253,20 @@ class Capacity:
             return {"state": "exhausted", "detail": detail}
         return {"state": "unread", "detail": detail}
 
-
 def emit(pairs: dict, stream=sys.stdout) -> None:
     for key, value in pairs.items():
         stream.write(f"{key}={shlex.quote('' if value is None else str(value))}\n")
-
 
 def model_entry(canon: dict, key: str) -> dict:
     m = dict(canon["models"][key])
     m["key"] = key
     return m
 
-
 def find_model_by_id(canon: dict, model_id: str) -> dict | None:
     for key, m in canon["models"].items():
         if m.get("id") == model_id:
             return model_entry(canon, key)
     return None
-
 
 def route_pairs(canon: dict, tier_key: str, tier_name: str, model: dict, effort: str,
                 default: dict, default_effort: str, status: str, reason: str) -> dict:
@@ -303,7 +293,6 @@ def route_pairs(canon: dict, tier_key: str, tier_name: str, model: dict, effort:
         "ROUTE_LINE": line,
     }
 
-
 def list_tiers(canon: dict) -> str:
     lines = []
     for key, row in canon["tiers"].items():
@@ -319,7 +308,6 @@ def list_tiers(canon: dict) -> str:
     if legacy:
         lines.append(f"  legacy          {legacy} (deprecated words, one release)")
     return "\n".join(lines)
-
 
 def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
     tiers = canon["tiers"]
@@ -354,8 +342,8 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
     allowed = []
     if isinstance(request, dict):
         allowed = list((request.get("authorisation") or {}).get("providers") or [])
-    tried: list[str] = []        # human lines for the exit-3 message
-    exhausted: list[str] = []    # capacity details behind an override
+    tried: list[str] = []
+    exhausted: list[str] = []
     for slot, cand in candidates:
         model = model_entry(canon, cand["model"])
         provider = model["provider"]
@@ -408,7 +396,6 @@ def resolve_tier(canon: dict, args: argparse.Namespace) -> int:
     sys.stderr.write(f"a ruling is needed for tier {label}: {ask}\n")
     return 3
 
-
 def resolve_model(canon: dict, args: argparse.Namespace) -> int:
     model = find_model_by_id(canon, args.model)
     if model is None:
@@ -457,14 +444,12 @@ def resolve_model(canon: dict, args: argparse.Namespace) -> int:
     emit(pairs)
     return 0
 
-
 def maybe_write_bundle(args: argparse.Namespace, pairs: dict) -> None:
     if not getattr(args, "bundle_out", None):
         return
     if not getattr(args, "runtime_cwd", ""):
         args.runtime_cwd = str(Path.cwd())
     write_route_bundle(Path(args.bundle_out), args, now_utc().isoformat(), pairs, now_utc())
-
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -517,7 +502,6 @@ def main(argv: list[str] | None = None) -> int:
         return resolve_tier(canon, args)
     sys.stderr.write("pass --tier <category>, or --model <id> with --effort <level>\n" + list_tiers(canon) + "\n")
     return 2
-
 
 if __name__ == "__main__":
     sys.exit(main())
