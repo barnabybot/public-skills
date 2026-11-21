@@ -8,8 +8,6 @@ export const meta = {
   ],
 }
 
-// Self-contained: no args required. Pass args.root, or set SKILLS_ROOT, to audit
-// a tree other than the one the harness reads. A leading ~ is expanded.
 const RAW_ROOT = (args && args.root) || process.env.SKILLS_ROOT || '~/.claude/skills'
 const SKILLS_ROOT = RAW_ROOT.replace(/^~(?=\/|$)/, process.env.HOME)
 
@@ -78,7 +76,7 @@ const withTotal = scored.map(s => ({
   ...s,
   total: s.description.score + s.line_budget.score + s.progressive_disclosure.score + s.self_containment.score + s.naming.score + s.freshness.score + s.signal_density.score,
 }))
-const ranked = withTotal.sort((a, b) => a.total - b.total) // worst first
+const ranked = withTotal.sort((a, b) => a.total - b.total)
 log(`Scored ${ranked.length} skills; worst total ${ranked[0] ? ranked[0].total : 'n/a'}/35`)
 
 phase('Synthesise')

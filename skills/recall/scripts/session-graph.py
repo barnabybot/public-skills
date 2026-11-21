@@ -33,7 +33,6 @@ except ImportError:
     )
 from pyvis.network import Network
 
-# Import recall-day as module
 import importlib.util
 spec = importlib.util.spec_from_file_location("recall_day", Path(__file__).parent / "recall-day.py")
 recall_day = importlib.util.module_from_spec(spec)
@@ -44,12 +43,10 @@ def _detect_vault_prefix():
     if os.environ.get("VAULT_DIR"):
         p = os.environ["VAULT_DIR"]
         return p if p.endswith("/") else p + "/"
-    # Walk up from CWD looking for .obsidian/ directory
     cwd = Path.cwd()
     for parent in [cwd, *cwd.parents]:
         if (parent / ".obsidian").is_dir():
             return str(parent) + "/"
-    # Fallback: use CWD
     return str(cwd) + "/"
 
 VAULT_PREFIX = _detect_vault_prefix()
@@ -66,15 +63,14 @@ FILE_PATH_RE = re.compile(
     r'(?:^|[\s"\'=])(' + re.escape(VAULT_PREFIX) + r'[^\s"\';<>|&\)]+)',
 )
 
-# Obsidian-inspired palette
 DAY_COLORS = {
-    0: "#B4A7FA",  # Mon - soft lavender
-    1: "#7DDCB5",  # Tue - mint
-    2: "#FDBA8C",  # Wed - peach
-    3: "#FCA5A5",  # Thu - blush
-    4: "#D8B4FE",  # Fri - lilac
-    5: "#FDE68A",  # Sat - butter
-    6: "#93C5FD",  # Sun - periwinkle
+    0: "#B4A7FA",
+    1: "#7DDCB5",
+    2: "#FDBA8C",
+    3: "#FCA5A5",
+    4: "#D8B4FE",
+    5: "#FDE68A",
+    6: "#93C5FD",
 }
 
 DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -100,7 +96,6 @@ FOLDER_COLORS = {
     "External/": "#E7E5E4",
 }
 
-# Folders that get clickable filter buttons in the legend
 FILTERABLE_FOLDERS = [
     "Notes/Goals/",
     "Notes/Research/",
@@ -111,14 +106,12 @@ FILTERABLE_FOLDERS = [
     ".claude/skills/",
 ]
 
-# Files that are touched by almost every session - skip them
 NOISE_FILES = {
     "AGENTS.md",
     "CLAUDE.md",
     ".claude/settings.json",
     ".claude/settings.local.json",
 }
-
 
 def extract_file_paths(jsonl_path: Path) -> dict | None:
     """Extract all file paths from tool calls in a JSONL session file."""
@@ -200,14 +193,12 @@ def extract_file_paths(jsonl_path: Path) -> dict | None:
     if not start_time:
         return None
 
-    # Strip noise files
     files -= NOISE_FILES
 
     title = "Untitled"
     if first_user_msg:
         first_line = first_user_msg.split('\n')[0].strip()
         first_line = re.sub(r'^#+\s*', '', first_line)
-        # Clean up "Continue:" prefix
         m = re.match(r'Continue:\s*(.+)', first_line)
         if m:
             first_line = m.group(1).strip()
@@ -225,7 +216,6 @@ def extract_file_paths(jsonl_path: Path) -> dict | None:
         'msg_count': user_msg_count,
         'filepath': str(jsonl_path),
     }
-
 
 def normalize_path(fp: str) -> str | None:
     """Normalize a file path to vault-relative, skip irrelevant paths."""
@@ -247,18 +237,15 @@ def normalize_path(fp: str) -> str | None:
     if not rel:
         return None
 
-    # Skip binary/media/config noise
     if rel.endswith(('.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3', '.wav',
                      '.zip', '.tar', '.gz', '.pdf', '.excalidraw', '.json',
                      '.har', '.css', '.ico')):
         return None
 
-    # Skip if it's just a directory path (no extension, no filename)
     if '.' not in rel.split('/')[-1]:
         return None
 
     return rel
-
 
 def get_folder_color(path: str) -> str:
     for folder, color in FOLDER_COLORS.items():
@@ -266,13 +253,11 @@ def get_folder_color(path: str) -> str:
             return color
     return "#78909C"
 
-
 def get_folder_group(path: str) -> str:
     parts = path.split('/')
     if len(parts) >= 2:
         return '/'.join(parts[:2])
     return parts[0]
-
 
 def recency_color(t: float) -> str:
     """Map recency 0.0 (oldest) to 1.0 (newest) to a lavender gradient hex.
@@ -284,29 +269,25 @@ def recency_color(t: float) -> str:
     """
     import colorsys
     h = 252 / 360.0
-    s_pct = 25 + t * 60   # 25% -> 85%
-    l_pct = 30 + t * 48   # 30% -> 78%
+    s_pct = 25 + t * 60
+    l_pct = 30 + t * 48
     s = s_pct / 100.0
     l = l_pct / 100.0
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     return f"#{int(r*255):02x}{int(g*255):02x}{int(b*255):02x}"
 
-
 def build_graph(sessions: list, min_files: int = 3) -> nx.Graph:
     """Build graph with noise reduction."""
     G = nx.Graph()
 
-    # Count how many sessions reference each file - skip ultra-common ones
     file_freq = Counter()
     for s in sessions:
         for fp in s['files']:
             file_freq[fp] += 1
 
-    # Files referenced by >60% of sessions are noise (like CLAUDE.md)
     noise_threshold = max(3, len(sessions) * 0.6)
     noisy_files = {fp for fp, count in file_freq.items() if count > noise_threshold}
 
-    # Compute time range for recency gradient
     timestamps = [s['start_time'].timestamp() for s in sessions]
     t_min, t_max = min(timestamps), max(timestamps)
     t_span = t_max - t_min if t_max > t_min else 1.0
@@ -350,7 +331,6 @@ def build_graph(sessions: list, min_files: int = 3) -> nx.Graph:
                     short = short[:22] + '...'
                 folder_group = get_folder_group(fp)
 
-                # Size by how many sessions reference this file
                 ref_count = file_freq[fp]
                 fsize = max(3, min(12, 2 + ref_count))
 
@@ -382,7 +362,6 @@ def build_graph(sessions: list, min_files: int = 3) -> nx.Graph:
             )
 
     return G
-
 
 def render_graph(G: nx.Graph, output_path: str, date_label: str, sessions_meta: dict):
     """Render with Obsidian-style theme and interactive features."""
@@ -465,7 +444,6 @@ def render_graph(G: nx.Graph, output_path: str, date_label: str, sessions_meta: 
     with open(output_path, 'w') as f:
         f.write(html)
 
-
 def build_custom_css() -> str:
     return """
     <style>
@@ -525,11 +503,9 @@ def build_custom_css() -> str:
     </style>
     """
 
-
 def build_custom_js(date_label: str, sessions_meta: dict) -> str:
     """Build legend, neighbor highlighting, folder/day filters, physics controls, clipboard JS."""
 
-    # Build recency gradient legend
     recency_gradient = (
         '<div style="display:flex;align-items:center;gap:8px;margin:4px 0">'
         '<span style="color:#666;font-size:9px">older</span>'
@@ -539,7 +515,6 @@ def build_custom_js(date_label: str, sessions_meta: dict) -> str:
         '</div>'
     )
 
-    # Folder filter items (clickable)
     folder_filter_items = ''.join(
         f'<div class="legend-item" data-folder="{folder}">'
         f'<span class="sq" style="background:{FOLDER_COLORS[folder]}"></span>'
@@ -547,7 +522,6 @@ def build_custom_js(date_label: str, sessions_meta: dict) -> str:
         for folder in FILTERABLE_FOLDERS
     )
 
-    # Physics defaults for reset
     physics_defaults = {
         'gravitationalConstant': -5000,
         'centralGravity': 0.15,
@@ -1137,17 +1111,14 @@ def build_custom_js(date_label: str, sessions_meta: dict) -> str:
     </script>
     """
 
-
 def filter_sessions_by_day(sessions: list, day_filter: str) -> list:
     """Filter sessions to a specific day within the range."""
     day_filter = day_filter.strip().lower()
 
-    # Check if it's a day name
     if day_filter in DAY_NAME_MAP:
         target_dow = DAY_NAME_MAP[day_filter]
         return [s for s in sessions if s['start_time'].weekday() == target_dow]
 
-    # Check if it's a date
     m = re.match(r'^(\d{4})-(\d{2})-(\d{2})$', day_filter)
     if m:
         target = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)), tzinfo=timezone.utc)
@@ -1156,7 +1127,6 @@ def filter_sessions_by_day(sessions: list, day_filter: str) -> list:
 
     print(f"Warning: Can't parse day filter '{day_filter}', showing all", file=sys.stderr)
     return sessions
-
 
 def main():
     import argparse
@@ -1242,7 +1212,6 @@ def main():
 
     if not args.no_open:
         subprocess.run(['open', output_path], check=False)
-
 
 if __name__ == '__main__':
     main()

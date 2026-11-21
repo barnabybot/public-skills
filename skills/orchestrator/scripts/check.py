@@ -17,7 +17,7 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # PyYAML is not in the standard library.
+except ImportError:
     sys.exit(
         "check.py needs PyYAML to read references/routing-metadata.yaml.\n"
         "Install it with:  python3 -m pip install --user PyYAML\n"
@@ -30,14 +30,12 @@ from resolve import DEFAULT_SKILL, load_canon
 BASES = {"measured", "practice", "ruling"}
 CLAUDE_ID = re.compile(r"^claude-(fable|opus|sonnet|haiku)-\d+(-\d+)?(\[1m\])?$")
 
-
 def run(cmd: list[str], timeout: float) -> str | None:
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired):
         return None
     return proc.stdout if proc.returncode == 0 else None
-
 
 def structural(canon: dict) -> list[tuple[str, str, str]]:
     """Check metadata after load_canon validates table seats and efforts."""
@@ -59,7 +57,6 @@ def structural(canon: dict) -> list[tuple[str, str, str]]:
     if not out:
         out.append(("ok", "structure", f"{len(tiers)} tiers, {len(models)} models, {len(providers)} providers; every backup on another provider"))
     return out
-
 
 def live_ids(canon: dict) -> list[tuple[str, str, str]]:
     out = []
@@ -107,7 +104,6 @@ def live_ids(canon: dict) -> list[tuple[str, str, str]]:
                 out.append(("fail", "id claude", f"{mid} is not a pinned Claude id"))
     return out
 
-
 def live_capacity(canon: dict) -> list[tuple[str, str, str]]:
     out = []
     timeout = float((canon.get("capacity") or {}).get("read_timeout_seconds", 20))
@@ -131,7 +127,6 @@ def live_capacity(canon: dict) -> list[tuple[str, str, str]]:
         weekly = usage.get("secondary") or usage.get("primary") or {}
         out.append(("ok", "capacity", f"{key}: {weekly.get('usedPercent', '?')}% used, resets {weekly.get('resetDescription') or weekly.get('resetsAt') or '?'}"))
     return out
-
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
@@ -160,7 +155,6 @@ def main() -> int:
         warns = sum(1 for r in rows if r[0] == "warn")
         append_evidence("check", status, f"{len(rows)} checks, {fails} fail, {warns} warn{' (no-live)' if args.no_live else ''}")
     return 1 if status == "fail" else 0
-
 
 if __name__ == "__main__":
     sys.exit(main())

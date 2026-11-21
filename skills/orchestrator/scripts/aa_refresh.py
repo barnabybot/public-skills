@@ -27,7 +27,7 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # PyYAML is not in the standard library.
+except ImportError:
     sys.exit(
         "aa_refresh.py needs PyYAML to read references/routing-metadata.yaml.\n"
         "Install it with:  python3 -m pip install --user PyYAML\n"
@@ -37,12 +37,10 @@ HERE = Path(__file__).resolve().parent
 METADATA = HERE.parent / "references" / "routing-metadata.yaml"
 from routing_log import vault_root
 
-
 def fetch(url: str) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=60) as resp:
         return resp.read().decode("utf-8", errors="ignore")
-
 
 def records(html: str) -> dict[str, dict]:
     """Decode the Next.js flight payload and return model records by slug."""
@@ -58,7 +56,6 @@ def records(html: str) -> dict[str, dict]:
             out[obj["slug"]] = obj
     return out
 
-
 def measure(rec: dict, keys: list[str]) -> float | None:
     vals = []
     for key in keys:
@@ -67,10 +64,8 @@ def measure(rec: dict, keys: list[str]) -> float | None:
             val = (val or {}).get(part) if isinstance(val, dict) else None
         if val is None:
             return None
-        # Index fields are 0-100; single benchmarks such as terminalBench40 are 0-1.
         vals.append(val if key.startswith(("capabilities", "intelligenceIndex")) else val * 100)
     return sum(vals) / len(vals)
-
 
 def candidates(recs: dict, meta: dict, keys: list[str], cls: str) -> list[dict]:
     out = []
@@ -85,14 +80,12 @@ def candidates(recs: dict, meta: dict, keys: list[str], cls: str) -> list[dict]:
                 continue
             cost = (((rec.get("intelligenceIndexCostPerTask") or {}).get("cost")) or {}).get("total")
             score = measure(rec, keys)
-            # AA's base record is the top effort; a non-reasoning record has none.
             effort = (rec.get("effort") or {}).get("slug") or ("max" if rec.get("isReasoning") else "none")
             if cost is None or score is None or effort not in meta["providers"][m["provider"]]["efforts"]:
                 continue
             out.append({"model": key, "display": m["display"], "provider": m["provider"],
                         "effort": effort, "score": round(score, 1), "cost": round(cost, 2)})
     return out
-
 
 def hull(cands: list[dict]) -> list[dict]:
     """Efficient settings, cheapest first, with falling points per dollar."""
@@ -110,7 +103,6 @@ def hull(cands: list[dict]) -> list[dict]:
         out.append(c)
     return out
 
-
 def knee(points: list[dict], limit: float) -> dict | None:
     if not points:
         return None
@@ -121,7 +113,6 @@ def knee(points: list[dict], limit: float) -> dict | None:
             break
         pick = nxt
     return pick
-
 
 def rank(recs: dict, meta: dict) -> dict:
     aa, out = meta["aa"], {}
@@ -134,7 +125,6 @@ def rank(recs: dict, meta: dict) -> dict:
         out[name] = {"class": cls, "limit": limit, "first": first, "backup": backup, "hull": points}
     return out
 
-
 def successors(recs: dict, meta: dict) -> list[str]:
     notes = []
     for m in meta["models"].values():
@@ -143,10 +133,8 @@ def successors(recs: dict, meta: dict) -> list[str]:
             notes.append(f"{m['display']} ({m['aa_release']}): AA lists successor `{rel['deprecatedTo']}`. Check the CLI offers it before routing to it.")
     return notes
 
-
 def label(c: dict | None) -> str:
     return "none" if not c else f"{c['display']} · {c['effort']} ({c['score']}, ${c['cost']:.2f})"
-
 
 def report(ranked: dict, notes: list[str], changed: list[str], today: str, source: str) -> str:
     lines = [
@@ -167,7 +155,6 @@ def report(ranked: dict, notes: list[str], changed: list[str], today: str, sourc
     lines += ["", "Categories with no AA measure (writing, visual, orchestrator, review) keep their table rows; "
               "see workflows/routing-refresh.md for the Arena cross-check and the classification sample test."]
     return "\n".join(lines) + "\n"
-
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -209,7 +196,6 @@ def main() -> int:
         (out_dir / f"{today}-aa-snapshot.json").write_text(json.dumps(
             {"date": today, "picks": picks, "successors": notes, "ranked": ranked}, indent=1), encoding="utf-8")
     return status
-
 
 if __name__ == "__main__":
     sys.exit(main())

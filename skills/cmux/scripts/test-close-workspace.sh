@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -u
 
 SCRIPT="$(cd "$(dirname "$0")" && pwd)/close-workspace.sh"
@@ -10,7 +9,6 @@ NOTES="$TMP/Sessions"
 BIN="$TMP/bin"
 mkdir -p "$NOTES" "$BIN"
 
-# Stub cmux so the test never touches a live workspace; record the close call.
 cat > "$BIN/cmux" <<'STUB'
 #!/bin/bash
 echo "$@" >> "$CMUX_CALLS"
@@ -111,7 +109,6 @@ check "the skip of a failed note is reported" "$?"
 grep -q "close-workspace --workspace workspace:8" "$CMUX_CALLS"
 check "the workspace is still closed" "$?"
 
-# Every match already closed: the helper says so and closes anyway.
 rm -f "$NOTES"/open.md "$NOTES"/review.md "$NOTES"/blocked.md
 : > "$CMUX_CALLS"
 OUT2=$("$SCRIPT" workspace:8 2>&1)

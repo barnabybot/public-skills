@@ -72,7 +72,13 @@ script changes. For this repository, start with these checks:
 ./.agents/skills/verify-public-skills/scripts/validate-all
 python3 skills/orchestrator/scripts/check.py --no-live --no-log
 python3 -m unittest discover -s skills/orchestrator/scripts -p 'test_*.py'
+python3 scripts/check_binary_ratchet.py --repo .
+python3 scripts/check_code_comments.py --root . --ratchet
 ```
+
+Enable the local pre-commit hooks with `git config core.hooksPath .githooks`.
+Record non-obvious tooling decisions in `docs/adr/` rather than inline code
+comments.
 
 Inspect rendered HTML, CSS, SVG, PDF and slides visually before declaring them
 complete. Source checks, rendered review and publication approval are separate

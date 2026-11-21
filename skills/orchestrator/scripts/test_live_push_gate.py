@@ -14,7 +14,6 @@ HERE = Path(__file__).resolve().parent
 GATE = HERE / "live_push_gate.py"
 FIXTURES = HERE / "fixtures" / "live-push"
 
-# filename, exit code, status, fragments that must appear in reasons
 CASES = (
     ("allow-inject.md", 0, "allow", ()),
     ("allow-update.md", 0, "allow", ()),
@@ -37,9 +36,7 @@ CASES = (
     ("refuse-remove-no-provenance.md", 1, "refuse", ("Provenance: direct",)),
 )
 
-
 REPO = HERE.parents[2]
-
 
 def setUpModule() -> None:
     """Materialise the relative preview paths the allow fixtures name."""
@@ -49,7 +46,6 @@ def setUpModule() -> None:
         target = folder / name
         target.write_text("<!doctype html><title>slice</title>\n", encoding="utf-8")
 
-
 def run_gate(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(GATE), *args],
@@ -57,7 +53,6 @@ def run_gate(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess
         text=True,
         cwd=cwd or REPO,
     )
-
 
 class LivePushGateTests(unittest.TestCase):
     def test_fixtures(self):
@@ -151,7 +146,6 @@ class LivePushGateTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
         self.assertEqual(json.loads(proc.stdout)["status"], "refuse")
         self.assertIn("local path", " ".join(json.loads(proc.stdout)["reasons"]))
-
 
 if __name__ == "__main__":
     unittest.main()

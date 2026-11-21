@@ -43,10 +43,8 @@ STAGE_CHAR_W = 7.7
 TEXT_KEYS = ("label", "sub", "note", "note2")
 MAXLEN_DEFAULT = 46
 
-
 class DeriveError(SystemExit):
     pass
-
 
 def load_sources(spec, base):
     """Load each JSON source into a namespace name. Paths are relative to the state file."""
@@ -57,7 +55,6 @@ def load_sources(spec, base):
             raise DeriveError(f"derive source {name!r} not found: {path}")
         ns[name] = json.loads(path.read_text(encoding="utf-8"))
     return ns
-
 
 def load_hooks(spec, base):
     """Call `module.py:function` hooks for values no JSON file holds.
@@ -84,7 +81,6 @@ def load_hooks(spec, base):
             sys.path.pop(0)
     return ns
 
-
 def subst(value, ns):
     """Evaluate every string in the tree as a Python f-string over `ns`.
 
@@ -110,7 +106,6 @@ def subst(value, ns):
     if isinstance(value, dict):
         return {k: subst(v, ns) for k, v in value.items()}
     return value
-
 
 def run_checks(checks, ns, permissive=False):
     """Every check must be truthy. A breaking check stops the render.
@@ -143,7 +138,6 @@ def run_checks(checks, ns, permissive=False):
         warnings.append(text)
     return warnings
 
-
 def digest(paths):
     """One hash over a set of files: their names and their bytes."""
     h = hashlib.sha256()
@@ -152,12 +146,10 @@ def digest(paths):
         h.update(p.read_bytes() if p.exists() else b"\0")
     return h.hexdigest()
 
-
 def resolve(base, rel):
     """A path or a glob, relative to the state file."""
     hits = sorted(base.glob(rel))
     return hits if hits else ([base / rel] if (base / rel).exists() else [])
-
 
 def staleness(nodes, base, prints_path, write):
     """Mark nodes whose inputs have moved since their output was last built.
@@ -201,7 +193,6 @@ def staleness(nodes, base, prints_path, write):
                                encoding="utf-8")
     return n_stale
 
-
 def known_statuses(events_path):
     """Replay the log; the last `to` recorded for a node is its known status."""
     known = {}
@@ -219,7 +210,6 @@ def known_statuses(events_path):
             known[rec["node"]] = rec.get("to")
     return known
 
-
 def log_transitions(events_path, nodes, actor):
     """Append one record per node whose status has moved since the log last saw it."""
     known = known_statuses(events_path)
@@ -232,9 +222,6 @@ def log_transitions(events_path, nodes, actor):
         was, now = known.get(nid), nd["status"]
         if was == now:
             continue
-        # A node the log has never seen is either genuinely new or predates event
-        # tracking. Say "first seen" rather than "added", because backfilling an
-        # existing graph would otherwise date every node to the day it was adopted.
         new.append({"ts": ts, "node": nid, "from": was, "to": now, "actor": actor,
                     "note": (f"first seen by the renderer at {now}" if nid not in known
                              else f"status moved {was} → {now}")})
@@ -243,7 +230,6 @@ def log_transitions(events_path, nodes, actor):
             for rec in new:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
     return new
-
 
 def row_boxes(nodes):
     """Return [(x, w)] for one row, centred on the band."""
@@ -255,14 +241,11 @@ def row_boxes(nodes):
     w = (FULL - gap * (n - 1)) // n
     return [(LEFT + i * (w + gap), w) for i in range(n)]
 
-
 def row_height(nodes):
     return 40 + 19 * max(len([k for k in ("sub", "note", "note2") if nd.get(k)]) for nd in nodes)
 
-
 def esc(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
 
 def draw(nodes, y):
     """Emit one row's nodes; return (svg, [centres], height)."""
@@ -283,7 +266,6 @@ def draw(nodes, y):
         out.append("  </g>")
     return out, cx, h
 
-
 def connect(prev_cx, prev_bottom, next_cx, next_top, cls="edge"):
     """Bus between two rows: fan in from prev, fan out to next."""
     mid = (prev_bottom + next_top) // 2
@@ -295,14 +277,11 @@ def connect(prev_cx, prev_bottom, next_cx, next_top, cls="edge"):
         p.append(f'  <path class="{cls}" d="M{c} {mid} V{next_top - 6}" marker-end="url(#ar)"/>')
     return p
 
-
 def build_graph(layout):
     svg, labels, y = [], [], 40
     prev_cx = prev_bottom = None
     for band in layout:
         labels.append((y + 26, band["stage"]))
-        # A stage titled with a leading "·" is an aside rather than a step, so the
-        # bus into it is dashed, e.g. a blocked-on-data band.
         cls = "edge-dash" if str(band["stage"]).lstrip().startswith("·") else "edge"
         for ri, nodes in enumerate(band["rows"]):
             body, cx, h = draw(nodes, y)
@@ -324,7 +303,6 @@ def build_graph(layout):
             y += h + (ROW_GAP if ri < len(band["rows"]) - 1 else BAND_GAP)
     return svg, labels, y
 
-
 def section(sec):
     t = sec["title"]
     if sec["kind"] == "list":
@@ -344,11 +322,9 @@ def section(sec):
         f"  <tbody>\n{rows}\n  </tbody>\n</table>"
     )
 
-
 LEGEND = [("done", "done"), ("ready", "in flight / waiting on you"), ("fail", "rejected"),
           ("block", "blocked"), ("queue", "queued"), ("gate", "gate — your explicit GO"),
           ("stale", "stale — inputs moved after the output was written")]
-
 
 def palette_css(m):
     """Optional per-programme colour override, light and dark."""
@@ -361,35 +337,6 @@ def palette_css(m):
                 + "".join(f"--{k}:{v};" for k, v in dark.items()) + "}}")
     return out
 
-
-# --------------------------------------------------------------- text metrics
-# ADVANCE WIDTHS PER 1px OF FONT-SIZE, for the faces the node boxes use.
-#
-# WHY THIS TABLE EXISTS. `maxlen` counted CHARACTERS against one budget shared by
-# all three text rows. But `.nsub` is 12px MONOSPACE and `.nown` is 11.5px
-# proportional sans, so at the 46-character budget a monospace sub sets 332px
-# inside a 246px box — 35% over — and the check waved it through, because the
-# budget was calibrated for the proportional face. One gate node
-# shipped with its sub-line 0.2px inside its own border and nothing fired.
-#
-# WHY NOT SOMETHING COARSER. Measured on a live graph: a flat per-class
-# constant carries ±13% spread, about 30px on a 240px budget. Five-bucket
-# character classes were measured at up to 23.5px error. Per-key CHARACTER budgets
-# derived from worst-case advance fail legitimate content, because a 29-character
-# label sets 210.8px while a 45-character note sets 235.9px — only per-character
-# widths separate those. This table predicts every rendered string across the
-# three live graphs to within 1.7px.
-#
-# TO REGENERATE, in a browser on the target machine:
-#   ctx.font = '100px ui-sans-serif,-apple-system,sans-serif'      # and '600 100px …'
-#   [...Array(95)].map((_, i) => ctx.measureText(String.fromCharCode(32 + i)).width / 100)
-# Font SIZE scales linearly — measured at 0px error — so one table per weight
-# serves every size. WEIGHT does not: semibold/regular ratios run 0.96 to 1.34,
-# which is why both are held.
-#
-# THE LIMIT, STATED PLAINLY. These are the metrics this machine resolves for
-# `ui-sans-serif`. A Linux host renders a different face and the estimate drifts.
-# That is why MARGIN_PX exists, and why this guard refuses rather than certifies.
 _METRIC_CHARS = "".join(chr(i) for i in range(32, 127)) + "·×–—→−"
 
 _W_REGULAR = (
@@ -424,7 +371,7 @@ if not len(_METRIC_CHARS) == len(_W_REGULAR) == len(_W_SEMIBOLD):   # pragma: no
 SANS_REGULAR = dict(zip(_METRIC_CHARS, _W_REGULAR))
 SANS_SEMIBOLD = dict(zip(_METRIC_CHARS, _W_SEMIBOLD))
 MONO_ADVANCE = 0.6021
-UNMEASURED = 0.62              # an unknown glyph is assumed wide, so it errs to refusing
+UNMEASURED = 0.62
 
 TEXT_METRICS = {
     "label": (SANS_SEMIBOLD, 14.5),
@@ -432,11 +379,7 @@ TEXT_METRICS = {
     "note":  (SANS_REGULAR,  11.5),
     "note2": (SANS_REGULAR,  11.5),
 }
-# Total horizontal breathing room a node must keep. Calibrated against a live
-# graph: the broken node had 0.4px of total slack, and the tightest three
-# legitimate ones had 10.2, 13.3 and 14.0. Eight separates them with room to spare.
 MARGIN_PX = 8
-
 
 def text_px(s, key):
     """Estimated rendered width of one node text row, in px."""
@@ -444,7 +387,6 @@ def text_px(s, key):
     if table is None:
         return len(s) * MONO_ADVANCE * size
     return sum(table.get(c, UNMEASURED) for c in s) * size
-
 
 def check_lengths(layout, maxlen, on_fail="warn", permissive=False):
     """Catch node text that would overflow its own box. Returns the warnings.
@@ -481,9 +423,6 @@ def check_lengths(layout, maxlen, on_fail="warn", permissive=False):
                         over.append((nd.get("label", "?"), key, px, budget, s))
                     if maxlen and key != "label" and len(s) > maxlen:
                         long.append((nd.get("label", "?"), key, len(s), s))
-    # `meta.maxlen` KEEPS ITS OLD TEETH. It was always opt-in and always breaking, so
-    # a programme that sets it has asked for a hard cap and must keep getting one.
-    # Only the new pixel guard is warn-by-default.
     if long and not permissive:
         raise DeriveError(
             f"node text overflows the house cap (meta.maxlen = {maxlen} chars):\n"
@@ -497,7 +436,6 @@ def check_lengths(layout, maxlen, on_fail="warn", permissive=False):
     if on_fail == "break" and not permissive:
         raise DeriveError(msg + "\n  Nothing was written.")
     return [msg]
-
 
 def show_in_cmux(path):
     """Open a rendered graph in the cmux browser pane.
@@ -528,16 +466,12 @@ def show_in_cmux(path):
         if not surface:
             print(f"  --open: {out or 'cmux browser open returned nothing'}")
             return
-        # CONFIRM THE PAGE RATHER THAN ASSUMING IT. `open` returns once the surface
-        # exists, which is before the document has parsed.
         cmux("browser", "--surface", surface, "wait", "--load-state", "complete",
              "--timeout-ms", "10000", timeout=25)
         title = cmux("browser", "--surface", surface, "get", "title", timeout=10)
         print(f"  opened in cmux {surface}: {title or '(no title)'}")
     except (subprocess.SubprocessError, OSError) as exc:
         print(f"  --open: could not drive cmux ({exc}), so nothing was shown")
-
-
 
 import html as _html
 import re
@@ -1487,10 +1421,8 @@ V3_JS = """(function() {
   renderBoard();
 })();"""
 
-
 def strip_tags(s):
     return re.sub(r"<[^>]+>", "", str(s or "")).strip()
-
 
 def extract_table_metadata(sections, known_ids):
     """Auto-extract dependencies, owners, and release conditions from sections tables."""
@@ -1520,14 +1452,12 @@ def extract_table_metadata(sections, known_ids):
             extracted[nid] = {"dependencies": deps, "owner": owner, "acceptance": cond}
     return extracted
 
-
 def format_cell(val, col_idx):
     s = str(val).replace("overflow-wrap:anywhere", "overflow-wrap:break-word")
     if col_idx == 0 and "<br>" in s:
         head, tail = s.split("<br>", 1)
         s = f'{head}<br><span class="cell-sub">{tail}</span>'
     return s
-
 
 def render_section_v3(sec, idx):
     t = str(sec.get("title", "Section"))
@@ -1557,7 +1487,6 @@ def render_section_v3(sec, idx):
         f'</details>'
     )
 
-
 def detect_role(nd):
     if nd.get("role"):
         return str(nd["role"])
@@ -1565,7 +1494,6 @@ def detect_role(nd):
     if any(k in hay for k in ("checker", "review", "recheck", "verify", "sceptic", "qa")):
         return "checker"
     return "worker"
-
 
 def iter_all_nodes(layout):
     def _walk_rows(rows):
@@ -1578,7 +1506,6 @@ def iter_all_nodes(layout):
                         yield from _walk_rows(nd["children"])
     for band in layout or []:
         yield from _walk_rows(band.get("rows") or [])
-
 
 def build_v3_page(st, state_name, events_name, n_events):
     meta = st.get("meta", {})
@@ -1791,7 +1718,6 @@ def build_v3_page(st, state_name, events_name, n_events):
 </html>
 """
 
-
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("state", help="path to <programme>.state.yaml")
@@ -1861,7 +1787,6 @@ def main(argv=None):
     if args.open_:
         show_in_cmux(out_path)
     return EXIT_OK
-
 
 if __name__ == "__main__":
     sys.exit(main())
