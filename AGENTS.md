@@ -89,6 +89,7 @@ python3 -m unittest discover -s skills/cmux/scripts -p 'test*.py'
 python3 skills/cmux/scripts/test-group-header.py
 python3 skills/cmux/scripts/test-close-idle-codex.py
 python3 -m unittest discover -s skills/editorial-review/scripts/tests
+python3 -m unittest discover -s skills/hygiene/scripts -p 'test_*.py'
 ```
 
 ## Branch hygiene
