@@ -7,7 +7,7 @@ presentations, and who run AI agents in a terminal to produce it. You use
 Claude Code or Codex already, or you are about to. You want several agents
 working on one goal, each starting from the right context.
 
-The repository holds eight skills, a [global contract](home/global.md) and a [Home Repo map](AGENTS.md), taken from a
+The repository holds nine skills, a [global contract](home/global.md) and a [Home Repo map](AGENTS.md), taken from a
 working setup and rewritten so they run on somebody else's machine.
 
 Download individual skills or the complete collection as ZIP files at
@@ -58,6 +58,7 @@ project, each in its own pane, and reports a gap one worker left:
 | [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches and node inspection. Marks a node stale when its inputs change after its output was built |
 | [`editorial-review`](skills/editorial-review/) | Checks prose and argument before it goes to a reader, including the tells that mark machine-written text |
 | [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a whole-tree audit |
+| [`hygiene`](skills/hygiene/) | Runs post-event and weekly repository hygiene sweeps across Git hooks, binary ratchets, code-comment burn-downs and ADRs, 150-run CI audits and architecture debt triage |
 
 `graph` turns one YAML state file into a page like this. Inspect nodes, filter the
 DAG and expand the folded content-audit branch. The design-brief node reads stale
@@ -200,7 +201,7 @@ for d in ~/public-skills/skills/*/; do
 done
 ```
 
-This links all eight and leaves any skill you already have under the same name
+This links all nine and leaves any skill you already have under the same name
 alone. Restart Claude Code, then type `/recall` to check it loaded.
 Project-scoped instead of global? Use `.claude/skills/` inside the project.
 
