@@ -660,7 +660,7 @@ h1 {
     bottom: 12px;
     left: 12px;
     right: 12px;
-    max-height: 54vh !important;
+    max-height: 440px !important;
     z-index: 60;
     box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.22);
   }
@@ -908,7 +908,7 @@ svg.edge-layer {
   position: sticky; top: 64px;
   border: 1px solid var(--rule-strong); border-radius: 10px;
   background: var(--card); padding: 16px;
-  max-height: calc(100vh - 84px); overflow-y: auto;
+  max-height: 680px; overflow-y: auto;
 }
 .inspector h2 { margin: 0 0 4px; font-family: var(--serif); font-weight: 400; font-size: calc(18px * var(--p-scale)); line-height: 1.25; }
 .insp-kv { margin: 10px 0; padding-top: 10px; border-top: 1px solid var(--rule); font-size: calc(13.5px * var(--p-scale)); }

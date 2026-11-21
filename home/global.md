@@ -6,8 +6,12 @@ project or vault. That file maps the Home Repo. This file supplies global rules.
 ## Skills and approval
 
 Read a matching skill's `SKILL.md` before acting. Present its intake questions
-first. Use the host's native question menu when the runtime permits. Treat
-answers already supplied in the request as settled.
+first using the host's native question menu (`AskUserQuestion` or
+`request_user_input`) whenever exposed and permitted. Fall back to numbered text
+only when the user asks for text, the native tool is absent or prohibited, the
+schema cannot represent a question, or a call fails or expires, and state the
+reason before the fallback. Treat answers already supplied in the request as
+settled.
 
 Apply the Thin-Slice Gate before pushing to a public repository, publishing,
 sending external messages or batch-generating several artefacts. Produce one
@@ -37,16 +41,30 @@ and machine sentinels. Make the smallest change that meets the request.
 - Make surgical edits restricted to the request.
 - Define a concrete verification check for each step before acting.
 
-## Files
+## Files and Markdown conversion
 
-Put accepted deliverables at the requested destination. Keep iterative renders,
-previews, screenshots and throwaway exports in
-`~/Scratch/YYYY-MM-DD/<slug>/` until accepted. Copy the accepted final artefact
-to its destination. Keep rebuild sources. Use `/tmp/` for mechanical scratch.
-Keep the Desktop empty.
+Keep Git repositories under `~/Repos/`, knowledge vaults under `$VAULTS_ROOT`,
+and iterative renders, previews, screenshots and throwaway exports in
+`~/Scratch/YYYY-MM-DD/<slug>/` until accepted. Never nest a Git repository
+inside a synced vault. Keep the Desktop empty. Use `/tmp/` for mechanical
+scratch.
 
+Put accepted deliverables at the requested destination and keep rebuild sources.
 Name generated artefacts `YYYY-MM-DD Title.ext` using the build date. Preserve
 raw evidence filenames. Keep working output outside skill repositories.
+
+Convert recurring source material (PDFs, office decks, spreadsheets, web pages)
+into clean Markdown before repeated agent reads, or clean HTML where visual
+layout carries meaning. Keep raw originals intact in `raw/` or beside the
+converted file.
+
+## Boundaries
+
+- **Boundary Rule.** Confidential project, client or employer material stays
+  inside its designated vault or repository. Never copy it into personal vaults,
+  global instructions or public repositories.
+- **Leaving Test.** Every project or work vault must remain complete and usable
+  if handed over without your personal Home Repo or private skills.
 
 ## Session continuity and handoff
 
