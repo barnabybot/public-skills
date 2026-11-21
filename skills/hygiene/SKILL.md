@@ -1,6 +1,6 @@
 ---
 name: hygiene
-version: 0.1.0
+version: 0.2.0
 description: >-
   Post-event and weekly full repository hygiene sweep covering Git state, local
   hooks, binary ratchets, code-comment burn-down and ADR extraction, 150-run CI
@@ -43,12 +43,12 @@ Skip fields already settled by the request.
 1. **Git, hooks, binary ratchet, and instruction drift**
    - Inspect `git status`, ahead/behind default branch, stale branches, and inactive worktrees.
    - Verify `core.hooksPath`, `<9s` pre-commit and pre-push hooks, binary ratchet baselines, and `AGENTS.md` / `CLAUDE.md` length or retired paths.
-2. **Code-comment burn-down and ratchet** (read [references/comment-audit.md](references/comment-audit.md))
-   - Classify non-directive comments as **Tautology**, **Stale**, **Excuse**, or **Decision Record**.
-   - Delete tautologies and stale comments, delete excuses and open an issue for each underlying defect, extract decision records to `docs/adr/NNNN-<slug>.md` before deletion, tighten the ratchet baseline, and estimate total lines shed.
-3. **150-run CI speed and cost audit** (read [references/ci-audit.md](references/ci-audit.md))
-   - Run `python3 scripts/ci_audit.py --repo <owner>/<repo> --limit 150 --json` for repositories with GitHub Actions workflows.
-   - Split every job into waiting, setup, and running at p50 and p95, measure billable minutes and PR overlap waste, inspect skipped tests and default branch protection, and review failure logs to prune proven change-detector tests.
+2. **Code-comment burn-down and ratchet**
+   - Load and follow [workflows/comment-burndown.md](workflows/comment-burndown.md) verbatim.
+   - Apply the full four-category audit, ratchet lint rule, repeatable repo-local skill setup, and lines-shed estimate for the target scope.
+3. **150-run CI speed and cost audit**
+   - Run `python3 scripts/ci_audit.py --repo <owner>/<repo> --limit 150 --json`, then load and follow [workflows/ci-speed.md](workflows/ci-speed.md) verbatim.
+   - Measure waiting, setup, and running at p50 and p95, enforce all budgets and honesty rules, and separate autonomous PRs from one monthly-cost approval list.
 4. **Architecture and debt triage**
    - Inspect the last 15 commits and core module boundaries for shallow wrappers, boundary leaks, duplicated helpers, dead files, and untested critical paths.
    - Produce one grade (`GREEN`, `AMBER`, or `RED`), a **Zero-Risk Quick Wins** list, and a ranked list of **Proposed Small PRs**.
