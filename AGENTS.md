@@ -4,9 +4,10 @@ This repository can serve as `<your-home-repo>`. Keep global steering in
 [home/global.md](home/global.md). Keep the repository map and local policy here.
 Read both files before cross-repo work.
 
-## Two instruction files
+## Instruction files and harness symlinks
 
-Symlink the global file into the instruction locations used by your tools:
+Symlink the global file into every provider instruction location your harnesses
+read:
 
 ```sh
 ln -s <your-home-repo>/home/global.md ~/.claude/CLAUDE.md
@@ -16,20 +17,28 @@ ln -s <your-home-repo>/home/global.md ~/.gemini/GEMINI.md
 
 Use an absolute path for `<your-home-repo>`. Create parent directories first.
 Review existing files and merge your rules before replacing them. Keep root
-`AGENTS.md` as the Home Repo map. Link root `CLAUDE.md` to `AGENTS.md` for tools
-that use that name.
+`AGENTS.md` as the Home Repo map. Link root `CLAUDE.md` and `GEMINI.md` to
+`AGENTS.md` so harnesses that check only one filename never silently skip your
+rules. (If you prefer a single unified file in your private Home Repo, fold
+global steering into root `AGENTS.md` and point the three global symlinks there.)
 
-Optional `home/harness/` files can hold version-controlled tool settings such as
-`claude-settings.json` or `codex-config.toml`. Keep credentials and machine-specific
-paths outside tracked settings. This repository supplies no personal settings.
+Optional `home/harness/` files can hold declarative settings templates such as
+`claude-settings.json` or `codex-config.toml`. Merge shared keys into live
+config files rather than overwriting machine-local state. Keep credentials and
+machine-specific paths outside tracked settings. This repository supplies no
+personal settings.
 
 ## Customise the map
 
 Complete this checklist before adopting the layout:
 
-- Replace `<your-home-repo>` with your absolute checkout path.
-- Set `$VAULTS_ROOT` to `<your-vaults-root>` and map each project and vault below.
-- Set `$AGENT_NOTES` to your agent-notes root. The skills default to `~/agent-notes`.
+- Replace `<your-home-repo>` with your absolute checkout path (for example
+  `~/Repos/home`).
+- Set `$VAULTS_ROOT` to `<your-vaults-root>` (for example `~/Obsidian`) and map
+  each project and vault below. Keep Git repositories under `~/Repos/` and never
+  nest a Git repo inside a synced vault.
+- Set `$AGENT_NOTES` to your agent-notes root (for example `$VAULTS_ROOT/Agents`).
+  The skills default to `~/agent-notes`.
 - Replace `<provider-a-model-id>` and `<provider-b-model-id>` in your routing
   configuration with supported IDs. Configure provider access and effort levels.
 - Read each destination's own `AGENTS.md` before changing its files.
@@ -37,15 +46,33 @@ Complete this checklist before adopting the layout:
 | Destination | Path | Instructions |
 |---|---|---|
 | Home Repo | `<your-home-repo>` | This file and `home/global.md` |
-| Project | `<your-project-root>` | Project `AGENTS.md` |
+| Repositories | `~/Repos/<repo>` | Repository `AGENTS.md` |
 | Vaults | `$VAULTS_ROOT` | Each vault's `AGENTS.md` |
 | Session records | `$AGENT_NOTES` | Agent-notes `AGENTS.md` |
+| Scratch renders | `~/Scratch/YYYY-MM-DD/` | Throwaway previews and exports |
+
+## Personal and work boundary
+
+Run a separate Home Repo on a work laptop. Use this repository (or a scrubbed
+fork of portable skills) as the bridge for generic capabilities you want in both
+environments. Enforce two rules across every vault and repo:
+
+- **Boundary Rule.** Never move confidential project, client or employer
+  material into personal vaults, global instructions or public repositories.
+- **Leaving Test.** Every project or work vault must remain complete and
+  intelligible if handed over without your personal Home Repo.
 
 ## Skill catalogue and locations
 
 [README.md](README.md) lists the shared skills and their prerequisites.
-Shared skills live in `skills/<name>/SKILL.md`. Mount them into
-`~/.claude/skills/` and `~/.codex/skills/` for use across repositories.
+Shared skills live in `skills/<name>/SKILL.md` (each kept at or under 100 lines,
+with deeper guides in `references/` and `workflows/`). Mount them into every
+global skills folder your harnesses read:
+
+- `~/.agents/skills/` (T3 Code, Codex, Antigravity and Agent Skills hosts)
+- `~/.claude/skills/` (Claude Code)
+- `~/.codex/skills/` (Codex CLI)
+- `~/.cursor/skills/` (Cursor)
 
 Keep repo-local skills at `.agents/skills/<name>/SKILL.md`. Link each tool's
 local skill folder to the same source with relative symlinks:
@@ -72,6 +99,7 @@ script changes. For this repository, start with these checks:
 ./.agents/skills/verify-public-skills/scripts/validate-all
 python3 skills/orchestrator/scripts/check.py --no-live --no-log
 python3 -m unittest discover -s skills/orchestrator/scripts -p 'test_*.py'
+python3 skills/graph/scripts/selftest.py
 python3 scripts/check_binary_ratchet.py --repo .
 python3 scripts/check_code_comments.py --root . --ratchet
 ```

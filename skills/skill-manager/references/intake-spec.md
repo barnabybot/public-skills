@@ -65,9 +65,9 @@ questions, continue independent work while awaiting a reply. If ending the
 turn with questions pending, include their text and choices only when runtime
 instructions permit; otherwise state what remains unanswered.
 
-For example, three compatible unanswered questions fit one
-`request_user_input` call. An exposed, permitted tool should show that menu
-immediately. Follow with the skill's text fields in one message.
+For example, the editorial-review skill's unanswered Depth, Surface and Output
+questions fit one `request_user_input` call. An exposed, permitted tool should
+show that menu immediately. Follow with the skill's text fields in one message.
 
 ## Authoring form
 
