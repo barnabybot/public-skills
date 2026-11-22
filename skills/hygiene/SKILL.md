@@ -1,6 +1,6 @@
 ---
 name: hygiene
-version: 0.2.0
+version: 0.2.1
 description: >-
   Post-event and weekly full repository hygiene sweep covering Git state, local
   hooks, binary ratchets, code-comment burn-down and ADR extraction, 150-run CI
@@ -51,6 +51,7 @@ Skip fields already settled by the request.
    - Measure waiting, setup, and running at p50 and p95, enforce all budgets and honesty rules, and separate autonomous PRs from one monthly-cost approval list.
 4. **Architecture and debt triage**
    - Inspect the last 15 commits and core module boundaries for shallow wrappers, boundary leaks, duplicated helpers, dead files, and untested critical paths.
+   - When the target repository contains frontend web code (`astro.config.*`, `src/**/*.astro`, `src/**/*.css`, or browser JS), run `npx --yes modern-web-guidance@latest legacy-scan . --json` during Phase 1 discovery. Filter findings with its `keepWhen` / `dropWhen` rubrics and a Safari / iOS Safari Baseline Widely Available check. Surface only verified wins as optional small PRs. Never auto-edit, and never wire the scanner into `<9s` git hooks because `npx` requires network access.
    - Produce one grade (`GREEN`, `AMBER`, or `RED`), a **Zero-Risk Quick Wins** list, and a ranked list of **Proposed Small PRs**.
 
 ## Multi-Repo Subagent Fan-Out
