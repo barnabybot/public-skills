@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+pids=()
+names=()
+run_bg() {
+  local name="$1"
+  shift
+  "$@" >"$TMP/$name.log" 2>&1 &
+  pids+=($!)
+  names+=("$name")
+}
+
+run_bg binary-ratchet python3 "$ROOT/scripts/check_binary_ratchet.py" --repo "$ROOT"
+run_bg comment-ratchet python3 "$ROOT/scripts/check_code_comments.py" --root "$ROOT" --ratchet
+run_bg validate-all env SHOT_OUT="$TMP/validate" bash "$ROOT/.agents/skills/verify-public-skills/scripts/validate-all"
+run_bg orchestrator-check python3 "$ROOT/skills/orchestrator/scripts/check.py" --no-live --no-log
+run_bg graph-selftest python3 "$ROOT/skills/graph/scripts/selftest.py"
+run_bg hygiene-tests python3 -m unittest discover -s "$ROOT/skills/hygiene/scripts" -p 'test_*.py'
+run_bg editorial-tests python3 -m unittest discover -s "$ROOT/skills/editorial-review/scripts/tests"
+run_bg cmux-unittest python3 -m unittest discover -s "$ROOT/skills/cmux/scripts" -p 'test*.py'
+run_bg cmux-close-sh bash "$ROOT/skills/cmux/scripts/test-close-workspace.sh"
+run_bg cmux-loop-sh bash "$ROOT/skills/cmux/scripts/test-spawn-loop.sh"
+run_bg cmux-spawn-sh bash "$ROOT/skills/cmux/scripts/test-spawn-workspace.sh"
+
+fail=0
+for i in "${!pids[@]}"; do
+  if ! wait "${pids[$i]}"; then
+    echo "pre-push FAIL: ${names[$i]}" >&2
+    cat "$TMP/${names[$i]}.log" >&2
+    fail=1
+  fi
+done
+exit "$fail"
