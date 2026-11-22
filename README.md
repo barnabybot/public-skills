@@ -98,7 +98,7 @@ project, each in its own pane, and reports a gap one worker left:
 | [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches and node inspection. Marks a node stale when its inputs change after its output was built |
 | [`editorial-review`](skills/editorial-review/) | Checks prose and argument before it goes to a reader, including the tells that mark machine-written text |
 | [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a whole-tree audit |
-| [`hygiene`](skills/hygiene/) | Runs post-event and weekly repository hygiene sweeps across Git hooks, binary ratchets, code-comment burn-downs and ADRs, 150-run CI audits and architecture debt triage |
+| [`hygiene`](skills/hygiene/) | Runs post-event and weekly repository hygiene sweeps across Git hooks, binary ratchets, code-comment burn-downs and ADRs, 150-run CI audits, architecture debt triage, and agent safety and blast-radius audits |
 
 `graph` turns one YAML state file into a page like this. Inspect nodes, filter
 the DAG and expand the folded content-audit branch. The design-brief node reads
