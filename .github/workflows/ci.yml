@@ -2,27 +2,117 @@ name: CI
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
+        with:
+          filter: blob:none
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python3 -m pip install pyyaml
-      - run: python3 scripts/check_binary_ratchet.py
-      - run: python3 scripts/check_code_comments.py --ratchet
-      - run: SHOT_OUT=/tmp/validate-public-skills bash ./.agents/skills/verify-public-skills/scripts/validate-all
-      - run: python3 -m unittest discover -s skills/hygiene/scripts -p 'test_*.py'
-      - run: python3 -m unittest discover -s skills/editorial-review/scripts/tests
-      - run: python3 -m unittest discover -s skills/orchestrator/scripts -p 'test_*.py'
-      - run: python3 -m unittest discover -s skills/cmux/scripts -p 'test*.py'
+      - uses: actions/cache@v4
+        id: pyyaml-cache
+        with:
+          path: ~/.cache/ci-pyyaml
+          key: ${{ runner.os }}-py312-pyyaml-v1
+      - name: Install PyYAML
+        if: steps.pyyaml-cache.outputs.cache-hit != 'true'
+        run: python3 -m pip install --target "$HOME/.cache/ci-pyyaml" --disable-pip-version-check --no-input pyyaml
+      - name: Export cached PYTHONPATH
+        run: echo "PYTHONPATH=$HOME/.cache/ci-pyyaml${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+      - name: Run ratchets, skill validation, and test suites
+        run: |
+          python3 - <<'PY'
+          import concurrent.futures
+          import importlib.util
+          import os
+          import pathlib
+          import subprocess
+          import sys
+          import time
+          import unittest
+
+          def discover_idle_codex_tests():
+              path = pathlib.Path("skills/cmux/scripts/test-close-idle-codex.py")
+              spec = importlib.util.spec_from_file_location("test_close_idle_codex", path)
+              mod = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(mod)
+              loader = unittest.defaultTestLoader
+              names = sorted(
+                  f"{cls_name}.{name}"
+                  for cls_name, obj in vars(mod).items()
+                  if isinstance(obj, type) and issubclass(obj, unittest.TestCase)
+                  for name in loader.getTestCaseNames(obj)
+              )
+              if not names:
+                  raise RuntimeError("No tests discovered in test-close-idle-codex.py")
+              return names
+
+          idle_tests = discover_idle_codex_tests()
+          shard_count = 8
+          idle_shards = [idle_tests[i::shard_count] for i in range(shard_count)]
+          assert sum(len(s) for s in idle_shards) == len(idle_tests)
+
+          cmux_shell_tests = sorted(str(p) for p in pathlib.Path("skills/cmux/scripts").glob("test-*.sh"))
+          assert cmux_shell_tests, "No skills/cmux/scripts/test-*.sh scripts found"
+
+          tasks = [
+              ("orchestrator-unittest", [sys.executable, "-m", "unittest", "discover", "-s", "skills/orchestrator/scripts", "-p", "test_*.py"], None),
+              ("cmux-group-header", [sys.executable, "skills/cmux/scripts/test-group-header.py"], None),
+          ]
+          for idx, shard in enumerate(idle_shards, 1):
+              if shard:
+                  tasks.append((f"cmux-idle-codex-shard-{idx}", [sys.executable, "skills/cmux/scripts/test-close-idle-codex.py", *shard], None))
+          for script in cmux_shell_tests:
+              tasks.append((pathlib.Path(script).name, ["bash", script], None))
+          tasks.extend([
+              ("cmux-unittest", [sys.executable, "-m", "unittest", "discover", "-s", "skills/cmux/scripts", "-p", "test*.py"], None),
+              ("graph-selftest", [sys.executable, "skills/graph/scripts/selftest.py"], None),
+              ("validate-all", ["bash", "./.agents/skills/verify-public-skills/scripts/validate-all"], {"SHOT_OUT": "/tmp/validate-public-skills"}),
+              ("orchestrator-check", [sys.executable, "skills/orchestrator/scripts/check.py", "--no-live", "--no-log"], None),
+              ("comment-ratchet", [sys.executable, "scripts/check_code_comments.py", "--ratchet"], None),
+              ("binary-ratchet", [sys.executable, "scripts/check_binary_ratchet.py"], None),
+              ("hygiene-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/hygiene/scripts", "-p", "test_*.py"], None),
+              ("editorial-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/editorial-review/scripts/tests"], None),
+          ])
+
+          def run_one(item):
+              name, cmd, extra_env = item
+              env = dict(os.environ)
+              if extra_env:
+                  env.update(extra_env)
+              t0 = time.monotonic()
+              proc = subprocess.run(cmd, capture_output=True, text=True, env=env)
+              return name, proc.returncode, time.monotonic() - t0, proc.stdout, proc.stderr
+
+          workers = max(8, os.cpu_count() or 8)
+          t_start = time.monotonic()
+          failures = []
+          with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+              for name, rc, elapsed, out, err in pool.map(run_one, tasks):
+                  status = "PASS" if rc == 0 else f"FAIL (rc={rc})"
+                  print(f"{status:14s} {elapsed:5.2f}s  {name}", flush=True)
+                  if rc != 0:
+                      failures.append((name, rc, out, err))
+          print(f"Total wall-clock: {time.monotonic() - t_start:.2f}s ({len(tasks)} suites, {len(idle_tests)} idle-codex tests across {shard_count} shards)")
+          if failures:
+              for name, rc, out, err in failures:
+                  print(f"\n=== FAILURE: {name} (exit {rc}) ===")
+                  if out:
+                      print(out)
+                  if err:
+                      print(err, file=sys.stderr)
+              sys.exit(1)
+          PY

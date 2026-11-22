@@ -15,7 +15,7 @@ FAILURES = []
 
 def run(state, *extra):
     return subprocess.run([sys.executable, str(RENDER), str(state), *extra],
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, cwd=state.parent)
 
 def check(name, cond, detail=""):
     print(f"  {'PASS' if cond else 'FAIL'}  {name}" + (f"  — {detail}" if detail and not cond else ""))

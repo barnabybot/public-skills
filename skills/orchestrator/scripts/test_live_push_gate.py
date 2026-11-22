@@ -36,22 +36,35 @@ CASES = (
     ("refuse-remove-no-provenance.md", 1, "refuse", ("Provenance: direct",)),
 )
 
-REPO = HERE.parents[2]
+_TMPDIR: tempfile.TemporaryDirectory[str] | None = None
+WORKDIR: Path = HERE.parents[2]
+
 
 def setUpModule() -> None:
     """Materialise the relative preview paths the allow fixtures name."""
-    folder = REPO / "output" / "slice"
+    global _TMPDIR, WORKDIR
+    _TMPDIR = tempfile.TemporaryDirectory(prefix="live-push-gate-")
+    WORKDIR = Path(_TMPDIR.name)
+    folder = WORKDIR / "output" / "slice"
     folder.mkdir(parents=True, exist_ok=True)
     for name in ("index.html", "page.html", "old-section.html"):
         target = folder / name
         target.write_text("<!doctype html><title>slice</title>\n", encoding="utf-8")
+
+
+def tearDownModule() -> None:
+    global _TMPDIR
+    if _TMPDIR is not None:
+        _TMPDIR.cleanup()
+        _TMPDIR = None
+
 
 def run_gate(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(GATE), *args],
         capture_output=True,
         text=True,
-        cwd=cwd or REPO,
+        cwd=cwd or WORKDIR,
     )
 
 class LivePushGateTests(unittest.TestCase):
