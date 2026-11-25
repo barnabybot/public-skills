@@ -1,20 +1,32 @@
 # Catalogue
 
-Every folder under `skills/` with a `SKILL.md`.
+Run the validator for every folder under `skills/` with a `SKILL.md`. The
+current catalogue contains nine skills, including `hygiene`.
 
 ## Sub-features
 
-- `catalogue-validate-all` — validate-all exits 0.
+- `catalogue-validate-all`. Record each skill's result and the combined exit.
 
 ## How to get to it (user POV)
 
-- Maintain the public skill set before publishing downloads.
+From the repository root, run the local helper before publishing downloads.
+The helper resolves the repository root from its own location and invokes
+`skills/skill-manager/scripts/validate.sh` for every catalogue entry.
 
-## Driving it with preview-shots
+Source: [validate-all](../scripts/validate-all), lines 3-29, and
+[the catalogue](../../../../README.md), lines 91-101.
 
-- `.cursor/skills/verify-public-skills/scripts/validate-all`
-- **Proof.** `summary.txt` all `ok`; `exit.txt` is `0`.
+## Live recipe
+
+Use [Launch and Doctor](../SKILL.md), then the Drive command there. Set
+`SHOT_OUT` to a fresh absolute evidence directory for this drive.
+
+Require process exit 0. Compare `summary.txt` against `skills/*/SKILL.md` so
+every source entry has exactly one `ok <name>`. Require all per-skill `.exit`
+files and `exit.txt` to contain `0`. Keep every transcript, including warnings.
 
 ## Gotchas
 
-- WARNs (e.g. SKILL.md >100 lines) are allowed; FAILs are not.
+- WARNs, such as a long `SKILL.md` or advisory CLI findings, allow exit 0.
+- FAILs block the catalogue. Keep the failure evidence and run Doctor again.
+- This checks the automatable structural subset of the review checklist.
