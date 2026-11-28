@@ -442,7 +442,7 @@ function renderRhythmSvg(slot, M){
     </g>`;
   }).join('');
 
-  slot.innerHTML = `<svg class="fig-svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" role="img" aria-label="Session starts by hour in HKT">
+  slot.innerHTML = `<svg class="fig-svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" role="img" aria-label="Session starts by hour (${esc(tzLabel)})">
     <rect x="${bandX.toFixed(1)}" y="${mt}" width="${bandW.toFixed(1)}" height="${ph}" fill="var(--accent-tint)"/>
     ${grid}
     <line x1="${ml}" y1="${mt+ph}" x2="${width-mr}" y2="${mt+ph}" stroke="var(--rule-strong)" stroke-width="1"/>

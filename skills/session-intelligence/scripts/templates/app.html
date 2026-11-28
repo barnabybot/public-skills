@@ -1085,10 +1085,10 @@ function viewOverview(){
       </figure>
       <figure class="fig">
         <div class="fig-head">
-          <p class="fig-claim">${hh.total_failures ? `${fmt(hh.total_failures)} cron failure${hh.total_failures>1?'s':''} across ${fmt(hh.total_runs)} Hermes runs` : `${fmt(hh.total_runs||0)} Hermes cron runs with zero failures`}</p>
+          <p class="fig-claim">${hh.total_failures ? `${fmt(hh.total_failures)} cron failure${hh.total_failures>1?'s':''} across ${fmt(hh.total_runs)} scheduled runs` : `${fmt(hh.total_runs||0)} scheduled runs with zero failures`}</p>
           <p class="fig-sub">${esc(cronSub)}</p>
         </div>
-        ${cronRows ? `<div class="table-wrap"><table><thead><tr><th>Cron job</th><th>Runs</th><th>Completed</th><th>Failed</th></tr></thead><tbody>${cronRows}</tbody></table></div>` : '<div class="empty">No Hermes cron runs in this period.</div>'}
+        ${cronRows ? `<div class="table-wrap"><table><thead><tr><th>Cron job</th><th>Runs</th><th>Completed</th><th>Failed</th></tr></thead><tbody>${cronRows}</tbody></table></div>` : '<div class="empty">No scheduled job runs in this period.</div>'}
       </figure>
     </div>
     <figure class="fig">
