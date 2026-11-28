@@ -87,6 +87,7 @@ jobs:
               ("hygiene-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/hygiene/scripts", "-p", "test_*.py"], None),
               ("editorial-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/editorial-review/scripts/tests"], None),
               ("skill-manager-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/skill-manager/scripts/tests", "-p", "test_*.py"], None),
+              ("session-intelligence-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/session-intelligence/scripts/tests", "-p", "test_*.py"], None),
           ])
 
           def run_one(item):

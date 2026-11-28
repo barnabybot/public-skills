@@ -116,6 +116,7 @@ script changes. For this repository, start with these checks:
 python3 skills/model-routing/scripts/check.py --no-live --no-log
 python3 -m unittest discover -s skills/model-routing/scripts -p 'test_*.py'
 python3 -m unittest discover -s skills/skill-manager/scripts/tests -p 'test_*.py'
+python3 -m unittest discover -s skills/session-intelligence/scripts/tests -p 'test_*.py'
 python3 skills/graph/scripts/selftest.py
 python3 scripts/check_binary_ratchet.py --repo .
 python3 scripts/check_code_comments.py --root . --ratchet

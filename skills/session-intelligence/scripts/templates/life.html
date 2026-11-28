@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Intelligence · How You Operate</title>
+<style>
+__FONTS__
+:root{
+  --paper:#fffff8;
+  --surface:#ffffff;
+  --paper-2:#f2f2ef;
+  --ink:#1a1a1a;
+  --ink-strong:#000000;
+  --muted:#5e6268;
+  --soft:#6b6b6b;
+  --rule:rgba(26,26,26,.11);
+  --rule-strong:#dcd9d1;
+  --accent:#c82118;
+  --accent-mark:#e8483f;
+  --accent-tint:#fdeeed;
+  --slate:#3e4e54;
+  --slate-pale:#edf0f1;
+  --rhythm:#3e4e54;
+  --value:#c82118;
+  --ritual:#4a4f57;
+  --drive:#c82118;
+  --drive-dot:#e8483f;
+  --tell:#4e5d64;
+  --tension:#c82118;
+  --series-muted:#d4d3cd;
+  --shadow-tip:0 6px 20px rgba(0,0,0,.16);
+  --tip-border:rgba(255,255,255,.12);
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --font-serif:"ET Book","et-book",Palatino,"Palatino Linotype",Georgia,serif;
+  --font-sans:"Meta Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+[data-theme="dark"]{
+  --paper:#121212;
+  --surface:#1a1a1a;
+  --paper-2:#222222;
+  --ink:#ededed;
+  --ink-strong:#ffffff;
+  --muted:#a3a6ac;
+  --soft:#8a8d93;
+  --rule:rgba(237,237,237,.12);
+  --rule-strong:rgba(237,237,237,.24);
+  --accent:#f1a49e;
+  --accent-mark:#e8483f;
+  --accent-tint:rgba(241,164,158,.14);
+  --slate:#8fa3ab;
+  --slate-pale:rgba(143,163,171,.14);
+  --rhythm:#9bb1ba;
+  --value:#f1a49e;
+  --ritual:#b8bcc2;
+  --drive:#f1a49e;
+  --drive-dot:#e8483f;
+  --tell:#a7b8c0;
+  --tension:#f1a49e;
+  --series-muted:#3d4044;
+  --shadow-tip:0 8px 24px rgba(0,0,0,.45);
+  --tip-border:rgba(255,255,255,.18);
+}
+*{box-sizing:border-box}
+html{background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;scrollbar-color:var(--rule-strong) transparent;scrollbar-width:thin}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15.5px/1.62 var(--font-sans);transition:background 180ms ease,color 180ms ease}
+::selection{background:var(--accent-tint);color:var(--ink-strong)}
+a{color:var(--ink-strong);text-decoration:underline;text-decoration-color:var(--rule-strong);text-underline-offset:.2em;cursor:pointer}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button{font:inherit;color:inherit}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--paper-2);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.num{font-variant-numeric:tabular-nums}
+
+.masthead{border-bottom:1px solid var(--rule);background:var(--paper);position:sticky;top:0;z-index:20}
+.masthead-inner{max-width:1120px;margin:0 auto;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;letter-spacing:.01em;color:var(--ink-strong);text-decoration:none}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-mark);flex:none}
+.chapters{display:flex;align-items:center;gap:4px;background:var(--paper-2);padding:3px;border-radius:7px;border:1px solid var(--rule)}
+.chapters a{text-decoration:none;font-size:13px;font-weight:500;padding:5px 12px;border-radius:5px;color:var(--muted);transition:background 150ms ease,color 150ms ease}
+.chapters a.active{background:var(--surface);color:var(--ink-strong);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.chapters a:hover:not(.active){color:var(--ink-strong)}
+.theme-btn{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--rule-strong);border-radius:6px;padding:5px 10px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:border-color 150ms ease,color 150ms ease}
+.theme-btn:hover{border-color:var(--ink);color:var(--ink-strong)}
+.theme-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.wrap{max-width:920px;margin:0 auto;padding:38px 28px 88px}
+@media(max-width:600px){.masthead-inner,.wrap,.foot{padding-left:18px;padding-right:18px}.wrap{padding-top:26px}}
+
+.hero-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px 24px;flex-wrap:wrap}
+.hero-copy{flex:1;min-width:260px}
+h1{margin:0;font-family:var(--font-serif);font-weight:400;font-size:34px;line-height:1.18;letter-spacing:-.015em;color:var(--ink-strong);text-wrap:balance;max-width:34ch}
+h1.long-thesis{font-size:28px;line-height:1.25;max-width:44ch}
+@media(max-width:600px){h1{font-size:26px}h1.long-thesis{font-size:23px;line-height:1.28}}
+.period-bar{display:inline-flex;align-items:center;gap:3px;background:var(--paper-2);padding:3px;border-radius:7px;border:1px solid var(--rule);flex:none;margin-top:4px}
+.period-bar button{background:transparent;border:none;padding:5px 11px;border-radius:5px;font-family:var(--font-mono);font-size:12px;color:var(--muted);cursor:pointer;transition:background 140ms ease,color 140ms ease}
+.period-bar button:hover:not(.on){color:var(--ink-strong)}
+.period-bar button.on{background:var(--surface);color:var(--ink-strong);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.07)}
+.byline{margin-top:12px;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.byline .mono{font-family:var(--font-mono);font-size:12px;color:var(--soft)}
+
+.op-strip{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule-strong);border-bottom:1px solid var(--rule-strong);margin:24px 0 26px;background:var(--surface)}
+@media(max-width:640px){.op-strip{grid-template-columns:repeat(2,1fr)}}
+.op-cell{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.op-cell:nth-child(4n){border-right:none}
+@media(min-width:641px){.op-cell{border-bottom:none}}
+@media(max-width:640px){.op-cell:nth-child(2n){border-right:none}.op-cell:nth-child(n+3){border-bottom:none}}
+.op-val{font-family:var(--font-mono);font-size:22px;font-weight:400;letter-spacing:-.02em;color:var(--ink-strong);font-variant-numeric:tabular-nums}
+.op-lbl{font-size:12px;color:var(--muted);margin-top:3px}
+.op-sub{font-family:var(--font-mono);font-size:10.5px;color:var(--soft);margin-top:2px}
+
+.beats-wrap{margin:0 0 32px}
+.beats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:18px 0 20px;border-bottom:1px solid var(--rule)}
+@media(max-width:740px){.beats-grid{grid-template-columns:1fr;gap:18px}}
+.beat h3{margin:0 0 7px;font-size:13.5px;font-weight:700;color:var(--ink-strong);display:flex;align-items:center;gap:7px;letter-spacing:.01em}
+.beat-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-mark);flex:none}
+.beat p{margin:0;font-size:14.5px;line-height:1.58;color:var(--ink)}
+.scope-line{margin:10px 0 0;font-family:var(--font-mono);font-size:11.5px;color:var(--soft)}
+
+.fig{margin:0 0 34px;padding-bottom:22px;border-bottom:1px solid var(--rule)}
+.fig-claim{margin:0;font-size:16px;font-weight:700;color:var(--ink-strong);line-height:1.32}
+.fig-sub{margin:4px 0 14px;font-size:13px;color:var(--muted)}
+.chart-slot{width:100%;min-height:40px}
+.fig-svg{width:100%;display:block;overflow:visible}
+.fig-note{margin:10px 0 0;font-size:11.5px;color:var(--soft);line-height:1.45}
+
+.sec-head{margin:34px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--rule-strong);display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-head h2{margin:0;font-family:var(--font-serif);font-weight:400;font-size:26px;color:var(--ink-strong)}
+.sec-head .meta{font-family:var(--font-mono);font-size:12px;color:var(--soft)}
+
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;align-items:center}
+.pill{font:inherit;font-size:12.5px;font-weight:500;padding:5px 13px;border:1px solid var(--rule-strong);border-radius:16px;background:transparent;color:var(--muted);cursor:pointer;transition:background 140ms ease,color 140ms ease,border-color 140ms ease}
+.pill:hover{border-color:var(--ink);color:var(--ink-strong)}
+.pill.on{background:var(--ink-strong);color:var(--paper);border-color:var(--ink-strong)}
+
+.pat-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px 34px;align-items:start}
+@media(max-width:740px){.pat-grid{grid-template-columns:1fr;gap:22px}}
+.pat{padding-top:15px;border-top:1px solid var(--rule-strong)}
+.pat.lead-pat{grid-column:1 / -1;display:grid;grid-template-columns:1.15fr .85fr;gap:16px 32px;align-items:start;background:var(--surface);border:1px solid var(--rule-strong);border-radius:8px;padding:20px 22px}
+@media(max-width:740px){.pat.lead-pat{grid-template-columns:1fr;padding:16px 18px}}
+.pat-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.pat-kind{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;flex:none;font-weight:500}
+.pat-dot{width:6px;height:6px;border-radius:50%;flex:none}
+.pat-name{margin:0;font-family:var(--font-serif);font-weight:400;font-size:21px;line-height:1.22;color:var(--ink-strong)}
+.pat-lead-insight{margin:0 0 10px;font-size:14.5px;line-height:1.52;font-weight:500;color:var(--ink-strong)}
+.pat-desc{margin:0 0 12px;font-size:13.5px;line-height:1.58;color:var(--muted)}
+.quote-stack{margin-top:4px}
+.q{margin:6px 0;padding-left:12px;border-left:1px solid var(--rule-strong);font-family:var(--font-serif);font-style:italic;font-size:14px;line-height:1.48;color:var(--muted)}
+.q.extra{display:none}
+.quote-stack.open .q.extra{display:block}
+.q-toggle{margin-top:6px;background:none;border:none;padding:2px 0;font-family:var(--font-mono);font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:.2em}
+.q-toggle:hover{color:var(--ink-strong)}
+
+.tension-list{margin-top:6px}
+.tension-row{padding:18px 0;border-bottom:1px solid var(--rule)}
+.tension-row:last-child{border-bottom:none}
+.tension-poles{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.pole{font-family:var(--font-serif);font-size:20px;line-height:1.25;color:var(--ink-strong)}
+.vs{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);background:var(--accent-tint);padding:2px 7px;border-radius:4px}
+.tension-detail{margin:0;font-size:14.5px;line-height:1.62;color:var(--ink);max-width:70ch}
+
+.tip{position:fixed;z-index:50;pointer-events:none;background:#3e4e54;color:#f2f2ef;border:1px solid var(--tip-border);padding:7px 10px;border-radius:6px;font-size:12px;line-height:1.4;box-shadow:var(--shadow-tip);opacity:0;transform:translateY(4px);transition:opacity 130ms var(--ease-out),transform 130ms var(--ease-out)}
+.tip.on{opacity:1;transform:translateY(0)}
+
+.empty{color:var(--soft);font-style:italic;padding:24px;text-align:center}
+.foot{max-width:920px;margin:0 auto;padding:20px 28px 46px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--soft)}
+
+@media(prefers-reduced-motion:reduce){
+  .tip{transition:opacity 120ms ease;transform:none}
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-inner">
+    <a class="brand" href="index.html"><span class="brand-dot" aria-hidden="true"></span>Session Intelligence</a>
+    <nav class="chapters" aria-label="Dossier chapters">
+      <a href="index.html">Automation Roadmap</a>
+      <a href="life.html" class="active" aria-current="page">Behavioural Portrait</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Toggle colour mode"></button>
+  </div>
+</header>
+
+<article class="wrap">
+  <div class="hero-row">
+    <div class="hero-copy">
+      <h1 id="oneliner"></h1>
+      <div class="byline" id="byline"></div>
+    </div>
+    <div class="period-bar" id="periodBar" role="group" aria-label="Time window"></div>
+  </div>
+
+  <div class="op-strip" id="opStrip"></div>
+
+  <section class="beats-wrap" id="beatsWrap"></section>
+
+  <div id="rhythmMount"></div>
+
+  <div class="sec-head">
+    <h2>Operating Patterns</h2>
+    <span class="meta" id="patMeta"></span>
+  </div>
+  <div class="controls" id="filters"></div>
+  <div class="pat-grid" id="cards"></div>
+
+  <div id="tensionsWrap" style="display:none">
+    <div class="sec-head">
+      <h2>Productive Tensions</h2>
+      <span class="meta" id="tenMeta">Where your own patterns pull against each other</span>
+    </div>
+    <div class="tension-list" id="tensions"></div>
+  </div>
+</article>
+
+<footer class="foot">
+  <span id="footLeft"></span>
+  <span>session-intelligence</span>
+</footer>
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const P = D.profile || {};
+const SESS = Array.isArray(D.sessions) ? D.sessions : [];
+const esc = s => (s == null ? '' : String(s)).replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const fmtCopy = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+const fmt = n => Number(n || 0).toLocaleString('en-GB');
+
+const rootEl = document.documentElement;
+const themeBtn = document.getElementById('themeBtn');
+const SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>';
+function applyTheme(t){
+  rootEl.setAttribute('data-theme', t);
+  try { localStorage.setItem('si-theme', t); } catch(_) {}
+  themeBtn.innerHTML = (t === 'dark' ? SUN + 'Light' : MOON + 'Dark');
+}
+let initTheme = 'light';
+try { initTheme = localStorage.getItem('si-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch(_) {}
+applyTheme(initTheme);
+themeBtn.onclick = () => applyTheme(rootEl.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+const tipEl = document.getElementById('tip');
+function showTip(evt, text){
+  const pt = evt.touches ? evt.touches[0] : evt;
+  tipEl.textContent = text;
+  tipEl.style.left = Math.min(window.innerWidth - 250, Math.max(10, pt.clientX + 12)) + 'px';
+  tipEl.style.top = Math.max(12, pt.clientY - 40) + 'px';
+  tipEl.classList.add('on');
+}
+function hideTip(){ tipEl.classList.remove('on'); }
+document.addEventListener('touchend', hideTip, {passive: true});
+
+const oneLiner = P.one_liner || 'How You Operate';
+const h1El = document.getElementById('oneliner');
+h1El.textContent = oneLiner;
+if(oneLiner.trim().split(/\s+/).length > 18) h1El.classList.add('long-thesis');
+
+const allDates = SESS.map(s => s.d).filter(Boolean).sort();
+const minDateStr = allDates[0] || ((D.rhythm && D.rhythm.date_range) ? D.rhythm.date_range[0] : '');
+const maxDateStr = allDates[allDates.length - 1] || ((D.rhythm && D.rhythm.date_range) ? D.rhythm.date_range[1] : '');
+const spanDays = (minDateStr && maxDateStr)
+  ? Math.round((new Date(maxDateStr + 'T00:00:00Z') - new Date(minDateStr + 'T00:00:00Z')) / 86400000) + 1
+  : 0;
+
+const PERIODS = [
+  {id:'7d', label:'7d', days:7, title:'Last 7 days'},
+  {id:'30d', label:'30d', days:30, title:'Last 30 days'},
+  {id:'90d', label:'90d', days:90, title:'Last 90 days'},
+  {id:'all', label:'All', days:0, title:'All sessions'},
+];
+let period = spanDays > 95 ? '90d' : 'all';
+try {
+  const saved = localStorage.getItem('si-period');
+  if(saved && PERIODS.some(p => p.id === saved)) period = saved;
+} catch(_) {}
+
+function cutoffFor(pid){
+  const spec = PERIODS.find(p => p.id === pid);
+  if(!spec || !spec.days || !maxDateStr) return '';
+  const dt = new Date(maxDateStr + 'T00:00:00Z');
+  dt.setUTCDate(dt.getUTCDate() - (spec.days - 1));
+  return dt.toISOString().slice(0, 10);
+}
+
+function getPeriodMetrics(){
+  const spec = PERIODS.find(p => p.id === period) || PERIODS[3];
+  if(!SESS.length){
+    const r = D.rhythm || {};
+    const tzLabel = r.tz_label || 'local';
+  const localHrs = r.local_hours || {};
+    const hrs = Array.from({length: 24}, (_, h) => ({h, v: localHrs[String(h).padStart(2,'0')] || 0}));
+    return {
+      spec,
+      narrowed: false,
+      nSessions: r.n_sessions || 0,
+      range: r.date_range || [],
+      harnesses: D.harnesses || [],
+      wkndPct: null,
+      hrs,
+      totTimestamped: hrs.reduce((a,b) => a + b.v, 0),
+    };
+  }
+  const cutoff = cutoffFor(period);
+  const rows = cutoff ? SESS.filter(s => (s.d || '') >= cutoff) : SESS;
+  const dates = rows.map(s => s.d).filter(Boolean).sort();
+  const hCounts = Object.create(null);
+  const hrs = Array.from({length: 24}, (_, h) => ({h, v: 0}));
+  let tsCount = 0, wknd = 0, dated = 0;
+  rows.forEach(s => {
+    if(s.hr) hCounts[s.hr] = (hCounts[s.hr] || 0) + 1;
+    if(s.h != null && s.h >= 0 && s.h < 24){ hrs[s.h].v++; tsCount++; }
+    if(s.wd != null){ dated++; if(s.wd >= 5) wknd++; }
+  });
+  const hSet = Object.entries(hCounts).sort((a,b) => b[1] - a[1]).map(x => x[0]);
+  return {
+    spec,
+    narrowed: Boolean(cutoff && (period === '7d' || period === '30d' || rows.length < SESS.length * 0.95)),
+    nSessions: rows.length,
+    range: dates.length ? [dates[0], dates[dates.length - 1]] : [],
+    harnesses: hSet,
+    wkndPct: dated ? Math.round((wknd / dated) * 100) : null,
+    hrs,
+    totTimestamped: tsCount,
+  };
+}
+
+function peakWindow3h(hrs){
+  let bestStart = 6, bestSum = -1;
+  for(let start = 0; start <= 21; start++){
+    const s = hrs[start].v + hrs[start+1].v + hrs[start+2].v;
+    if(s > bestSum){ bestSum = s; bestStart = start; }
+  }
+  const endH = bestStart + 2;
+  const label = `${String(bestStart).padStart(2,'0')}:00\u2013${String(endH).padStart(2,'0')}:59`;
+  return {start: bestStart, end: endH, sum: bestSum, label, isDawn: bestStart >= 5 && bestStart <= 7};
+}
+
+function deriveBeats(){
+  if(Array.isArray(P.portrait_beats) && P.portrait_beats.length){
+    return P.portrait_beats.slice(0, 4);
+  }
+  const raw = String(P.portrait || '').trim();
+  if(!raw) return [];
+  const sents = raw.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if(sents.length <= 2) return [{label: 'Operating stance', point: raw}];
+  let best = [1, 2], bestSpread = Infinity;
+  const len = arr => arr.reduce((a, s) => a + s.length, 0);
+  for(let i = 1; i < sents.length - 1; i++){
+    for(let j = i + 1; j < sents.length; j++){
+      const a = len(sents.slice(0, i)), b = len(sents.slice(i, j)), c = len(sents.slice(j));
+      const spread = Math.max(a, b, c) - Math.min(a, b, c);
+      if(spread < bestSpread){ bestSpread = spread; best = [i, j]; }
+    }
+  }
+  const groups = [
+    sents.slice(0, best[0]).join(' '),
+    sents.slice(best[0], best[1]).join(' '),
+    sents.slice(best[1]).join(' '),
+  ].filter(Boolean);
+  const labelFor = (txt, fallback) => {
+    const t = txt.toLowerCase();
+    if(/06:00|dawn|weekend|local|operating layer/.test(t)) return 'Cadence & reach';
+    if(/vendor|harness|quota|80:20/.test(t)) return 'Fleet arbitrage';
+    if(/steer|dictation|safari|tone|softener|reset|craft/.test(t)) return 'Steering & craft';
+    if(/skill|hygiene|worktree|purge|repo|vault|compound/.test(t)) return 'Compounding loop';
+    return fallback;
+  };
+  const used = new Set();
+  const defaults = ['Cadence & reach', 'Fleet arbitrage', 'Steering & craft'];
+  return groups.map((pt, i) => {
+    let lbl = labelFor(pt, defaults[i] || `Pillar ${i + 1}`);
+    if(used.has(lbl)) lbl = defaults[i] || `Pillar ${i + 1}`;
+    used.add(lbl);
+    return {label: lbl, point: pt};
+  });
+}
+
+function buildPeriodBar(){
+  const bar = document.getElementById('periodBar');
+  if(!SESS.length){ bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  bar.innerHTML = '';
+  PERIODS.forEach(p => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = period === p.id ? 'on' : '';
+    b.setAttribute('aria-pressed', period === p.id ? 'true' : 'false');
+    b.title = p.title;
+    b.textContent = p.label;
+    b.onclick = () => {
+      period = p.id;
+      try { localStorage.setItem('si-period', p.id); } catch(_) {}
+      renderLiveSections();
+    };
+    bar.appendChild(b);
+  });
+}
+
+function renderRhythmSvg(slot, M){
+  const hrs = M.hrs;
+  const totH = M.totTimestamped;
+  if(!totH){
+    slot.innerHTML = '<div class="empty">No exact-timestamp transcripts in this period.</div>';
+    return;
+  }
+  const width = Math.max(260, Math.floor(slot.clientWidth || 840));
+  const compact = width < 520;
+  const peak = peakWindow3h(hrs);
+  const maxV = Math.max(1, ...hrs.map(x => x.v));
+  const H = compact ? 150 : 162, ml = compact ? 28 : 34, mr = 8, mt = 14, mb = 26;
+  const pw = width - ml - mr, ph = H - mt - mb;
+  const step = pw / 24, bw = Math.max(4, step * 0.68);
+  const bandX = ml + peak.start * step, bandW = 3 * step;
+
+  let grid = '';
+  const ticks = maxV <= 2 ? [0, maxV] : [0, Math.ceil(maxV / 2), maxV];
+  ticks.forEach(v => {
+    const y = mt + ph - (v / maxV) * ph;
+    grid += `<line x1="${ml}" y1="${y.toFixed(1)}" x2="${width-mr}" y2="${y.toFixed(1)}" stroke="var(--rule)" stroke-width="1"/>`;
+    grid += `<text x="${ml-7}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="var(--font-mono)" font-size="10.5" fill="var(--soft)">${v}</text>`;
+  });
+
+  const tickEvery = compact ? 4 : 3;
+  const bars = hrs.map((x, idx) => {
+    const cx = ml + idx * step + step / 2;
+    const bh = (x.v / maxV) * ph;
+    const y = mt + ph - bh;
+    const inBand = x.h >= peak.start && x.h <= peak.end;
+    const fill = inBand ? 'var(--accent-mark)' : 'var(--series-muted)';
+    const lbl = String(x.h).padStart(2,'0') + ':00';
+    return `<g>
+      ${x.v ? `<rect x="${(cx-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1.5, bh).toFixed(1)}" rx="1.5" fill="${fill}"/>` : ''}
+      <rect x="${(ml+idx*step).toFixed(1)}" y="${mt}" width="${step.toFixed(1)}" height="${ph}" fill="transparent" style="cursor:crosshair"
+        onmousemove="showTip(event,'${lbl} ${tzLabel} · ${x.v} multi-turn session${x.v===1?'':'s'} started')"
+        ontouchstart="showTip(event,'${lbl} ${tzLabel} · ${x.v} multi-turn session${x.v===1?'':'s'} started')"
+        onmouseleave="hideTip()"/>
+      ${idx % tickEvery === 0 ? `<text x="${cx.toFixed(1)}" y="${H-6}" text-anchor="middle" font-family="var(--font-mono)" font-size="10.5" fill="var(--soft)">${String(x.h).padStart(2,'0')}</text>` : ''}
+    </g>`;
+  }).join('');
+
+  slot.innerHTML = `<svg class="fig-svg" width="${width}" height="${H}" viewBox="0 0 ${width} ${H}" role="img" aria-label="Session starts by hour in HKT">
+    <rect x="${bandX.toFixed(1)}" y="${mt}" width="${bandW.toFixed(1)}" height="${ph}" fill="var(--accent-tint)"/>
+    ${grid}
+    <line x1="${ml}" y1="${mt+ph}" x2="${width-mr}" y2="${mt+ph}" stroke="var(--rule-strong)" stroke-width="1"/>
+    ${bars}
+  </svg>`;
+}
+
+let currentM = getPeriodMetrics();
+function renderLiveSections(){
+  buildPeriodBar();
+  currentM = getPeriodMetrics();
+  const M = currentM;
+
+  const byParts = [];
+  if(M.nSessions) byParts.push(`<span class="num">${fmt(M.nSessions)} sessions</span>`);
+  if(M.range && M.range.length) byParts.push(`<span class="mono">${esc(M.range[0])} to ${esc(M.range[1])}</span>`);
+  if(M.harnesses.length) byParts.push(`<span>${M.harnesses.length} harnesses</span>`);
+  byParts.push(`<span>${(D.lens_findings||[]).length} lens findings &middot; verbatim quotes</span>`);
+  document.getElementById('byline').innerHTML = byParts.join('<span>&middot;</span>');
+
+  const peak = peakWindow3h(M.hrs);
+  const peakPct = M.totTimestamped ? Math.round((peak.sum / M.totTimestamped) * 100) : null;
+  const cells = [
+    [fmt(M.nSessions), 'Sessions', M.narrowed ? `in ${M.spec.label} (of ${fmt(SESS.length)})` : 'recorded runs'],
+    [peakPct != null ? `${peakPct}%` : '&ndash;', peak.isDawn ? 'Dawn starts' : 'Peak 3h starts', `${peak.label} ${tzLabel}`],
+    [M.wkndPct != null ? `${M.wkndPct}%` : '&ndash;', 'Weekend share', 'Sat & Sun sessions'],
+    [fmt(M.harnesses.length), 'Active harnesses', M.harnesses.slice(0, 2).join(', ') || 'multi-harness'],
+  ];
+  document.getElementById('opStrip').innerHTML = cells.map(c =>
+    `<div class="op-cell"><div class="op-val">${c[0]}</div><div class="op-lbl">${esc(c[1])}</div><div class="op-sub">${esc(c[2])}</div></div>`
+  ).join('');
+
+  const beats = deriveBeats();
+  const beatsEl = document.getElementById('beatsWrap');
+  if(beats.length){
+    beatsEl.innerHTML = `<div class="beats-grid">${beats.map(b =>
+      `<div class="beat"><h3><span class="beat-dot" aria-hidden="true"></span>${esc(b.label)}</h3><p>${esc(b.point)}</p></div>`
+    ).join('')}</div>${M.narrowed ? `<p class="scope-line">Portrait and operating patterns reflect full-window synthesis. Metrics and hourly cadence reflect ${esc(M.spec.title.toLowerCase())}.</p>` : ''}`;
+  } else {
+    beatsEl.innerHTML = '';
+  }
+
+  const mount = document.getElementById('rhythmMount');
+  if(M.totTimestamped || (D.rhythm && D.rhythm.local_hours && Object.keys(D.rhythm.local_hours).length)){
+    const claim = M.totTimestamped
+      ? `${peakPct}% of timestamped sessions start in the ${peak.label} ${tzLabel} ${peak.isDawn ? 'dawn ' : ''}window`
+      : 'Hourly session cadence';
+    mount.innerHTML = `<figure class="fig">
+      <p class="fig-claim">${esc(claim)}</p>
+      <p class="fig-sub">Multi-turn transcript starts by hour of day (${esc(tzLabel)}, n = ${fmt(M.totTimestamped)})</p>
+      <div class="chart-slot" id="rhythmSlot"></div>
+      <figcaption class="fig-note">Shaded band marks the peak 3-hour window (${esc(peak.label)} ${esc(tzLabel)}). Based on local transcripts carrying exact UTC start timestamps.</figcaption>
+    </figure>`;
+    const slot = document.getElementById('rhythmSlot');
+    if(slot) renderRhythmSvg(slot, M);
+  } else {
+    mount.innerHTML = '';
+  }
+
+  const hList = M.harnesses.length ? ` across ${M.harnesses.join(', ')}` : '';
+  document.getElementById('footLeft').textContent = `Mined from ${(D.lens_findings||[]).length} lens findings${hList}. Every quote is verbatim.`;
+}
+
+const KINDS = ['rhythm','value','ritual','drive','tell','tension'];
+const KCOL = {
+  rhythm:'var(--rhythm)',
+  value:'var(--value)',
+  ritual:'var(--ritual)',
+  drive:'var(--drive)',
+  tell:'var(--tell)',
+  tension:'var(--tension)'
+};
+const KDOT = {
+  rhythm:'var(--rhythm)',
+  value:'var(--value)',
+  ritual:'var(--ritual)',
+  drive:'var(--drive-dot)',
+  tell:'var(--tell)',
+  tension:'var(--tension)'
+};
+const pats = P.patterns || [];
+document.getElementById('patMeta').textContent = `${pats.length} patterns across 7 lenses`;
+let kf = '';
+const fbar = document.getElementById('filters');
+
+function makeChip(label, val){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pill' + (kf === val ? ' on' : '');
+  b.setAttribute('aria-pressed', kf === val ? 'true' : 'false');
+  b.textContent = label;
+  b.onclick = () => { kf = val; drawPatterns(); };
+  return b;
+}
+
+function toggleQuotes(btn){
+  const stack = btn.closest('.quote-stack');
+  if(!stack) return;
+  const open = stack.classList.toggle('open');
+  const extra = Number(btn.getAttribute('data-extra') || 0);
+  btn.textContent = open ? 'Hide extra quotes' : `+${extra} more quote${extra>1?'s':''}`;
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function renderQuotes(quotes, expandAll){
+  if(!quotes || !quotes.length) return '';
+  if(expandAll){
+    return `<div class="quote-stack open">${quotes.map(q => `<blockquote class="q">&ldquo;${esc(q)}&rdquo;</blockquote>`).join('')}</div>`;
+  }
+  const extra = quotes.length - 1;
+  return `<div class="quote-stack">
+    <blockquote class="q">&ldquo;${esc(quotes[0])}&rdquo;</blockquote>
+    ${quotes.slice(1).map(q => `<blockquote class="q extra">&ldquo;${esc(q)}&rdquo;</blockquote>`).join('')}
+    ${extra > 0 ? `<button type="button" class="q-toggle" data-extra="${extra}" aria-expanded="false" onclick="toggleQuotes(this)">+${extra} more quote${extra>1?'s':''}</button>` : ''}
+  </div>`;
+}
+
+function drawPatterns(){
+  fbar.innerHTML = '';
+  fbar.appendChild(makeChip('All ' + pats.length, ''));
+  KINDS.forEach(k => {
+    const n = pats.filter(p => p.kind === k).length;
+    if(n) fbar.appendChild(makeChip(k + ' ' + n, k));
+  });
+  const rows = pats.filter(p => !kf || p.kind === kf);
+  const useLeadSpan = rows.length >= 3 && rows.length % 2 === 1;
+  document.getElementById('cards').innerHTML = rows.map((p, idx) => {
+    const col = KCOL[p.kind] || 'var(--muted)';
+    const dot = KDOT[p.kind] || col;
+    const isLead = useLeadSpan && idx === 0;
+    const headHtml = `<div class="pat-head"><h3 class="pat-name">${esc(p.name)}</h3><span class="pat-kind" style="color:${col}"><span class="pat-dot" style="background:${dot}"></span>${esc(p.kind||'pattern')}</span></div>`;
+    const bodyHtml = `${p.reveals ? `<p class="pat-lead-insight">${fmtCopy(p.reveals)}</p>` : ''}<p class="pat-desc">${fmtCopy(p.description)}</p>`;
+    const quotesHtml = renderQuotes(p.evidence_quotes || [], isLead);
+    if(isLead){
+      return `<section class="pat lead-pat">
+        <div>${headHtml}${bodyHtml}</div>
+        <div>${quotesHtml}</div>
+      </section>`;
+    }
+    return `<section class="pat">
+      ${headHtml}
+      ${bodyHtml}
+      ${quotesHtml}
+    </section>`;
+  }).join('');
+}
+
+const tens = P.tensions || [];
+if(tens.length){
+  document.getElementById('tensionsWrap').style.display = '';
+  document.getElementById('tensions').innerHTML = tens.map(t => {
+    const raw = String(t.tension || '');
+    const parts = raw.split(/\s+vs\.?\s+/i);
+    const head = parts.length === 2
+      ? `<div class="tension-poles"><span class="pole">${esc(parts[0])}</span><span class="vs">vs</span><span class="pole">${esc(parts[1])}</span></div>`
+      : `<div class="tension-poles"><span class="pole">${esc(raw)}</span></div>`;
+    return `<div class="tension-row">${head}<p class="tension-detail">${fmtCopy(t.detail||'')}</p></div>`;
+  }).join('');
+}
+
+let resizeTimer = null;
+if(typeof ResizeObserver !== 'undefined'){
+  const ro = new ResizeObserver(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const slot = document.getElementById('rhythmSlot');
+      if(slot) renderRhythmSvg(slot, currentM);
+    }, 40);
+  });
+  ro.observe(document.querySelector('.wrap'));
+}
+
+renderLiveSections();
+drawPatterns();
+</script>
+</body>
+</html>

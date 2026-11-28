@@ -8,7 +8,7 @@ missing detail. The native timeline also serves users without session notes.
 
 ## Discovery for another skill
 
-When a caller such as retrospective supplies a repository, topic or date window,
+When a caller such as session-intelligence supplies a repository, topic or date window,
 reuse those inputs and run the retrieval steps below. Return matching records
 with session ID, agent, source path, native or recorded timestamp and its basis,
 repository evidence, relevant excerpts and missing-data notes. Reconcile hand

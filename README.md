@@ -93,7 +93,7 @@ project, each in its own pane, and reports a gap one worker left:
 |---|---|
 | [`vault-setup`](skills/vault-setup/) | Creates each vault type with its folder tree, templates and instruction file |
 | [`recall`](skills/recall/) | Finds past work in session notes where available, with native transcripts for missing detail or a setup without notes |
-| [`retrospective`](skills/retrospective/) | Reviews a session or a bounded recent sample, verifies repeated problems and proposes small fixes. Uses recall for historical evidence |
+| [`session-intelligence`](skills/session-intelligence/) | Mines multi-runtime agent traces (Claude Code, Codex, Grok, Muse, Antigravity) and `$AGENT_NOTES` session notes into an interactive automation roadmap (`index.html`) and behavioural portrait (`life.html`) with period filtering and verbatim quote verification |
 | [`model-routing`](skills/model-routing/) | Routes tasks to the best eligible model across T3 Code, cmux and CLI using Python stdlib only, with provider circuit breakers and automated 2-hop takeovers |
 | [`orchestrator`](skills/orchestrator/) | Explicit-only coordinator for multi-item queues, multi-repo work, parallel fan-outs and session handoffs across T3 Code, cmux and CLI. Calls `model-routing` for preflight and takeover |
 | [`cmux`](skills/cmux/) | Controls workspaces and browser panes in the optional cmux terminal application. Calls `model-routing` for routing policy |
@@ -185,10 +185,11 @@ yourself before you say go.
   search collection or searches files under `$AGENT_NOTES/Sessions/`. Without
   notes, it reads native Claude Code and Codex transcripts. Graph mode also
   needs `networkx` and `pyvis`.
-- **`retrospective` uses `recall` for earlier sessions.** Install both for the
-  recent-sessions mode. A review of the visible conversation can run alone.
-  `/retrospective recent sessions <project-path>` reviews up to ten eligible
-  sessions and proposes zero to three fixes. It runs when invoked.
+- **`session-intelligence` runs on Python 3 stdlib only.** It discovers local
+  transcripts across Claude Code, Codex, Grok, Muse and Antigravity plus
+  `$AGENT_NOTES/Sessions/*.md` notes (and optional `$AGENT_NOTES/Cron/sessions/*.md`
+  logs), verifies quotes deterministically, and renders self-contained HTML apps
+  using your local CLI runtime or `run_workflow`.
 - **Three skills need nothing beyond Python stdlib or Bash.** `vault-setup`,
   `editorial-review` and `hygiene` run anywhere (`gh` optional for remote CI
   audits in `hygiene`).
@@ -342,6 +343,9 @@ python3 -m unittest discover -s skills/model-routing/scripts -p 'test_*.py'
 
 # The portable skill-audit test suite
 python3 -m unittest discover -s skills/skill-manager/scripts/tests -p 'test_*.py'
+
+# The session-intelligence discovery, rendering and friction test suites
+python3 -m unittest discover -s skills/session-intelligence/scripts/tests -p 'test_*.py'
 
 # Yesterday's sessions, read from your own transcripts
 python3 skills/recall/scripts/recall-day.py list yesterday --all-projects
