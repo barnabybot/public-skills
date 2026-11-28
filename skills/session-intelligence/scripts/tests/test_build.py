@@ -461,7 +461,8 @@ class WorkflowContractTests(unittest.TestCase):
                     return {"one_liner": "Fast.", "portrait": "You ship.", "patterns": [{"name": "P1", "description": "D", "reveals": "R", "kind": "rhythm"}]}
                 return {"patterns": [{"name": role, "what": "W", "reveals": "R", "evidence_quotes": ["ship it"]}]}
 
-            _exec_workflow(SCRIPTS / "life.workflow", {"scriptsDir": str(SCRIPTS), "root": str(root)}, fake_life_agent)
+            with mock.patch.dict("os.environ", {"SESSION_TZ_OFFSET": "8", "SESSION_TZ_LABEL": "UTC+8"}):
+                _exec_workflow(SCRIPTS / "life.workflow", {"scriptsDir": str(SCRIPTS), "root": str(root)}, fake_life_agent)
             self.assertEqual(len(life_prompts), 8)
             self.assertTrue(all("Do NOT call any file or shell tools" in p for p in life_prompts))
             self.assertIn('"07:00": 1', life_prompts[0])

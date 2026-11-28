@@ -47,7 +47,9 @@ skill_friction = read_json(sd / "skill-friction.json", [])
 preferences = read_json(sd / "preferences.json", [])
 quotes = read_json(data_dir / "life" / "quotes.json", [])
 
-LOCAL_TZ = datetime.now().astimezone().tzinfo or timezone.utc
+import os
+_tz_off = os.environ.get("SESSION_TZ_OFFSET", "").strip()
+LOCAL_TZ = timezone(timedelta(hours=float(_tz_off))) if _tz_off else (datetime.now().astimezone().tzinfo or timezone.utc)
 local_hours = Counter()
 weekdays = Counter()
 by_week_harness = Counter()
