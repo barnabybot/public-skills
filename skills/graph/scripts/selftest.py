@@ -270,6 +270,131 @@ def main():
               r.returncode == 0 and '"u3"' in v3_html and '"from": "u2", "to": "u3"' in v3_html
               and '"is_frontier": true' in v3_html, r.stdout + r.stderr)
 
+        s10 = write(d, "frontier.state.yaml", textwrap.dedent("""\
+            meta:
+              title: Frontier Programme
+              lede: L
+              updated: '2026-11-26'
+              spec: docs/spec.md
+              notes: ~/Scratch/2026-11-26/notes.md
+              integration_branch: feat/frontier-test
+              pills: {a: b}
+            layout:
+              - stage: 0 · BASE
+                rows:
+                  - - id: base
+                      status: done
+                      label: Baseline
+                      sub: done
+                      owner: agent
+              - stage: 1 · FANOUT
+                rows:
+                  - - id: n1
+                      status: ready
+                      label: Slice A
+                      sub: api
+                      owner: agent
+                      dependencies: [base]
+                      spec: docs/slice-a.md
+                      touches: [src/shared.py, src/a.py]
+                      acceptance:
+                        - Endpoint returns 200
+                        - Unit tests pass
+                    - id: n2
+                      status: queue
+                      label: Slice B
+                      sub: cli
+                      owner: codex
+                      dependencies: [base]
+                      touches: [src/shared.py]
+                      acceptance: CLI exits 0
+                    - id: g1
+                      status: gate
+                      label: Approve slice
+                      sub: human go
+                      owner: human
+                      dependencies: [base]
+                    - id: h1
+                      status: ready
+                      label: Owner review
+                      sub: human owned
+                      owner: Owner
+                      dependencies: [base]
+                    - id: blocked
+                      status: queue
+                      label: Downstream
+                      sub: waits on n1
+                      owner: agent
+                      dependencies: [n1]
+            sections: []
+            """))
+        r = run(s10, "--frontier", "--json")
+        check("--frontier --json exits 0 and writes no files",
+              r.returncode == 0
+              and not (d / "frontier.html").exists()
+              and not (d / "frontier.events.jsonl").exists()
+              and not (d / "frontier.fingerprints.json").exists(),
+              r.stdout + r.stderr)
+        fdata = json.loads(r.stdout) if r.returncode == 0 else {}
+        act_ids = [n["id"] for n in fdata.get("actionable", [])]
+        gate_ids = [n["id"] for n in fdata.get("gates", [])]
+        check("--frontier --json partitions actionable vs gate and human nodes",
+              act_ids == ["n1", "n2"] and gate_ids == ["g1", "h1"]
+              and "blocked" not in [n["id"] for n in fdata.get("frontier", [])],
+              str(fdata))
+        check("--frontier --json surfaces spec metadata, list acceptance and overlaps",
+              fdata.get("spec") == "docs/spec.md"
+              and fdata.get("integration_branch") == "feat/frontier-test"
+              and fdata["actionable"][0]["acceptance"] == ["Endpoint returns 200", "Unit tests pass"]
+              and fdata["actionable"][0]["spec"] == "docs/slice-a.md"
+              and len(fdata.get("overlap_warnings", [])) == 1
+              and fdata["overlap_warnings"][0]["nodes"] == ["n1", "n2"],
+              str(fdata))
+
+        r_txt = run(s10, "--frontier")
+        check("--frontier text mode reports actionable, gates and overlap",
+              r_txt.returncode == 0 and "n1" in r_txt.stdout and "g1" in r_txt.stdout
+              and "OVERLAP" in r_txt.stdout, r_txt.stdout + r_txt.stderr)
+
+        r_bad1 = run(s10, "--frontier", "--open")
+        check("--frontier rejects --open", r_bad1.returncode != 0)
+        r_bad2 = run(s10, "--json")
+        check("--json requires --frontier", r_bad2.returncode != 0)
+
+        r_html = run(s10)
+        f_html = (d / "frontier.html").read_text(encoding="utf-8")
+        check("list-form acceptance and spec render cleanly into HTML payload",
+              r_html.returncode == 0
+              and '"Endpoint returns 200", "Unit tests pass"' in f_html
+              and '"docs/slice-a.md"' in f_html, r_html.stdout + r_html.stderr)
+
+        (d / "st_in.txt").write_text("v1")
+        (d / "st_out.txt").write_text("built")
+        s11 = write(d, "stf.state.yaml", BASE + textwrap.dedent("""\
+            layout:
+              - stage: S
+                rows:
+                  - - id: up
+                      status: done
+                      label: Upstream
+                      sub: built
+                      output: st_out.txt
+                      inputs: [st_in.txt]
+                    - id: down
+                      status: queue
+                      label: Downstream
+                      sub: waits
+                      owner: agent
+                      dependencies: [up]
+            """))
+        run(s11)
+        (d / "st_in.txt").write_text("v2")
+        r_stf = run(s11, "--frontier", "--json")
+        stf_data = json.loads(r_stf.stdout) if r_stf.returncode == 0 else {}
+        check("--frontier detects stale upstream read-only and blocks downstream",
+              r_stf.returncode == 0 and stf_data.get("counts", {}).get("stale") == 1
+              and stf_data.get("actionable") == [], str(stf_data))
+
     print()
     if FAILURES:
         print(f"{len(FAILURES)} FAILED: {', '.join(FAILURES)}")

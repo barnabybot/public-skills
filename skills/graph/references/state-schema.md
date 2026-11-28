@@ -74,6 +74,9 @@ starts with an expression.
 | `updated` | yes | Usually `"{today}"`. |
 | `pills` | yes | `{label: value}`, rendered as a row of pills. `updated` is appended automatically. |
 | `pills_hot` | no | List of pill labels to highlight. |
+| `spec` | no | Relative or absolute path to the canonical spec document for this programme. Surfaced by `--frontier --json`. |
+| `notes` | no | Optional path to shared exploration notes (for example `~/Scratch/YYYY-MM-DD/<programme>-notes.md`). |
+| `integration_branch` | no | Optional git branch name when a code-repo programme lands multiple nodes onto one integration branch. |
 | `aria` | no | SVG `aria-label`. Describe the graph for a reader who cannot see it. |
 | `maxlen` | no | Character budget for `sub`/`note`/`note2`. Opt-in: set it on four-wide layouts, leave it off where nodes use `span`. |
 | `legend` | no | `{status: label}` overriding the default legend wording. |
@@ -109,8 +112,10 @@ is drawn dashed.
 | `note`, `note2` | Third and fourth lines, in the monospace face. |
 | `span` | `mid` (8 cols) · `wide` (10 cols) · `full` (12 cols). Single-node rows only. |
 | `dependencies` | Optional `[node_id, …]` list of upstream node IDs for directed SVG edges and `FRONTIER` calculation. Also auto-extracted from `Dependencies, owners and release conditions` tables or `Depends:` notes. |
-| `owner` | Optional custodian / owner string shown on card fallback and in the node inspector. |
-| `acceptance` | Optional release condition / acceptance criteria shown in the node inspector. |
+| `owner` | Optional custodian / owner string shown on card fallback and in the node inspector. Human owners (`human`, `user`, `owner`) are excluded from agent-actionable frontier items. |
+| `acceptance` | Optional release condition or acceptance criteria, as either a string or a list of strings. Rendered in the node inspector and normalised to a list in `--frontier --json`. |
+| `spec`, `brief` | Optional path to a node-specific spec or brief pointer, shown in the node inspector and `--frontier --json`. |
+| `touches` | Optional list of file paths or path globs this node modifies. `--frontier` flags overlapping `touches` across actionable nodes so overlapping lanes are serialised. |
 | `role` | Optional `worker` \| `checker` badge override (auto-detected when `checker`/`review`/`verify` appears in label/note). |
 | `children` | Optional foldable sub-branch rows (`rows` of child nodes nested under this parent node). |
 | `collapsed` | Boolean (`true` by default when `children` is present). Renders a stacked-card motif with a `▸ +N branch (done/total)` pill; expands into a `2px dotted` rounded sub-branch container. |
@@ -187,3 +192,35 @@ The renderer replays the log to find each node's last known status, then appends
 record for anything that has moved. An unchanged render appends nothing, so rerunning
 is free. Agents may append their own richer records by hand; the renderer only reads
 `node` and `to`.
+
+## Querying the frontier (`--frontier`)
+
+`render-graph.py <programme>.state.yaml --frontier` runs read-only. It evaluates `derive`
+and `checks`, checks content-hash staleness without mutating `.fingerprints.json`, and
+writes no HTML or event log.
+
+Add `--json` for machine-readable output:
+
+```json
+{
+  "state_file": "/abs/path/programme.state.yaml",
+  "title": "Programme title",
+  "spec": "docs/spec.md",
+  "notes": "~/Scratch/2026-11-26/programme-notes.md",
+  "integration_branch": "feat/programme",
+  "counts": {"all": 8, "done": 3, "frontier": 3, "actionable": 2, "human_gates": 1, "stale": 0},
+  "frontier": [],
+  "actionable": [],
+  "gates": [],
+  "overlap_warnings": [{"nodes": ["n1", "n2"], "paths": ["src/shared.py"]}]
+}
+```
+
+Every item in `frontier`, `actionable` and `gates` includes `id`, `stage`, `status`,
+`label`, `sub`, `note`, `owner`, `role`, `acceptance` (always a list of strings), `spec`,
+`touches`, `dependencies`, `dependents` and `actionable_by_agent`.
+
+A frontier node lands in `gates` when its effective status is `gate` or its `owner` starts
+with `human`, `user` or `owner`. Every other frontier node lands in `actionable`.
+If an upstream node becomes `stale`, downstream nodes depending on it drop out of the
+frontier until the stale output is rebuilt.

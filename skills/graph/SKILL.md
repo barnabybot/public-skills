@@ -1,6 +1,6 @@
 ---
 name: graph
-version: 1.1.0
+version: 1.2.0
 description: >-
   Track a programme of work as a dependency graph of tasks and their status. Use for /graph,
   work graphs, project state, what is left to do, node status, blocked or stale work, gates
@@ -30,9 +30,11 @@ R=scripts/render-graph.py                         # relative to this skill
 python3 $R <programme>.state.yaml                 # render
 python3 $R <programme>.state.yaml --open          # render, then show it in cmux
 python3 $R <programme>.state.yaml --check         # validate, write nothing, exit 5 on drift
+python3 $R <programme>.state.yaml --frontier      # list unblocked frontier nodes read-only
+python3 $R <programme>.state.yaml --frontier --json  # machine-readable frontier and overlaps
 python3 $R <programme>.state.yaml --permissive    # breaking checks become warnings
 python3 $R <programme>.state.yaml --actor codex   # attribute logged transitions
-python3 scripts/selftest.py                       # 27 assertions, run after any change
+python3 scripts/selftest.py                       # smoke tests, run after any change
 ```
 
 **T3 Code.** Render without `--open`. To show the graph in the conversation,
@@ -89,9 +91,10 @@ The rendered page draws a dependency DAG across stages. It provides:
 Click a node to inspect it, a stage gutter to fold its stage, or a branch badge to expand
 its child nodes. These controls are local to the generated HTML and need no server.
 
-## Conventions & schema
+## Conventions, schema & frontier runbook
 
 Read [`references/conventions.md`](references/conventions.md) for statuses,
-derived numbers (`derive:` / `checks:`), content-hash staleness, visual language,
-editing habits and test commands. The complete YAML schema lives in
-[`references/state-schema.md`](references/state-schema.md).
+`derive:` / `checks:`, content-hash staleness and editing habits. Read
+[`references/state-schema.md`](references/state-schema.md) for the YAML schema
+and `--frontier --json` contract. When draining a graph to the next gate, read
+[`references/run-frontier.md`](references/run-frontier.md) first.
