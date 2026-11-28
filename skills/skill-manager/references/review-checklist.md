@@ -3,7 +3,9 @@
 Before shipping any skill:
 
 - [ ] Description: ≤1024 chars, third person, concrete triggers
-- [ ] SKILL.md: under 100 content lines (or justified parent router)
+- [ ] SKILL.md: under 100 content lines (or justified parent router; hard cap 500 lines)
+- [ ] No `.mcp.json` inside skill folder (declare MCP servers in host harness config)
+- [ ] Numbered verifiable steps and a structured Error Recovery or fallback section (no bare "try again" rows)
 - [ ] Signal density: no no-ops — every line changes behaviour (cut truisms, restatement, duplication)
 - [ ] No time-sensitive content (move dated claims to a changelog or notes file)
 - [ ] Consistent terminology (one name per concept across all files)

@@ -47,11 +47,15 @@ check "Frontmatter has description field"       "grep -q '^description:' '$SKILL
 DLEN="$(desc_len)"; DLEN="${DLEN:-0}"
 check "Description <=1024 chars (is $DLEN)"     "[ '$DLEN' -le 1024 ]"
 
+check "No .mcp.json inside skill folder"       "! find '$SKILL_DIR' -name '.mcp.json' 2>/dev/null | grep -q ."
 check "Scripts (if any) live in scripts/"      "! find '$SKILL_DIR' -maxdepth 1 \( -name '*.sh' -o -name '*.py' \) 2>/dev/null | grep -q . || [ -d '$SKILL_DIR/scripts' ]"
 check "References (if any) live in references/" "! find '$SKILL_DIR' -maxdepth 1 -name '*.md' -not -name 'SKILL.md' -not -name 'README.md' 2>/dev/null | grep -q . || [ -d '$SKILL_DIR/references' ]"
 
 LINES="$(wc -l < "$SKILL_MD" 2>/dev/null | tr -d ' ')"; LINES="${LINES:-0}"
+check "SKILL.md <=500 lines hard cap (is $LINES)" "[ '$LINES' -le 500 ]"
 warn "SKILL.md <=100 lines (is $LINES; parent routers may justifiably exceed)" "[ '$LINES' -le 100 ]"
+warn "Error recovery section present"          "grep -qiE '^#{1,3}[[:space:]]+.*(error|failure|troubleshoot|recovery|fallback|blocked|stop)' '$SKILL_MD' 2>/dev/null"
+warn "Numbered steps present"                  "grep -qE '^[[:space:]]*1\\.[[:space:]]+' '$SKILL_MD' 2>/dev/null"
 
 INTAKE="$(awk '
   NR==1 && /^---/ {fm=1; next}

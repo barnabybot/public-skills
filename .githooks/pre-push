@@ -21,6 +21,7 @@ run_bg orchestrator-check python3 "$ROOT/skills/orchestrator/scripts/check.py" -
 run_bg graph-selftest python3 "$ROOT/skills/graph/scripts/selftest.py"
 run_bg hygiene-tests python3 -m unittest discover -s "$ROOT/skills/hygiene/scripts" -p 'test_*.py'
 run_bg editorial-tests python3 -m unittest discover -s "$ROOT/skills/editorial-review/scripts/tests"
+run_bg skill-manager-tests python3 -m unittest discover -s "$ROOT/skills/skill-manager/scripts/tests" -p 'test_*.py'
 run_bg cmux-unittest python3 -m unittest discover -s "$ROOT/skills/cmux/scripts" -p 'test*.py'
 run_bg cmux-close-sh bash "$ROOT/skills/cmux/scripts/test-close-workspace.sh"
 run_bg cmux-loop-sh bash "$ROOT/skills/cmux/scripts/test-spawn-loop.sh"

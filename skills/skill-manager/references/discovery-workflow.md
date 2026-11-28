@@ -37,17 +37,30 @@ hosts where only coreutils are guaranteed.
 
 ## Auditing the whole tree
 
-`workflows/skill-audit.js` is a Claude Code dynamic workflow (run via the
-`Workflow` tool, not Bash) that scores every `SKILL.md` under a root against the
-rubric. A Haiku sub-agent grades each skill on seven dimensions (description,
-line budget, progressive disclosure, self-containment, naming, freshness,
-signal density), the script ranks worst-first, and one Opus agent names the
-single highest-value fix plus the top five to action. It finds the skills
-itself; pass `args.root` or set `SKILLS_ROOT`, or it reads `~/.claude/skills`:
+`scripts/skill_audit.py` and `workflows/skill-audit.workflow` discover every
+`SKILL.md` under a flat (`<root>/<skill>/SKILL.md`) or family-grouped
+(`<root>/<family>/<skill>/SKILL.md`) skills root (`$SKILLS_ROOT` or
+`~/my-skills`), score each on seven dimensions (description, line budget,
+progressive disclosure, self-containment, naming, freshness, and signal density;
+total /35), rank worst-first, and synthesise the single highest-value fix plus
+the top five to action.
 
-```
-Workflow({scriptPath: "<this skill>/workflows/skill-audit.js", args: {root: "~/my-skills"}})
+- Via portable CLI (`agy`, `claude`, `codex`, `grok`, or `muse`):
+
+```bash
+python3 scripts/skill_audit.py discover --root ~/my-skills --json
+python3 scripts/skill_audit.py run --root ~/my-skills --harness auto \
+  --out-html "$AGENT_NOTES/Audits/YYYY-MM-DD skill-audit.html" --json
 ```
 
-It returns `{ count, ranked, synthesis, html }`. Write the returned `html` to a
-dated report (e.g. `YYYY-MM-DD skill-audit.html`) and action the top five.
+- In hosts exposing `run_workflow`:
+
+```text
+run_workflow(
+  ScriptPath="<this skill>/workflows/skill-audit.workflow",
+  Args={"root": "~/my-skills", "outHtml": "$AGENT_NOTES/Audits/YYYY-MM-DD skill-audit.html"}
+)
+```
+
+It returns `{ count, ranked, synthesis, html }`. Save the returned `html` to a
+dated report and action the top five.
