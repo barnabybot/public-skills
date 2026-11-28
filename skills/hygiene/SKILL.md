@@ -8,6 +8,10 @@ description: >-
   blast-radius audits across one or more repos. Use for /hygiene, post-event
   hygiene, full repo hygiene check, comment ratchet burn-down, CI and
   architecture audits, or agent safety and blast-radius audits.
+fallback: >-
+  Run local Git, hook, ratchet, and comment checks offline and mark remote CI
+  and branch-protection probes as unknown. Never edit dirty working trees during
+  Phase 1 discovery.
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, AskUserQuestion
 ---
 

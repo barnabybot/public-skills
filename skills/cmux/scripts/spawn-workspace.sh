@@ -4,7 +4,7 @@ set -e
 USAGE='Usage: spawn-workspace.sh <name> (--tier <category> | --model <id> [--effort <level>]) [--request <JSON>] [--agent codex|claude|grok] [--of <category>] [--builder <provider>] [--reason "..."] [--cwd <path>] [--worktree [branch]] [--prompt "..."] [--prompt-file <path>] [--goal "..."] [--session] [--no-session] [--same-window] [--new-window] [--loop [pct]] [--route-out <path>] [--resolved-route <path>] [--dry-run]'
 
 SCRIPT_REAL="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")"
-RESOLVER="${ROUTING_RESOLVER:-$(cd "$(dirname "$SCRIPT_REAL")/../../orchestrator/scripts" 2>/dev/null && pwd)/resolve.py}"
+RESOLVER="${ROUTING_RESOLVER:-$(cd "$(dirname "$SCRIPT_REAL")/../../model-routing/scripts" 2>/dev/null && pwd)/resolve.py}"
 PYTHON="${SPAWN_PYTHON:-python3}"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_REAL")" && pwd)"
 STAMP_HELPER="$SCRIPT_DIR/stamp_surface.py"
@@ -14,7 +14,7 @@ AGENT_NOTES="${AGENT_NOTES:-$HOME/agent-notes}"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   printf '%s\n' 'Spawn a named cmux workspace with Claude Code, Codex or Grok (no focus steal).' "$USAGE" \
-    'See skills/orchestrator/references/routing-rules.md for routing categories and gates.'
+    'See skills/model-routing/references/routing-rules.md for routing categories and gates.'
   exit 0
 fi
 

@@ -1,6 +1,6 @@
 ---
 name: skill-manager
-version: 1.1.0
+version: 1.2.0
 fallback: "If validate.sh cannot run, apply references/review-checklist.md by hand."
 attribution: "Structure and progressive-disclosure patterns adapted from Artem Zhutov's skill-management skill"
 description: >-
@@ -24,7 +24,7 @@ panel.
 **Task** — What is the job?
 - Create — scaffold a new skill: folder, frontmatter, description, the length budget (`references/authoring-spec.md`)
 - Review — the pre-ship pass on a skill: `scripts/validate.sh`, then the checklist (`references/review-checklist.md`)
-- Audit — every SKILL.md in the tree scored on seven dimensions, worst first (`workflows/skill-audit.js`)
+- Audit — every SKILL.md in the tree scored on seven dimensions, worst first (`scripts/skill_audit.py`, `workflows/skill-audit.workflow`)
 - Plumbing — names, renames and symlinks (`references/naming-conventions.md`, `references/discovery-workflow.md`)
 - settled by: "new skill" (Create); "review" or "before I ship" (Review); "audit" (Audit); "symlink" or "rename" (Plumbing)
 
@@ -84,14 +84,13 @@ python3 scripts/cli_lint.py ~/.claude/skills/my-skill
 
 ## Audit the whole tree
 
-`workflows/skill-audit.js` is a Claude Code dynamic workflow (run via the
-`Workflow` tool, not Bash) that scores every SKILL.md on seven dimensions,
-ranks worst-first, and names the single highest-value fix plus the top five:
+`scripts/skill_audit.py` (with `workflows/skill-audit.workflow` for hosts with
+`run_workflow`) scores every `SKILL.md` on seven dimensions (total /35), ranks
+worst-first, and names the single highest-value fix plus the top five:
 
-```
-Workflow({scriptPath: "<this skill>/workflows/skill-audit.js", args: {root: "~/my-skills"}})
+```bash
+python3 scripts/skill_audit.py run --root ~/my-skills --harness auto \
+  --out-html "$AGENT_NOTES/Audits/YYYY-MM-DD skill-audit.html" --json
 ```
 
-It returns `{ count, ranked, synthesis, html }`. Write the `html` to a dated
-report (e.g. `YYYY-MM-DD skill-audit.html`) and action the top five. Details in
-`references/discovery-workflow.md`.
+Details and workflow usage live in `references/discovery-workflow.md`.

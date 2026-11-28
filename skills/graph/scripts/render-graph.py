@@ -1283,7 +1283,9 @@ V3_JS = """(function() {
     if (activeFilter === 'frontier') return Boolean(nd.is_frontier);
     if (activeFilter !== 'all' && st !== activeFilter) return false;
     if (searchQuery) {
-      const hay = `${nd.id} ${nd.label} ${nd.sub||''} ${nd.note||''} ${nd.owner||''} ${nd.acceptance||''}`.toLowerCase();
+      const accText = Array.isArray(nd.acceptance) ? nd.acceptance.join(' ') : (nd.acceptance || '');
+      const touchText = Array.isArray(nd.touches) ? nd.touches.join(' ') : '';
+      const hay = `${nd.id} ${nd.label} ${nd.sub||''} ${nd.note||''} ${nd.owner||''} ${accText} ${nd.spec||''} ${touchText}`.toLowerCase();
       return hay.includes(searchQuery);
     }
     return true;
@@ -1315,6 +1317,12 @@ V3_JS = """(function() {
     const deps = (nd.dependencies || []).map(d => `<span class="chip" data-select-node="${esc(d)}">⇠ ${esc(d)} (${esc((NODES[d]||{}).status||'?')})</span>`).join('');
     const outs = (nd.dependents || []).map(d => `<span class="chip" data-select-node="${esc(d)}">⇢ ${esc(d)} (${esc((NODES[d]||{}).status||'?')})</span>`).join('');
     const kids = (nd.children || []).flat().map(k => `<div class="chip" data-select-node="${esc(k.id)}">${esc(k.id)} · ${esc(k.label)} (${esc(k.status)})</div>`).join('');
+    const accHtml = Array.isArray(nd.acceptance)
+      ? (nd.acceptance.length ? `<ul style="margin:4px 0 0 18px;padding:0">${nd.acceptance.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : '')
+      : (nd.acceptance ? `<div>${esc(nd.acceptance)}</div>` : '');
+    const touchesHtml = (nd.touches && nd.touches.length)
+      ? nd.touches.map(p => `<span class="chip"><code>${esc(p)}</code></span>`).join('')
+      : '';
     insp.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:start;gap:8px">
         <div>
@@ -1328,7 +1336,9 @@ V3_JS = """(function() {
       ${nd.sub ? `<div class="insp-kv"><div class="insp-k">Summary</div><div>${esc(nd.sub)}</div></div>` : ''}
       ${nd.note ? `<div class="insp-kv"><div class="insp-k">Operational Note</div><div><code>${esc(nd.note)}</code></div></div>` : ''}
       ${nd.owner ? `<div class="insp-kv"><div class="insp-k">Owner / Custodian</div><div>${esc(nd.owner)}</div></div>` : ''}
-      ${nd.acceptance ? `<div class="insp-kv"><div class="insp-k">Acceptance / Release Condition</div><div>${esc(nd.acceptance)}</div></div>` : ''}
+      ${nd.spec ? `<div class="insp-kv"><div class="insp-k">Spec / Brief</div><div><code>${esc(nd.spec)}</code></div></div>` : ''}
+      ${accHtml ? `<div class="insp-kv"><div class="insp-k">Acceptance / Release Condition</div>${accHtml}</div>` : ''}
+      ${touchesHtml ? `<div class="insp-kv"><div class="insp-k">Touches</div><div class="chip-list">${touchesHtml}</div></div>` : ''}
       ${kids ? `<div class="insp-kv"><div class="insp-k">Foldable Branch Nodes (${(nd.children||[]).flat().length})</div><div class="chip-list">${kids}</div></div>` : ''}
       <div class="insp-kv"><div class="insp-k">Upstream Dependencies (${(nd.dependencies||[]).length})</div><div class="chip-list">${deps || '<span style="color:var(--faint)">None (root / unblocked)</span>'}</div></div>
       <div class="insp-kv"><div class="insp-k">Downstream Dependents (${(nd.dependents||[]).length})</div><div class="chip-list">${outs || '<span style="color:var(--faint)">None (terminal output)</span>'}</div></div>
@@ -1507,8 +1517,63 @@ def iter_all_nodes(layout):
     for band in layout or []:
         yield from _walk_rows(band.get("rows") or [])
 
-def build_v3_page(st, state_name, events_name, n_events):
-    meta = st.get("meta", {})
+HUMAN_OWNERS = frozenset({"human", "user", "owner"})
+
+
+def normalize_acceptance(val):
+    if isinstance(val, list):
+        return [str(item).strip() for item in val if str(item).strip()]
+    text = str(val or "").strip()
+    return [text] if text else []
+
+
+def normalize_touches(val):
+    if isinstance(val, list):
+        return [str(item).strip() for item in val if str(item).strip()]
+    text = str(val or "").strip()
+    return [text] if text else []
+
+
+def is_human_owner(owner):
+    tokens = re.findall(r"[a-z]+", str(owner or "").lower())
+    return bool(tokens) and tokens[0] in HUMAN_OWNERS
+
+
+def paths_overlap(a, b):
+    pa = a.rstrip("/")
+    pb = b.rstrip("/")
+    if not pa or not pb:
+        return False
+    if pa == pb:
+        return True
+    pa_base = pa.split("*", 1)[0].rstrip("/")
+    pb_base = pb.split("*", 1)[0].rstrip("/")
+    if not pa_base or not pb_base:
+        return False
+    return (
+        pa_base == pb_base
+        or pa_base.startswith(pb_base + "/")
+        or pb_base.startswith(pa_base + "/")
+    )
+
+
+def find_touch_overlaps(entries):
+    overlaps = []
+    for i, left in enumerate(entries):
+        for right in entries[i + 1:]:
+            shared = []
+            for p1 in left["touches"]:
+                for p2 in right["touches"]:
+                    if paths_overlap(p1, p2):
+                        pair = p1 if p1 == p2 else f"{p1} <-> {p2}"
+                        if pair not in shared:
+                            shared.append(pair)
+            if shared:
+                overlaps.append({"nodes": [left["id"], right["id"]], "paths": shared})
+    return overlaps
+
+
+def build_graph_model(st):
     stages_raw = st.get("layout", [])
     sections = st.get("sections", [])
 
@@ -1527,6 +1592,9 @@ def build_v3_page(st, state_name, events_name, n_events):
             reg_crow = [register_node(c, st_title, st_idx, parent_id=nid) for c in crow_list]
             kids_rows.append(reg_crow)
 
+        raw_acc = nd.get("acceptance")
+        acceptance = normalize_acceptance(raw_acc) if isinstance(raw_acc, list) else str(raw_acc or "")
+
         rec = {
             "id": nid,
             "status": status,
@@ -1536,7 +1604,9 @@ def build_v3_page(st, state_name, events_name, n_events):
             "note": str(nd.get("note", "")),
             "note2": str(nd.get("note2", "")),
             "owner": str(nd.get("owner", "")),
-            "acceptance": str(nd.get("acceptance", "")),
+            "acceptance": acceptance,
+            "spec": str(nd.get("spec") or nd.get("brief") or ""),
+            "touches": normalize_touches(nd.get("touches")),
             "output": str(nd.get("output", "")),
             "inputs": nd.get("inputs", []) or [],
             "span": nd.get("span"),
@@ -1633,6 +1703,93 @@ def build_v3_page(st, state_name, events_name, n_events):
         if eff in ("gate", "ready", "stale", "block", "fail"):
             counts["action"] += 1
 
+    return {"nodes": nodes_map, "stages": stages_out, "edges": edges, "counts": counts}
+
+
+def build_frontier_report(st, state_path, model):
+    meta = st.get("meta", {})
+    nodes_map = model["nodes"]
+    frontier = []
+    for rec in nodes_map.values():
+        if not rec["is_frontier"]:
+            continue
+        needs_human = (rec["effective_status"] == "gate") or is_human_owner(rec["owner"])
+        frontier.append({
+            "id": rec["id"],
+            "stage": rec["stage"],
+            "status": rec["effective_status"],
+            "label": rec["label"],
+            "sub": rec["sub"],
+            "note": rec["note"],
+            "owner": rec["owner"],
+            "role": rec["role"],
+            "acceptance": normalize_acceptance(rec["acceptance"]),
+            "spec": rec["spec"],
+            "touches": rec["touches"],
+            "dependencies": rec["dependencies"],
+            "dependents": rec["dependents"],
+            "actionable_by_agent": not needs_human,
+        })
+    actionable = [item for item in frontier if item["actionable_by_agent"]]
+    gates = [item for item in frontier if not item["actionable_by_agent"]]
+    overlaps = find_touch_overlaps(actionable)
+    counts = dict(model["counts"])
+    counts["actionable"] = len(actionable)
+    counts["human_gates"] = len(gates)
+    return {
+        "state_file": str(state_path),
+        "title": str(meta.get("title", "")),
+        "spec": str(meta.get("spec", "")),
+        "notes": str(meta.get("notes", "")),
+        "integration_branch": str(meta.get("integration_branch", "")),
+        "counts": counts,
+        "frontier": frontier,
+        "actionable": actionable,
+        "gates": gates,
+        "overlap_warnings": overlaps,
+    }
+
+
+def format_frontier_text(report):
+    counts = report["counts"]
+    lines = [
+        f"frontier {pathlib.Path(report['state_file']).name}: "
+        f"{counts['actionable']} actionable, {counts['human_gates']} gate/human, "
+        f"{counts['done']}/{counts['all']} done, {counts['stale']} stale"
+    ]
+    if report["spec"]:
+        lines.append(f"  spec: {report['spec']}")
+    if report["notes"]:
+        lines.append(f"  notes: {report['notes']}")
+    if report["integration_branch"]:
+        lines.append(f"  integration_branch: {report['integration_branch']}")
+    if report["actionable"]:
+        lines.append("  actionable:")
+        for item in report["actionable"]:
+            owner = f" [{item['owner']}]" if item["owner"] else ""
+            lines.append(f"    - {item['id']} ({item['status']}){owner}: {item['label']}")
+    if report["gates"]:
+        lines.append("  gates:")
+        for item in report["gates"]:
+            owner = f" [{item['owner']}]" if item["owner"] else ""
+            lines.append(f"    - {item['id']} ({item['status']}){owner}: {item['label']}")
+    for ov in report["overlap_warnings"]:
+        lines.append(
+            f"  OVERLAP — {' & '.join(ov['nodes'])} share {', '.join(ov['paths'])}; serialise these lanes"
+        )
+    return "\n".join(lines)
+
+
+def build_v3_page(st, state_name, events_name, n_events, model=None):
+    meta = st.get("meta", {})
+    sections = st.get("sections", [])
+    if model is None:
+        model = build_graph_model(st)
+    nodes_map = model["nodes"]
+    stages_out = model["stages"]
+    edges = model["edges"]
+    counts = model["counts"]
+
     hot = set(meta.get("pills_hot") or [])
     pills_list = [
         f'<span class="pill{" hot" if k in hot else ""}">{esc(str(k))}: <b>{esc(str(v))}</b></span>'
@@ -1724,6 +1881,10 @@ def main(argv=None):
     ap.add_argument("--check", action="store_true",
                     help="validate and report; write nothing. Exits 5 if the render "
                          "would change or a node reads stale")
+    ap.add_argument("--frontier", action="store_true",
+                    help="inspect unblocked frontier nodes without writing any files")
+    ap.add_argument("--json", action="store_true", dest="as_json",
+                    help="emit machine-readable JSON (requires --frontier)")
     ap.add_argument("--permissive", action="store_true",
                     help="downgrade breaking checks to warnings, for drafting")
     ap.add_argument("--actor", default="render-graph", help="actor recorded on logged transitions")
@@ -1731,8 +1892,12 @@ def main(argv=None):
                     help="after rendering, show the page in the cmux browser pane. "
                          "Never fatal: a run without cmux still renders")
     args = ap.parse_args(argv)
+    if args.as_json and not args.frontier:
+        return "--json requires --frontier"
     if args.check and args.open_:
         return "--open cannot be combined with --check: there would be nothing new to show"
+    if args.frontier and (args.open_ or args.check):
+        return "--frontier cannot be combined with --open or --check"
 
     state = pathlib.Path(args.state).expanduser().resolve()
     if not state.exists():
@@ -1758,6 +1923,19 @@ def main(argv=None):
 
     m = st["meta"]
     nodes = list(iter_all_nodes(st["layout"]))
+    if args.frontier:
+        staleness(nodes, base, prints_path, write=False)
+        model = build_graph_model(st)
+        report = build_frontier_report(st, state, model)
+        warn_stream = sys.stderr if args.as_json else sys.stdout
+        for w in warnings:
+            print(f"  WARNING — {w}", file=warn_stream)
+        if args.as_json:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            print(format_frontier_text(report))
+        return EXIT_OK
+
     warnings += check_lengths(st["layout"], int(m.get("maxlen") or 0),
                               str(m.get("width_check") or "warn").lower(), args.permissive)
 
@@ -1766,7 +1944,8 @@ def main(argv=None):
     events = [] if args.check else log_transitions(events_path, nodes, args.actor)
     n_events = sum(1 for _ in events_path.open()) if events_path.exists() else 0
 
-    html = build_v3_page(st, state.name, events_path.name, n_events)
+    model = build_graph_model(st)
+    html = build_v3_page(st, state.name, events_path.name, n_events, model=model)
 
     for w in warnings:
         print(f"  WARNING — {w}")

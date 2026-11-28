@@ -1,7 +1,7 @@
 # Catalogue
 
 Run the validator for every folder under `skills/` with a `SKILL.md`. The
-current catalogue contains nine skills, including `hygiene`.
+current catalogue contains ten skills, including `model-routing` and `hygiene`.
 
 ## Sub-features
 

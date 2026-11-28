@@ -1,0 +1,164 @@
+{
+  "schema_version": 2,
+  "revised": "2026-11-28",
+  "revised_by": "Placeholder multi-provider catalogue for public-skills",
+  "evidence_date": "2026-11-28",
+  "providers": {
+    "provider_a": {
+      "agent": "claude",
+      "provider_instance_id": "provider_a",
+      "driver_kind": "claudeAgent",
+      "billing": "subscription",
+      "enabled": true,
+      "explicit_only": false,
+      "effort_option": "effort",
+      "efforts": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "provider_b": {
+      "agent": "codex",
+      "provider_instance_id": "provider_b",
+      "driver_kind": "codex",
+      "billing": "subscription",
+      "enabled": true,
+      "explicit_only": false,
+      "effort_option": "reasoningEffort",
+      "efforts": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "provider_c": {
+      "agent": "grok",
+      "provider_instance_id": "provider_c",
+      "driver_kind": "grok",
+      "billing": "subscription",
+      "enabled": false,
+      "explicit_only": true,
+      "effort_option": "reasoningEffort",
+      "efforts": ["low", "medium", "high", "xhigh"]
+    }
+  },
+  "models": {
+    "a_large": {
+      "id": "claude-opus-5-5",
+      "provider": "provider_a",
+      "display": "A-Large",
+      "aliases": ["a-large", "opus"],
+      "effort_option": "effort",
+      "efforts": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "a_mid": {
+      "id": "claude-sonnet-5-5",
+      "provider": "provider_a",
+      "display": "A-Mid",
+      "aliases": ["a-mid", "sonnet"],
+      "effort_option": "effort",
+      "efforts": ["low", "medium", "high", "xhigh"]
+    },
+    "a_small": {
+      "id": "claude-haiku-4-5-20251001",
+      "provider": "provider_a",
+      "display": "A-Small",
+      "aliases": ["a-small", "haiku"],
+      "effort_option": "effort",
+      "efforts": ["low", "medium", "high"]
+    },
+    "b_large": {
+      "id": "configure-provider-b-large",
+      "provider": "provider_b",
+      "display": "B-Large",
+      "aliases": ["b-large"],
+      "effort_option": "reasoningEffort",
+      "efforts": ["low", "medium", "high", "xhigh", "max"]
+    },
+    "b_mid": {
+      "id": "configure-provider-b-mid",
+      "provider": "provider_b",
+      "display": "B-Mid",
+      "aliases": ["b-mid"],
+      "effort_option": "reasoningEffort",
+      "efforts": ["low", "medium", "high", "xhigh"]
+    },
+    "c_default": {
+      "id": "configure-provider-c-default",
+      "provider": "provider_c",
+      "display": "C-Default",
+      "aliases": ["c-default"],
+      "effort_option": "reasoningEffort",
+      "efforts": ["low", "medium", "high", "xhigh"]
+    }
+  },
+  "categories": {
+    "finance": {
+      "name": "Finance & accounting",
+      "chain": [
+        {"model": "a_large", "effort": "xhigh"},
+        {"model": "b_large", "effort": "xhigh"}
+      ]
+    },
+    "strategy": {
+      "name": "Strategy & economics",
+      "chain": [
+        {"model": "a_large", "effort": "xhigh"},
+        {"model": "b_large", "effort": "xhigh"}
+      ]
+    },
+    "legal": {
+      "name": "Legal",
+      "chain": [
+        {"model": "a_large", "effort": "high"},
+        {"model": "b_large", "effort": "high"}
+      ]
+    },
+    "writing": {
+      "name": "Writing",
+      "chain": [
+        {"model": "a_large", "effort": "high"},
+        {"model": "b_large", "effort": "high"}
+      ]
+    },
+    "visual": {
+      "name": "Visual",
+      "chain": [
+        {"model": "a_large", "effort": "medium"},
+        {"model": "b_large", "effort": "high"}
+      ]
+    },
+    "coding": {
+      "name": "Coding",
+      "chain": [
+        {"model": "a_mid", "effort": "high"},
+        {"model": "b_mid", "effort": "high"}
+      ]
+    },
+    "systems": {
+      "name": "Systems debugging",
+      "chain": [
+        {"model": "a_large", "effort": "xhigh"},
+        {"model": "b_large", "effort": "high"}
+      ]
+    },
+    "classification": {
+      "name": "Classification",
+      "chain": [
+        {"model": "a_mid", "effort": "medium"},
+        {"model": "b_mid", "effort": "low"}
+      ]
+    },
+    "housekeeping": {
+      "name": "Housekeeping",
+      "chain": [
+        {"model": "a_small", "effort": "medium"},
+        {"model": "b_mid", "effort": "medium"}
+      ]
+    },
+    "orchestrator": {
+      "name": "Orchestrator",
+      "chain": [
+        {"model": "a_large", "effort": "high"},
+        {"model": "b_large", "effort": "high"}
+      ]
+    },
+    "review": {
+      "name": "Review",
+      "of": "required"
+    }
+  }
+}

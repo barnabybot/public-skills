@@ -83,9 +83,25 @@ ln -s ../../.agents/skills/<name> .claude/skills/<name>
 ln -s ../../.agents/skills/<name> .cursor/skills/<name>
 ```
 
-Use `orchestrator` for coordination, model and effort routing, and handoffs
-across T3 Code, cmux and CLI subagents. Read its `references/hosts.md` before
-choosing a transport. Install `cmux` only for cmux workspace control.
+Use `model-routing` (`skills/model-routing/scripts/preflight.py`) for
+deterministic model preflight across hosts (`--host t3 | cmux | cli`), the
+provider health circuit breaker and automated 2-hop takeovers. Use
+`orchestrator` explicitly for multi-item queues, multi-repo coordination,
+parallel fan-outs and session handoffs, reading its `references/hosts.md`
+before choosing a transport. Install `cmux` only for cmux workspace control.
+
+## Personal CLI front-door (optional)
+
+Keep deterministic routing, sync, vault search and operational commands in
+scripts rather than long prompt rules. Out of the box, agents call
+`python3 skills/model-routing/scripts/preflight.py` directly.
+
+In your private Home Repo, you can front those scripts behind one thin wrapper
+executable on `PATH` (for example `b <domain> <verb>`, such as `b route
+preflight --json`, `b sync --check --json`, `b qmd query`, `b sessions`) so
+every runtime invokes the same short command without hardcoding repo paths.
+Keep personal credentials, calendar, mail and machine-specific domains inside
+your private Home Repo wrapper rather than in portable skills.
 
 ## Verification gates
 
@@ -97,8 +113,10 @@ script changes. For this repository, start with these checks:
 
 ```sh
 ./.agents/skills/verify-public-skills/scripts/validate-all
-python3 skills/orchestrator/scripts/check.py --no-live --no-log
-python3 -m unittest discover -s skills/orchestrator/scripts -p 'test_*.py'
+python3 skills/model-routing/scripts/check.py --no-live --no-log
+python3 -m unittest discover -s skills/model-routing/scripts -p 'test_*.py'
+python3 -m unittest discover -s skills/skill-manager/scripts/tests -p 'test_*.py'
+python3 -m unittest discover -s skills/session-intelligence/scripts/tests -p 'test_*.py'
 python3 skills/graph/scripts/selftest.py
 python3 scripts/check_binary_ratchet.py --repo .
 python3 scripts/check_code_comments.py --root . --ratchet

@@ -2,18 +2,13 @@
 set -u
 HERE="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")" && pwd)"
 HELPER="$HERE/spawn-workspace.sh"
-RESOLVER="$HERE/../../orchestrator/scripts/resolve.py"
+RESOLVER="$HERE/../../model-routing/scripts/resolve.py"
 export CMUX_AGENT_LAUNCH_KIND=claude
 
 if [[ ! -f "$RESOLVER" ]]; then
-  echo "FAIL  the orchestrator package is missing: $RESOLVER" >&2
-  echo "      spawn-workspace.sh routes through the orchestrator skill; install both." >&2
+  echo "FAIL  the model-routing package is missing: $RESOLVER" >&2
+  echo "      spawn-workspace.sh routes through the model-routing skill; install both." >&2
   exit 1
-fi
-if ! python3 -c 'import yaml' 2>/dev/null; then
-  echo "SKIP  PyYAML is not installed, so the resolver cannot read the table." >&2
-  echo "      Install it with: python3 -m pip install --user PyYAML" >&2
-  exit 0
 fi
 
 pass=0; fail=0

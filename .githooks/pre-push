@@ -17,10 +17,13 @@ run_bg() {
 run_bg binary-ratchet python3 "$ROOT/scripts/check_binary_ratchet.py" --repo "$ROOT"
 run_bg comment-ratchet python3 "$ROOT/scripts/check_code_comments.py" --root "$ROOT" --ratchet
 run_bg validate-all env SHOT_OUT="$TMP/validate" bash "$ROOT/.agents/skills/verify-public-skills/scripts/validate-all"
-run_bg orchestrator-check python3 "$ROOT/skills/orchestrator/scripts/check.py" --no-live --no-log
+run_bg model-routing-check python3 "$ROOT/skills/model-routing/scripts/check.py" --no-live --no-log
+run_bg model-routing-tests python3 -m unittest discover -s "$ROOT/skills/model-routing/scripts" -p 'test_*.py'
 run_bg graph-selftest python3 "$ROOT/skills/graph/scripts/selftest.py"
 run_bg hygiene-tests python3 -m unittest discover -s "$ROOT/skills/hygiene/scripts" -p 'test_*.py'
 run_bg editorial-tests python3 -m unittest discover -s "$ROOT/skills/editorial-review/scripts/tests"
+run_bg skill-manager-tests python3 -m unittest discover -s "$ROOT/skills/skill-manager/scripts/tests" -p 'test_*.py'
+run_bg session-intelligence-tests python3 -m unittest discover -s "$ROOT/skills/session-intelligence/scripts/tests" -p 'test_*.py'
 run_bg cmux-unittest python3 -m unittest discover -s "$ROOT/skills/cmux/scripts" -p 'test*.py'
 run_bg cmux-close-sh bash "$ROOT/skills/cmux/scripts/test-close-workspace.sh"
 run_bg cmux-loop-sh bash "$ROOT/skills/cmux/scripts/test-spawn-loop.sh"

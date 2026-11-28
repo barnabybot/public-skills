@@ -69,7 +69,7 @@ jobs:
           assert cmux_shell_tests, "No skills/cmux/scripts/test-*.sh scripts found"
 
           tasks = [
-              ("orchestrator-unittest", [sys.executable, "-m", "unittest", "discover", "-s", "skills/orchestrator/scripts", "-p", "test_*.py"], None),
+              ("model-routing-unittest", [sys.executable, "-m", "unittest", "discover", "-s", "skills/model-routing/scripts", "-p", "test_*.py"], None),
               ("cmux-group-header", [sys.executable, "skills/cmux/scripts/test-group-header.py"], None),
           ]
           for idx, shard in enumerate(idle_shards, 1):
@@ -81,11 +81,13 @@ jobs:
               ("cmux-unittest", [sys.executable, "-m", "unittest", "discover", "-s", "skills/cmux/scripts", "-p", "test*.py"], None),
               ("graph-selftest", [sys.executable, "skills/graph/scripts/selftest.py"], None),
               ("validate-all", ["bash", "./.agents/skills/verify-public-skills/scripts/validate-all"], {"SHOT_OUT": "/tmp/validate-public-skills"}),
-              ("orchestrator-check", [sys.executable, "skills/orchestrator/scripts/check.py", "--no-live", "--no-log"], None),
+              ("model-routing-check", [sys.executable, "skills/model-routing/scripts/check.py", "--no-live", "--no-log"], None),
               ("comment-ratchet", [sys.executable, "scripts/check_code_comments.py", "--ratchet"], None),
               ("binary-ratchet", [sys.executable, "scripts/check_binary_ratchet.py"], None),
               ("hygiene-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/hygiene/scripts", "-p", "test_*.py"], None),
               ("editorial-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/editorial-review/scripts/tests"], None),
+              ("skill-manager-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/skill-manager/scripts/tests", "-p", "test_*.py"], None),
+              ("session-intelligence-tests", [sys.executable, "-m", "unittest", "discover", "-s", "skills/session-intelligence/scripts/tests", "-p", "test_*.py"], None),
           ])
 
           def run_one(item):
