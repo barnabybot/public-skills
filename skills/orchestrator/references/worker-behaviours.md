@@ -1,61 +1,12 @@
 # Worker behaviour
 
-In T3 Code, follow completion wakeups and `next`. Use a new `delegate_task` for each delegated review or re-check. Terminal stall checks apply only in cmux.
+Resolve every route and fallback through `../model-routing/scripts/preflight.py`.
+Keep worker briefs short, pointer-based and verifiable.
 
-Use the model and effort from the table in `SKILL.md`. Task boundaries and
-escalation are in `references/routing-rules.md`.
-
-**These are your notes to write.** The list below is the portable half: things
-true of coding agents generally. Everything model-specific belongs here too,
-and only you can write it, because it describes the models in your table.
-Keep it as a list of observations with the evidence attached, so a later reader
-can tell a measurement from a habit.
-
-## Portable
-
-- **Long quiet turns are normal** on a large model at high or max effort.
-  Diagnose a stalled seat from an idle input line AND a final message that
-  promises action with no tool call after it. Both tells, or it is still
-  working. Send an authorised continuation once that state is verified.
-- **Include this instruction in every dispatch brief**, verbatim: "Before
-  reporting progress, audit each claim against a tool result from this session.
-  Only report work you can point to evidence for; if something is not yet
-  verified, say so explicitly."
-- **Carry intent.** State the larger task, the intended reader, and what the
-  output enables.
-- **Succession is the orchestrator's call.** Every seat works until the
-  orchestrator asks it to hand off, at 30% of its window or 300k tokens,
-  whichever comes first. `workflows/recycle.md` carries the thresholds.
-- **Cap a seat's own delegation.** Delegated work inherits the parent model
-  unless told otherwise, so a seat that fans out freely bills its subagents at
-  its own rate. Say "do this yourself; delegate only if a track is large and
-  genuinely independent", and name the model explicitly for delegation that
-  needs judgement.
-- **Give a literal seat the complete file list.** Where results are thin,
-  investigate the brief before escalating effort.
-- **Ask reviewers for every finding** with a confidence and an estimated
-  severity, then filter yourself. "Only report high-severity issues" gets
-  followed literally: the same depth, fewer findings.
-- **Report coverage with the findings.** A zero is a measurement of what the
-  instrument looked for. A zero with no stated non-coverage is not reportable.
-- **Accept the artefact.** Where a worker wrote a file, read the file. Do not
-  ask it to paste the contents into chat.
-- **Remote branch hygiene**, in every dispatch brief: when a pull request merges
-  or closes, delete that remote branch. Also delete dead worker remotes that
-  have no open pull request. Never force-push. Never delete the default branch
-  or a branch that is still an open pull request head.
-
-## Yours to fill in
-
-One line per model in your table. The shape that has held up elsewhere:
-
-- Which models spin at high effort and should start lower.
-- Which model gains nothing from max, so a stall there changes model rather
-  than effort.
-- Which models need a locked plan and testable acceptance before they are
-  useful.
-- Which model's CLI takes which effort vocabulary, where it differs from the
-  `efforts` list in `references/routing-metadata.yaml`.
-- Any environment variable a seat needs at launch. For a Claude seat, for
-  example, `CLAUDE_CODE_SUBAGENT_MODEL` sets the default model its subagents
-  use.
+- In T3 Code, follow delegate completion wakeups and `next`. Start a fresh `delegate_task` for every delegated review or re-check, and follow the T3 Code `delegate_task` boundary in `references/hosts.md` (force `isolation: "shared"` whenever `target.environmentId` names a linked environment).
+- Pass file paths, issue URLs, branch names and verification commands rather than inlining long file contents or logs.
+- Include this instruction in every dispatch brief: "Before reporting progress, audit each claim against a tool result from this session. Only report work you can point to evidence for; if something is not yet verified, say so explicitly."
+- Include this instruction in every dispatch brief: "Remote branch hygiene (default): when your PR merges or closes, delete that remote branch. Also delete any dead worker remotes you created with no open PR. Never force-push. Never delete main or any still-open PR head."
+- State the larger task, intended reader and purpose of the output.
+- Bounded `delegate_task` children and workflow workers are exempt from the 30% / 300k context handoff ceiling and complete their single ticket. Only interactive coordinators and long-lived top-level threads hand off via `workflows/handoff.md`.
+- Ask reviewers for every finding with confidence and severity, plus a coverage statement naming what was checked and what was excluded.

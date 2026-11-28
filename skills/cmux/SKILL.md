@@ -1,6 +1,6 @@
 ---
 name: cmux
-version: 1.2.0
+version: 1.3.0
 description: >-
   Control workspaces and browser panes in the optional cmux terminal application. Use for spawn, spin up, dispatch, restore sessions, cmux status, workspace screens or opening local HTML in the cmux browser.
 fallback: If cmux is unavailable, write the prompt or handoff file under $AGENT_NOTES/Sessions/Handoffs/ and tell the user the workspace could not be opened.
@@ -13,11 +13,11 @@ terminal.
 
 > For the multi-agent **orchestrator** pattern - one agent spawns and
 > coordinates many through session notes - use the `orchestrator` skill. This
-> standalone host driver covers cmux mechanics and calls orchestrator for routing policy.
+> standalone host driver covers cmux mechanics and calls `model-routing` for routing policy.
 
-**Requires** [cmux](https://www.cmux.dev) on the `PATH`, and the **orchestrator**
+**Requires** [cmux](https://www.cmux.dev) on the `PATH`, and the **model-routing**
 skill installed beside this one, because `spawn-workspace.sh` routes through its
-resolver. Everything else below is cmux CLI plus the two helper scripts in this
+stdlib resolver. Everything else below is cmux CLI plus the helper scripts in this
 directory.
 
 ## Verification
@@ -74,7 +74,7 @@ Reference docs:
 - `references/pitfalls.md` - failure modes that bit real sessions
   (window-scoping, multi-line send, current-workspace drift, shared-branch
   commits).
-- the **orchestrator** skill's `references/routing-rules.md` - how a request
-  becomes a category, and what the route log is for.
+- the **model-routing** skill's `references/routing-rules.md` - how a request
+  becomes a category, and how preflight, circuit breakers and takeovers work.
 
 - `references/operations.md` - idle Codex retirement (`--exit-idle-codex`), runtime and permission flags, model selection, command quick reference, browser pane, viewer mode, sidebar status, surfaces and socket API.
