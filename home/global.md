@@ -29,25 +29,58 @@ Reject stock AI vocabulary. Avoid verbs that inflate simple actions, metaphors
 for routine work and claims of quality without evidence. Apply `editorial-review`
 when installed. Check its banned-word list and structural voice rules.
 
-Let code carry its meaning. Keep comments for a necessary reason or external
-constraint that code cannot express. Retain licences, shebangs, tool directives
-and machine sentinels. Make the smallest change that meets the request.
+Let code carry its meaning. Keep comments only for licences, shebangs, lint or
+type directives, machine sentinels and external constraints the code cannot
+express. Delete tautology and stale comments. Delete excuse comments and open
+an issue for the underlying defect. Move architectural or contract decision
+records to `docs/adr/NNNN-<slug>.md` before deleting the inline comment. Check
+added comments with `scripts/check_code_comments.py --ratchet`. Make the
+smallest change that meets the request.
 
-## Execution discipline
+## Execution, CI and test discipline
 
 - State assumptions and surface trade-offs before coding when a choice materially
   changes the result.
 - Prefer the simplest design. Add abstractions only when the task needs them.
 - Make surgical edits restricted to the request.
 - Define a concrete verification check for each step before acting.
+- Keep pull-request CI feedback under 1 minute at p50 and under 2 minutes at
+  p95. Never add retries, wider timeouts or skipped tests to paper over a red
+  check. Fix the defect.
+- Keep local `.githooks/pre-commit` and `.githooks/pre-push` checks fast (under
+  9 seconds).
+- Log red CI runs in `docs/ci-failure-log.md` for two weeks before changing any
+  test. Protect tests covering security, privacy, personal-data scanning,
+  ratchets and publish gates. Avoid brittle change-detector tests (full-file
+  raw HTML line-count goldens, unreviewed signoff gates without a deterministic
+  invariant, or exact-prose assertions on non-contract copy).
 
-## Files and Markdown conversion
+## Browser and desktop automation
+
+Prefer CLIs and connectors where supported. When GUI or browser automation is
+required, never quit or restart an app or browser the user is actively using.
+Run automated browser sessions in the background where the host supports it,
+close every tab you open unless asked to keep it open, and pause at login, 2FA,
+passkey or payment gates with a clear note naming the waiting tab.
+
+## Multi-agent delegation
+
+In T3 Code, use `delegate_task` whenever working outside your primary
+repository, across providers, in a separate worktree or on a linked
+environment. Force `isolation: "shared"` whenever `target.environmentId` names
+a linked environment.
+
+## Files, vaults and Markdown conversion
 
 Keep Git repositories under `~/Repos/`, knowledge vaults under `$VAULTS_ROOT`,
 and iterative renders, previews, screenshots and throwaway exports in
 `~/Scratch/YYYY-MM-DD/<slug>/` until accepted. Never nest a Git repository
 inside a synced vault. Keep the Desktop empty. Use `/tmp/` for mechanical
 scratch.
+
+Search indexed vaults through your search MCP server or CLI (such as QMD)
+before grepping files on disk. Reserve `rg` and `grep` for source code
+repositories, exact regex matches or unindexed folders.
 
 Put accepted deliverables at the requested destination and keep rebuild sources.
 Name generated artefacts `YYYY-MM-DD Title.ext` using the build date. Preserve
@@ -84,12 +117,14 @@ Close with `ended:` and `## Outcome`. Use one of these status values:
 - `blocked`
 - `failed`
 
-At 30% context usage or about 300k tokens, whichever comes first, finish the
-current step and hand off before compaction. Subagents and workflow agents are
-exempt. Save a dated brief under `$AGENT_NOTES/Sessions/Handoffs/`. Include the
-goal, decisions, changed files, evidence and next step. Use `/orchestrator`
-when installed. Respect the host's rules for creating a successor. If context
-usage is unavailable, say so and plan continuation between phases.
+At 30% context usage or about 300k tokens, whichever comes first, interactive
+coordinators and long-lived top-level threads finish the current step and hand
+off before compaction. Bounded `delegate_task` children and workflow workers
+are exempt and complete their single ticket. Save a dated brief under
+`$AGENT_NOTES/Sessions/Handoffs/`. Include the goal, decisions, changed files,
+evidence and next step. Use `/orchestrator` when dispatching across workspaces
+or threads. Respect the host's rules for creating a successor. If context usage
+is unavailable, say so and plan continuation between phases.
 
 ## Secrets and commits
 

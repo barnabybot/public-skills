@@ -8,7 +8,7 @@ it. You use Claude Code, Codex, T3 Code or another CLI agent already, or you are
 about to. You want several agents working on one goal, each starting from the
 right context.
 
-The repository holds nine skills, a [global contract](home/global.md) and a
+The repository holds ten skills, a [global contract](home/global.md) and a
 [Home Repo map](AGENTS.md), taken from a working setup and rewritten so they run
 on somebody else's machine.
 
@@ -77,9 +77,10 @@ past sessions from session notes and the transcripts your tools already write.
 
 ## Multi-agent work
 
-One coordinator divides a goal into jobs and selects each worker's model and
-effort. `orchestrator` supports T3 Code, cmux and CLI subagents. Its
-[host guide](skills/orchestrator/references/hosts.md) maps native tools,
+One coordinator divides a multi-item goal into jobs while `model-routing`
+selects each worker's model, effort, host payload and circuit-breaker fallback.
+`orchestrator` is explicit-only and supports T3 Code, cmux and CLI subagents.
+Its [host guide](skills/orchestrator/references/hosts.md) maps native tools,
 worktree isolation and handoff. The optional `cmux` skill controls cmux
 workspaces.
 
@@ -93,11 +94,12 @@ project, each in its own pane, and reports a gap one worker left:
 | [`vault-setup`](skills/vault-setup/) | Creates each vault type with its folder tree, templates and instruction file |
 | [`recall`](skills/recall/) | Finds past work in session notes where available, with native transcripts for missing detail or a setup without notes |
 | [`retrospective`](skills/retrospective/) | Reviews a session or a bounded recent sample, verifies repeated problems and proposes small fixes. Uses recall for historical evidence |
-| [`orchestrator`](skills/orchestrator/) | Coordinates T3 Code, cmux and CLI workers, resolves model and effort routing, and manages session handoffs. Requires PyYAML and a configured routing table. The cmux companion is optional |
-| [`cmux`](skills/cmux/) | Controls workspaces and browser panes in the optional cmux terminal application. Calls orchestrator for routing policy |
-| [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches and node inspection. Marks a node stale when its inputs change after its output was built |
+| [`model-routing`](skills/model-routing/) | Routes tasks to the best eligible model across T3 Code, cmux and CLI using Python stdlib only, with provider circuit breakers and automated 2-hop takeovers |
+| [`orchestrator`](skills/orchestrator/) | Explicit-only coordinator for multi-item queues, multi-repo work, parallel fan-outs and session handoffs across T3 Code, cmux and CLI. Calls `model-routing` for preflight and takeover |
+| [`cmux`](skills/cmux/) | Controls workspaces and browser panes in the optional cmux terminal application. Calls `model-routing` for routing policy |
+| [`graph`](skills/graph/) | Renders a programme of work as an interactive dependency graph with dependency tracing, foldable branches, node inspection and a read-only `--frontier` CLI for agent drain loops. Marks a node stale when its inputs change after its output was built |
 | [`editorial-review`](skills/editorial-review/) | Checks prose and argument before it goes to a reader, including the tells that mark machine-written text |
-| [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a whole-tree audit |
+| [`skill-manager`](skills/skill-manager/) | Writes and reviews new skills: description rules, a pre-ship checklist, a validator and a portable multi-runtime whole-tree audit |
 | [`hygiene`](skills/hygiene/) | Runs post-event and weekly repository hygiene sweeps across Git hooks, binary ratchets, code-comment burn-downs and ADRs, 150-run CI audits, architecture debt triage, and agent safety and blast-radius audits |
 
 `graph` turns one YAML state file into a page like this. Inspect nodes, filter
@@ -187,25 +189,28 @@ yourself before you say go.
   recent-sessions mode. A review of the visible conversation can run alone.
   `/retrospective recent sessions <project-path>` reviews up to ten eligible
   sessions and proposes zero to three fixes. It runs when invoked.
-- **Two skills need nothing.** `vault-setup` and `editorial-review` run
-  anywhere.
-- **`orchestrator` needs PyYAML and a configured routing table.**
-  It coordinates T3 Code, cmux and CLI agents. The optional `cmux` companion
-  is needed only for cmux workspace dispatch. The standalone cmux host driver
-  calls orchestrator for routing policy, so cmux users install both.
-- **`orchestrator` and `graph` need PyYAML**
-  (`python3 -m pip install --user PyYAML`). The orchestrator scripts and the
-  graph renderer stop with that install line when it is missing. Apart from
-  recall's graph mode, it is the only non-stdlib dependency in the repository.
-- **`skill-manager` runs anywhere, except its audit.** `validate.sh` needs only
-  Bash. The whole-tree audit is a Claude Code dynamic workflow, so it needs the
-  `Workflow` tool.
-- **The routing table is a placeholder.** Every category in the orchestrator's
-  `references/routing-metadata.yaml` is marked `basis: practice`, which means a
-  shape rather than a finding about your stack. Its second provider resolves to
-  deliberately invalid model IDs, so an unconfigured provider fails loudly
-  instead of launching the wrong model. Edit the table in `SKILL.md` and the
-  metadata before you spawn anything you care about.
+- **Three skills need nothing beyond Python stdlib or Bash.** `vault-setup`,
+  `editorial-review` and `hygiene` run anywhere (`gh` optional for remote CI
+  audits in `hygiene`).
+- **`model-routing` and `orchestrator` use Python stdlib only.**
+  `model-routing` owns the JSON routing catalogue (`references/routing-catalog.json`),
+  host adapters (`--host t3 | cmux | cli`), circuit breaker and 2-hop takeover
+  with zero `PyYAML` dependency. `orchestrator` is explicit-only and delegates
+  routing decisions to `model-routing`. Install `cmux` only for cmux workspace
+  dispatch.
+- **Only `graph` needs PyYAML**
+  (`python3 -m pip install --user PyYAML`). Apart from `recall`'s optional graph
+  mode (`networkx` and `pyvis`), it is the only non-stdlib dependency in the
+  repository.
+- **`skill-manager` runs across runtimes.** `validate.sh` needs only Bash.
+  `scripts/skill_audit.py` runs the whole-tree audit portably across `agy`,
+  `claude`, `codex`, `grok` or `muse` (and `workflows/skill-audit.workflow`
+  runs in hosts with `run_workflow`).
+- **The routing catalogue is a placeholder.** In `skills/model-routing/`,
+  `provider_a` resolves to sample IDs and `provider_b` resolves to deliberately
+  invalid IDs, so an unconfigured second provider fails loudly instead of
+  launching the wrong model. Edit `SKILL.md` and `references/routing-catalog.json`
+  before you dispatch work you care about.
 
 ## Where things get written
 
@@ -244,7 +249,7 @@ git clone https://github.com/barnabybot/public-skills.git ~/Repos/public-skills
 | Codex CLI (legacy path) | `~/.codex/skills/` |
 | Cursor | `~/.cursor/skills/` |
 
-Link all nine skills into each target you use, leaving any existing skill with
+Link all ten skills into each target you use, leaving any existing skill with
 the same name untouched:
 
 ```bash
@@ -329,11 +334,14 @@ Use the child instruction template in root `AGENTS.md` for projects and vaults.
 # The routing table resolves, and no workspace is spawned
 skills/cmux/scripts/spawn-workspace.sh test --tier systems --dry-run
 
-# The routing table and metadata are structurally valid
-python3 skills/orchestrator/scripts/check.py --no-live --no-log
+# The routing catalogue and SKILL.md table are structurally valid
+python3 skills/model-routing/scripts/check.py --no-live --no-log
 
-# The orchestrator test suite, against invented fixtures
-python3 -m unittest discover -s skills/orchestrator/scripts -p 'test_*.py'
+# The model-routing preflight, circuit-breaker and takeover test suite
+python3 -m unittest discover -s skills/model-routing/scripts -p 'test_*.py'
+
+# The portable skill-audit test suite
+python3 -m unittest discover -s skills/skill-manager/scripts/tests -p 'test_*.py'
 
 # Yesterday's sessions, read from your own transcripts
 python3 skills/recall/scripts/recall-day.py list yesterday --all-projects
